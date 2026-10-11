@@ -34,7 +34,7 @@ Soft edges: WS1 and WS3a start against WS0's stub engine/interfaces and swap in 
 | 4 | WS8 (after WS5 exposes feedback hooks) | 1 |
 | 5 | WS7 alone | 1 |
 
-Suggested max concurrency: 5 agents. No two parallel WS own the same path (tables below). Shared files (root `package.json`, lockfile, CI config) are touched only by WS0 and WS7; any other WS needing a new dependency adds it only in its own package's `package.json` and mentions it in the PR (lockfile conflicts resolved by rebasing and `pnpm install`).
+Max concurrency: 2 agents at a time on the Pro plan (see README "Working within usage limits"); "parallel" below means no file conflicts, not run-all-at-once. No two parallel WS own the same path (tables below). Shared files (root `package.json`, lockfile, CI config) are touched only by WS0 and WS7; any other WS needing a new dependency adds it only in its own package's `package.json` and mentions it in the PR (lockfile conflicts resolved by rebasing and `pnpm install`).
 
 ## 3. Conventions
 

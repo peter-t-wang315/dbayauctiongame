@@ -69,6 +69,30 @@ This is a browser version of the 2001 *eBay Electronic Talking Auction Game*, re
 - [ ] **M4:** juice and polish (WS8)
 - [ ] **M5:** playtest with friends, then tune constants with the simulator
 
+## Working within usage limits (Claude Pro, $20/mo)
+The project is built on the Pro plan. Usage is capped per rolling window and per week, and every subagent spends from the same budget. **Plan work to finish within limits, not to maximize parallelism.** This section overrides the concurrency suggestions in 06.
+
+- **Do it yourself first.** Handle work inline in the main session. Only spawn a subagent when it really saves effort or the user asks: a large isolated research sweep, the pre-PR review, or a truly independent workstream.
+- **Parallelism: at most 2 agents at a time.** The "parallel" workstreams in 06 mean *no file conflicts*, not "run them all at once". The default is **one workstream per session**, run sequentially.
+- **Model choice:**
+  - **Sonnet** is the default for coding and reviews.
+  - **Haiku** is for mechanical or bulk work: lookups, data entry such as the 60 items and sprites, simple refactors.
+  - **Opus** is reserved for hard design or debugging problems, and only when needed.
+  - Use **medium effort** unless the task is truly hard.
+- **Read narrowly.** Read only the docs and sections your workstream lists in 06, not the whole `docs/` tree. Use search instead of reading big files end to end. Don't re-read files that are already in context.
+- **Cheap checks before expensive ones.** Run typecheck, lint and tests locally; they're free. Fix what they catch *before* asking any agent to review.
+- **Pre-PR review stays, but lean.** One reviewer, focused on the diff only. Round 2 happens only if round 1 found blockers.
+- **Checkpoint often.** Commit and push at safe points (see Git workflow), and update the Status checklist. If the session hits a usage limit, the next session resumes from the repo with nothing lost.
+- **Size sessions to fit.** One workstream, or one clear slice of one, per session. Stop at a clean checkpoint rather than starting something big near the end of a window.
+- **Batch questions to the user.** Ask in one message instead of many back-and-forth turns.
+- **Before kicking off a multi-agent batch,** tell the user how many agents and which models, and get a go-ahead.
+
+**Recommended pacing for the build:**
+1. WS0 alone.
+2. Then M2, one or two workstreams per session, in this order: WS1 → WS2 → WS3a → WS4 → WS5.
+3. Then M3: WS3b → WS6 → WS7.
+4. Then WS8.
+
 ## Git workflow for sessions and agents
 Use your judgement here. Don't wait to be asked for routine git hygiene. The detailed branch and PR naming per workstream is in [06-workstreams.md](06-workstreams.md).
 
