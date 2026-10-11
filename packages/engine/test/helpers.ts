@@ -1,6 +1,26 @@
 import { createEngine } from '../src/engine';
 import { synthPack } from '../src/testing/synthPack';
-import type { EngineAction, EngineState, GameEvent, GameSetup, Mode } from '../src/types';
+import type {
+  BidCard,
+  EngineAction,
+  EngineState,
+  GameEvent,
+  GameSetup,
+  Mode,
+  StackEntry,
+} from '../src/types';
+
+export const v = (value: number): BidCard => ({ id: `v${value}`, kind: 'value', value });
+export const px = (n: number): BidCard => ({ id: `p${n}`, kind: 'proxy' });
+
+/** Put entries on a bay, removing the cards from their owners' hands. */
+export function stackOn(s: EngineState, bay: number, entries: Array<[string, BidCard]>): void {
+  s.bays[bay]!.stack = entries.map(([by, card]) => {
+    const p = s.players.find((x) => x.id === by)!;
+    p.hand = p.hand.filter((c) => c.id !== card.id);
+    return { by, card } as StackEntry;
+  });
+}
 
 export const engine = createEngine(synthPack());
 export const T0 = 1000;

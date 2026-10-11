@@ -5,13 +5,14 @@
 
 ## Done
 - Slice 1: seeded RNG (`src/rng.ts`), pack index (`src/pack.ts`), setup/deck build (`src/setup.ts`), scoring (`src/scoring.ts`), synthetic 60-item pack for tests/sim (`src/testing/synthPack.ts`). Tests: R1-R6, R32-R36 (`test/setup-scoring.test.ts`).
+- Slice 3: tests for specials/Gifts (R25-R31, R37, `test/gifts.test.ts`) and Frenzy (F1-F8, `test/frenzy.test.ts`).
 - Slice 2: full engine implemented in `src/game.ts` (Classic, Frenzy, Gifts), `src/engine.ts` (`createEngine(pack)`, `engine`), `src/bots.ts`, `src/testing/driver.ts` (simulated-clock bot driver). Classic tests R7-R24 in `test/classic.test.ts`.
 
 ## In progress
-- Slice 3: tests for specials/Gifts (R25-R31, R37) and Frenzy (F1-F8).
+- Slice 4: tools/sim CLI and balance run.
 
 ## Next
-1. Slice 3: `test/gifts.test.ts` (R25-R31, R37 via `engine.revealDelayMs`), `test/frenzy.test.ts` (F1-F8). Helpers in `test/helpers.ts` (`toGifts` jumps to the gifts stage).
+1. (done) Slice 3 added test/gifts.test.ts (R25-R31, R37) and test/frenzy.test.ts (F1-F8).
 2. Slice 4: `tools/sim` CLI (uses `playGame` from `packages/engine/src/testing/driver.ts`); run 1000 games per player count and mode, tune bots/CONFIG if hard limits fail, record results here.
 3. Slice 5: replay golden test, fast-check properties (SHOULD), docs, then the draft PR.
 
