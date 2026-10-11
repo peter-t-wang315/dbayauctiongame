@@ -111,8 +111,7 @@ export type EngineAction =
   | { type: 'setConnected'; player: PlayerId; connected: boolean };
 
 export type ApplyResult =
-  | { ok: true; state: EngineState; events: GameEvent[] }
-  | { ok: false; code: ErrorCode };
+  { ok: true; state: EngineState; events: GameEvent[] } | { ok: false; code: ErrorCode };
 
 export interface GameSetup {
   seed: string;

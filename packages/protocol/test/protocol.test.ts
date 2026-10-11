@@ -36,18 +36,33 @@ const validClient: Record<ClientMsg['t'], ClientMsg> = {
 
 // At least one invalid fixture per client message type.
 const invalidClient: Record<ClientMsg['t'], unknown[]> = {
-  join: [{ t: 'join', v, name: '' }, { t: 'join', v, name: 'x'.repeat(17) }, { t: 'join', v, name: 'a\u0007b' }, { t: 'join', name: 'A' }],
-  hello: [{ t: 'hello', v, playerId: 'p1' }, { t: 'hello', v, playerId: '', secret: 's' }],
+  join: [
+    { t: 'join', v, name: '' },
+    { t: 'join', v, name: 'x'.repeat(17) },
+    { t: 'join', v, name: 'a\u0007b' },
+    { t: 'join', name: 'A' },
+  ],
+  hello: [
+    { t: 'hello', v, playerId: 'p1' },
+    { t: 'hello', v, playerId: '', secret: 's' },
+  ],
   ping: [{ t: 'ping' }, { t: 'ping', c: 'now' }],
   snap: [{ t: 'snapshot' }],
   leave: [{ t: 'leav' }],
-  bid: [{ t: 'bid', seq: 1, card: 'v100', bay: 4 }, { t: 'bid', seq: 0, card: 'v100', bay: 0 }, { t: 'bid', seq: 1, bay: 0 }],
+  bid: [
+    { t: 'bid', seq: 1, card: 'v100', bay: 4 },
+    { t: 'bid', seq: 0, card: 'v100', bay: 0 },
+    { t: 'bid', seq: 1, bay: 0 },
+  ],
   pass: [{ t: 'pass' }, { t: 'pass', seq: 1.5 }],
   gift: [{ t: 'gift', seq: 1 }],
   giftGive: [{ t: 'giftGive', seq: 1, item: '' }],
   rename: [{ t: 'rename', seq: 1, name: '   ' }],
   start: [{ t: 'start', seq: -1 }],
-  setOpts: [{ t: 'setOpts', seq: 1, mode: 'turbo' }, { t: 'setOpts', seq: 1, bidWindowMs: 4000 }],
+  setOpts: [
+    { t: 'setOpts', seq: 1, mode: 'turbo' },
+    { t: 'setOpts', seq: 1, bidWindowMs: 4000 },
+  ],
   addBot: [{ t: 'addBot' }],
   rmBot: [{ t: 'rmBot', seq: 1 }],
   kick: [{ t: 'kick', seq: 1, playerId: 7 }],
@@ -68,14 +83,54 @@ export const sampleView: PlayerView = {
   ],
   canAct: true,
   players: [
-    { id: 'p1', name: 'Peter', color: 'red', shape: '●', connected: true, isBot: false, cardsInHand: 3, collection: ['toys-pink-snake'], gifts: 0 },
-    { id: 'p2', name: 'Pat', color: 'blue', shape: '▲', connected: true, isBot: false, cardsInHand: 9, collection: [], gifts: 1 },
-    { id: 'b1', name: 'Bot Billy', color: 'yellow', shape: '■', connected: true, isBot: true, cardsInHand: 11, collection: [], gifts: 0 },
+    {
+      id: 'p1',
+      name: 'Peter',
+      color: 'red',
+      shape: '●',
+      connected: true,
+      isBot: false,
+      cardsInHand: 3,
+      collection: ['toys-pink-snake'],
+      gifts: 0,
+    },
+    {
+      id: 'p2',
+      name: 'Pat',
+      color: 'blue',
+      shape: '▲',
+      connected: true,
+      isBot: false,
+      cardsInHand: 9,
+      collection: [],
+      gifts: 1,
+    },
+    {
+      id: 'b1',
+      name: 'Bot Billy',
+      color: 'yellow',
+      shape: '■',
+      connected: true,
+      isBot: true,
+      cardsInHand: 11,
+      collection: [],
+      gifts: 0,
+    },
   ],
   bays: [
-    { idx: 0, card: 'toys-bean-bag-bear', stack: [{ by: 'p2', card: 'v75', kind: 'value', value: 75 }], topBid: { by: 'p2', kind: 'value', value: 75 } },
+    {
+      idx: 0,
+      card: 'toys-bean-bag-bear',
+      stack: [{ by: 'p2', card: 'v75', kind: 'value', value: 75 }],
+      topBid: { by: 'p2', kind: 'value', value: 75 },
+    },
     { idx: 1, card: 'special-gift-1', stack: [], topBid: null },
-    { idx: 2, card: 'glass-crystal-swan', stack: [{ by: 'p1', card: 'v150', kind: 'value', value: 150 }], topBid: { by: 'p1', kind: 'value', value: 150 } },
+    {
+      idx: 2,
+      card: 'glass-crystal-swan',
+      stack: [{ by: 'p1', card: 'v150', kind: 'value', value: 150 }],
+      topBid: { by: 'p1', kind: 'value', value: 150 },
+    },
   ],
   turn: { player: 'p1', color: 'red', endsAt: 1_700_000_005_000, phase: 'window' },
   round: { n: 7, of: 30, halfway: false, last: false },
@@ -98,7 +153,12 @@ const validServer: ServerMsg[] = [
 const invalidServer: unknown[] = [
   { t: 'welcome', v, code: 'K7QMX' },
   { t: 'snap', rev: 1, now: 0, view: { ...sampleView, phase: 'paused' } },
-  { t: 'snap', rev: 1, now: 0, view: { ...sampleView, players: [{ ...sampleView.players[0], color: 'orange' }] } },
+  {
+    t: 'snap',
+    rev: 1,
+    now: 0,
+    view: { ...sampleView, players: [{ ...sampleView.players[0], color: 'orange' }] },
+  },
   { t: 'ack', seq: 1, ok: false },
   { t: 'ack', seq: 1, ok: false, code: 'NOPE' },
   { t: 'closing', reason: 'bored' },
@@ -130,15 +190,23 @@ describe('client messages', () => {
   });
 
   it('rejects a protocol version mismatch on join and hello', () => {
-    expect(parseClientFrame(JSON.stringify({ t: 'join', v: v + 1, name: 'A' }))).toEqual({ ok: false, code: 'VERSION_MISMATCH' });
-    expect(parseClientFrame(JSON.stringify({ t: 'hello', v: v + 1, playerId: 'p', secret: 's' }))).toEqual({ ok: false, code: 'VERSION_MISMATCH' });
+    expect(parseClientFrame(JSON.stringify({ t: 'join', v: v + 1, name: 'A' }))).toEqual({
+      ok: false,
+      code: 'VERSION_MISMATCH',
+    });
+    expect(
+      parseClientFrame(JSON.stringify({ t: 'hello', v: v + 1, playerId: 'p', secret: 's' })),
+    ).toEqual({ ok: false, code: 'VERSION_MISMATCH' });
   });
 });
 
 describe('server messages', () => {
   for (const msg of validServer) {
     it(`${msg.t}: valid fixture round-trips`, () => {
-      expect(parseServerFrame(JSON.stringify(msg))).toEqual({ ok: true, msg: ServerMsgSchema.parse(msg) });
+      expect(parseServerFrame(JSON.stringify(msg))).toEqual({
+        ok: true,
+        msg: ServerMsgSchema.parse(msg),
+      });
     });
   }
   it('invalid fixtures are rejected', () => {
@@ -147,7 +215,9 @@ describe('server messages', () => {
     }
   });
   it('a snapshot of the sample view stays under 5KB', () => {
-    expect(JSON.stringify({ t: 'snap', rev: 1, now: 0, view: sampleView }).length).toBeLessThan(5000);
+    expect(JSON.stringify({ t: 'snap', rev: 1, now: 0, view: sampleView }).length).toBeLessThan(
+      5000,
+    );
   });
 });
 

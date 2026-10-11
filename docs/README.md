@@ -145,4 +145,4 @@ Use your judgement here. Don't wait to be asked for routine git hygiene. The det
 
 | Package | Version |
 |---|---|
-| _(filled in during WS0)_ | |
+| See the root [README](../README.md#pinned-versions) | |

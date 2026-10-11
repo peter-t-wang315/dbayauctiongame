@@ -120,7 +120,12 @@ export const ClientMsgSchema = z.discriminatedUnion('t', [
   z.object({ t: z.literal('ping'), c: z.number() }),
   z.object({ t: z.literal('snap') }),
   z.object({ t: z.literal('leave') }),
-  z.object({ t: z.literal('bid'), seq: Seq, card: CardIdSchema, bay: z.number().int().min(0).max(3) }),
+  z.object({
+    t: z.literal('bid'),
+    seq: Seq,
+    card: CardIdSchema,
+    bay: z.number().int().min(0).max(3),
+  }),
   z.object({ t: z.literal('pass'), seq: Seq }),
   z.object({ t: z.literal('gift'), seq: Seq, target: PlayerIdSchema }),
   z.object({ t: z.literal('giftGive'), seq: Seq, item: AuctionCardIdSchema }),
@@ -195,7 +200,11 @@ export const PlayerViewSchema = z.object({
       card: AuctionCardIdSchema.nullable(),
       stack: z.array(BidOnBaySchema),
       topBid: z
-        .object({ by: PlayerIdSchema, kind: BidKind, value: z.number().int().positive().optional() })
+        .object({
+          by: PlayerIdSchema,
+          kind: BidKind,
+          value: z.number().int().positive().optional(),
+        })
         .nullable(),
       endsAt: ServerTime.optional(),
     }),
@@ -261,7 +270,11 @@ export const PlayerViewSchema = z.object({
         }),
       ),
       giftLog: z.array(
-        z.object({ holder: PlayerIdSchema, victim: PlayerIdSchema, card: AuctionCardIdSchema.nullable() }),
+        z.object({
+          holder: PlayerIdSchema,
+          victim: PlayerIdSchema,
+          card: AuctionCardIdSchema.nullable(),
+        }),
       ),
     })
     .optional(),
@@ -278,7 +291,12 @@ export const ServerMsgSchema = z.union([
     secret: z.string().optional(),
     code: z.string(),
   }),
-  z.object({ t: z.literal('snap'), rev: z.number().int().min(0), now: ServerTime, view: PlayerViewSchema }),
+  z.object({
+    t: z.literal('snap'),
+    rev: z.number().int().min(0),
+    now: ServerTime,
+    view: PlayerViewSchema,
+  }),
   z.object({ t: z.literal('ack'), seq: Seq, ok: z.literal(true) }),
   z.object({
     t: z.literal('ack'),
@@ -300,7 +318,8 @@ export type ParseResult<T> = { ok: true; msg: T } | { ok: false; code: ErrorCode
 
 /** Parse one inbound text frame: size cap, JSON, schema, protocol version (05 section 12). */
 export function parseClientFrame(raw: string): ParseResult<ClientMsg> {
-  if (new TextEncoder().encode(raw).byteLength > MAX_INBOUND_BYTES) return { ok: false, code: 'BAD_MESSAGE' };
+  if (new TextEncoder().encode(raw).byteLength > MAX_INBOUND_BYTES)
+    return { ok: false, code: 'BAD_MESSAGE' };
   let json: unknown;
   try {
     json = JSON.parse(raw);

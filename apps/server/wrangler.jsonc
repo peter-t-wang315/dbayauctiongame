@@ -1,0 +1,15 @@
+// Room server Worker. WS3b owns this after WS0 (docs/05-tech-stack.md sections 9, 12-15).
+{
+  "name": "dbay-server",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "durable_objects": {
+    "bindings": [{ "name": "Room", "class_name": "Room" }],
+  },
+  // SQLite-backed DOs are required on the Workers Free plan.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }],
+  "vars": {
+    "ALLOWED_ORIGINS": "http://localhost:3000",
+    "LOG_LEVEL": "info",
+  },
+}

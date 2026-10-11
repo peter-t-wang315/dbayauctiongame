@@ -1,7 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { ContentPackSchema, ItemDefSchema, activePack, fixturePack, toPublicPack } from '../src/index';
+import {
+  ContentPackSchema,
+  ItemDefSchema,
+  activePack,
+  fixturePack,
+  toPublicPack,
+} from '../src/index';
 import { publicPack } from '../src/public';
 
 describe('content schema', () => {
@@ -14,7 +20,12 @@ describe('content schema', () => {
     expect(ItemDefSchema.safeParse({ ...good, estimatedValue: 42 }).success).toBe(false); // not x5
     expect(ItemDefSchema.safeParse({ ...good, id: 'media-pink-snake' }).success).toBe(false); // wrong prefix
     expect(ItemDefSchema.safeParse({ ...good, tier: 'jackpot' }).success).toBe(false); // ratio mismatch
-    expect(ItemDefSchema.safeParse({ ...good, flavor: 'one two three four five six seven eight nine ten eleven twelve thirteen' }).success).toBe(false);
+    expect(
+      ItemDefSchema.safeParse({
+        ...good,
+        flavor: 'one two three four five six seven eight nine ten eleven twelve thirteen',
+      }).success,
+    ).toBe(false);
   });
 
   it('rejects duplicate ids', () => {

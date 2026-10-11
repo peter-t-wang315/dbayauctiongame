@@ -5,8 +5,15 @@ import { CONFIG, type PlayerCount } from './config';
 import type { BidCard, Engine, EngineState } from './types';
 
 export function startingHand(): BidCard[] {
-  const values: BidCard[] = CONFIG.BID_VALUES.map((v) => ({ id: `v${v}`, kind: 'value', value: v }));
-  const proxies: BidCard[] = Array.from({ length: CONFIG.PROXIES_PER_PLAYER }, (_, i) => ({ id: `p${i + 1}`, kind: 'proxy' }));
+  const values: BidCard[] = CONFIG.BID_VALUES.map((v) => ({
+    id: `v${v}`,
+    kind: 'value',
+    value: v,
+  }));
+  const proxies: BidCard[] = Array.from({ length: CONFIG.PROXIES_PER_PLAYER }, (_, i) => ({
+    id: `p${i + 1}`,
+    kind: 'proxy',
+  }));
   return [...values, ...proxies];
 }
 
@@ -21,8 +28,18 @@ export const stubEngine: Engine = {
       bidWindowMs: setup.bidWindowMs,
       relaxed: setup.relaxed,
       stage: 'bidding',
-      players: setup.players.map((p, seat) => ({ ...p, seat, hand: startingHand(), won: [], gifts: [] })),
-      bays: Array.from({ length: bayCount }, (_, idx) => ({ idx, card: cards[idx % cards.length] ?? null, stack: [] })),
+      players: setup.players.map((p, seat) => ({
+        ...p,
+        seat,
+        hand: startingHand(),
+        won: [],
+        gifts: [],
+      })),
+      bays: Array.from({ length: bayCount }, (_, idx) => ({
+        idx,
+        card: cards[idx % cards.length] ?? null,
+        stack: [],
+      })),
       deck: [],
       rng: { deck: 0, calls: 0, closes: 0, misc: 0 },
       colorBag: [],
@@ -51,7 +68,14 @@ export const stubEngine: Engine = {
   },
   score(state) {
     return {
-      players: state.players.map((p) => ({ id: p.id, items: [], displayCaseAssign: [], collections: [], total: 0, rank: 1 })),
+      players: state.players.map((p) => ({
+        id: p.id,
+        items: [],
+        displayCaseAssign: [],
+        collections: [],
+        total: 0,
+        rank: 1,
+      })),
       giftLog: state.giftLog,
     };
   },

@@ -52,7 +52,9 @@ export const ItemDefSchema = z
     flavor: Flavor,
     sprite: SpriteSchema.optional(),
   })
-  .refine((i) => i.id.startsWith(`${i.category}-`), { message: 'item id must start with its category' })
+  .refine((i) => i.id.startsWith(`${i.category}-`), {
+    message: 'item id must start with its category',
+  })
   .refine(
     (i) => {
       const [lo, hi] = TIER_RANGES[i.tier];
