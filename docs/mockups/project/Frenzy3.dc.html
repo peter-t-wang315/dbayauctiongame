@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>dBay Frenzy, 3 bays</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#B07400}a:hover{color:#8A5E00}
+</style>
+</helmet>
+<main style="width: 390px; height: 844px; box-sizing: border-box; background: #FFFFFF; color: #191919; font-family: 'Nunito', sans-serif; padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow: hidden">
+
+  <div role="status" style="height: 44px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 4px 0 12px; color: #FFFFFF; background: #1E2A44; border: 2px solid #0E1511; border-radius: 12px; box-sizing: border-box">
+    <span style="font-family: 'Lilita One', sans-serif; font-size: 15px; color: #FFB81C; white-space: nowrap">11<span style="color: #9CA3AF">/24</span></span>
+    <span style="flex: 1; min-width: 0; font-size: 14px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">▲ Pat bid $200 on Bay 1 (+3s)</span>
+    <button type="button" aria-label="Menu: players, log, settings" style="width: 40px; height: 36px; background: transparent; border: 0; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg>
+    </button>
+  </div>
+
+  <div style="height: 52px; flex: none; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-radius: 12px; border: 2px solid #0E1511; background: #F04B3E; color: #1E1A14">
+    <span style="font-family: 'Lilita One', sans-serif; font-size: 22px">FRENZY · BID ANYWHERE</span>
+    <span style="font-weight: 800; font-size: 13px; background: #FFFFFF; border: 2px solid #0E1511; border-radius: 999px; padding: 4px 10px">● Ready</span>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 8px; flex: none">
+    <sc-for list="{{bays}}" as="b" hint-placeholder-count="3">
+      <div style="{{b.style}}">
+        <div style="display: flex; justify-content: space-between; align-items: center">
+          <span style="{{b.labelStyle}}">{{b.label}}</span>
+          <span style="{{b.catStyle}}">{{b.cat}}</span>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: center">
+          <div aria-hidden="true" style="width: 64px; height: 64px; flex: none; box-sizing: border-box; padding: 4px; background: #FFFFFF; border: 2px solid #0E1511; border-radius: 10px; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr))">
+            <sc-for list="{{b.pixels}}" as="px" hint-placeholder-count="144">
+              <span style="{{px.s}}"></span>
+            </sc-for>
+          </div>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px">
+              <span style="font-size: 17px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{b.item}}</span>
+              <span style="font-size: 13px; font-weight: 800; color: #6B7280; white-space: nowrap">Est. ${{b.est}}</span>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between">
+              <span style="font-family: 'Lilita One', sans-serif; font-size: 30px; color: #B07400; line-height: 1">{{b.top}}</span>
+              <span style="{{b.bidderStyle}}">{{b.bidder}}</span>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <div style="flex: 1; height: 8px; background: #E5E7EB; border: 1.5px solid #0E1511; border-radius: 999px; overflow: hidden"><div style="{{b.barStyle}}"></div></div>
+          <span style="{{b.extStyle}}">+3s</span>
+          <span style="{{b.timeStyle}}">{{b.time}}</span>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <button type="button" aria-label="Your collections. Tap to see details." style="height: 44px; flex: none; box-sizing: border-box; display: flex; align-items: center; gap: 10px; padding: 0 10px; background: #F3F4F6; border: 2px solid #0E1511; border-radius: 12px; color: #191919; font-family: 'Nunito', sans-serif; overflow: hidden">
+    <span style="font-size: 11px; font-weight: 800; letter-spacing: 1px; color: #6B7280">SETS</span>
+    <sc-for list="{{sets}}" as="c" hint-placeholder-count="2">
+      <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 800; white-space: nowrap">
+        <span style="{{c.sq}}"></span>{{c.name}}
+        <span style="display: inline-flex; gap: 2px">
+          <sc-for list="{{c.pips}}" as="p" hint-placeholder-count="3"><span style="{{p.s}}"></span></sc-for>
+        </span>
+      </span>
+    </sc-for>
+    <svg style="margin-left: auto; flex: none" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
+  </button>
+
+  <div aria-label="Your bid cards" style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; flex: none; padding-top: 4px">
+    <sc-for list="{{hand}}" as="h" hint-placeholder-count="12">
+      <button type="button" style="{{h.style}}">{{h.label}}</button>
+    </sc-for>
+  </div>
+</main>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const P = { me: ['● You', '#F04B3E', '#1E1A14'], pat: ['▲ Pat', '#2F7CF6', '#1E1A14'], sam: ['■ Sam', '#FFB81C', '#1E1A14'] };
+    const pal = { '.': 'transparent', k: '#0E1511', b: '#A0643C', l: '#E8C88A', c: '#2F7CF6', w: '#FFF6E0', v: '#2F7CF6', r: '#F04B3E' };
+    const art = [
+      ['............', '..kk....kk..', '.kbbk..kbbk.', '.kbbkkkkbbk.', '..kbbbbbbk..', '.kbbkbbkbbk.', '.kbbllllbbk.', '.kbblkklbbk.', '..kbllllbk..', '...kbbbbk...', '..kbbkkbbk..', '..kkk..kkk..'],
+      ['............', '............', 'kkkkkkkkkkkk', 'kcccccccccck', 'kcwwwwwwwwck', 'kcwkwwwwkwck', 'kcwwwwwwwwck', 'kcccccccccck', 'kcckkkkkkcck', 'kkkkkkkkkkkk', '............', '............'],
+      ['...kkkkkk...', '..kwwwwwwk..', '.kwvvvvvvwk.', '.kwvvvvvvwk.', '.kwwwwwwwwk.', '..kkwwwwkk..', '.kwwwrrwwwk.', 'kwwkwwwwkwwk', 'kwwkwwwwkwwk', '..kwwkkwwk..', '..kwwk.kwwk.', '..kkkk.kkkk.']
+    ];
+    const pixels = (rows) => { const o = []; rows.forEach((row) => row.split('').forEach((ch) => o.push({ s: 'display: block; background: ' + pal[ch] }))); return o; };
+    const raw = [
+      { num: 1, cat: 'TOYS', cc: '#E4572E', item: 'Bean-Bag Bear', est: 80, top: '$200', who: 'pat', pct: 10, time: '0:03', danger: true, extended: true, state: 'outbid' },
+      { num: 2, cat: 'MEDIA', cc: '#3A86FF', item: 'Haunted Mixtape', est: 60, top: '$50', who: 'me', pct: 55, time: '0:14', danger: false, extended: false, state: 'winning' },
+      { num: 3, cat: 'COLLECT.', cc: '#8E5BD9', item: 'Astronaut Action Figure', est: 100, top: '$125', who: 'sam', pct: 80, time: '0:21', danger: false, extended: false, state: '' }
+    ];
+    const pill = (bg, fg) => 'font-size: 11px; font-weight: 800; letter-spacing: 1px; padding: 2px 8px; border-radius: 999px; white-space: nowrap; background: ' + bg + '; color: ' + fg;
+    const bays = raw.map((b, i) => {
+      const p = P[b.who];
+      const winning = b.state === 'winning';
+      const outbid = b.state === 'outbid';
+      const edge = outbid ? '#FF6B5E' : (winning ? '#F04B3E' : '#0E1511');
+      return {
+        cat: b.cat, item: b.item, est: b.est, top: b.top, bidder: p[0], time: b.time,
+        label: outbid ? 'OUTBID!' : (winning ? '✓ WINNING' : 'BAY ' + b.num),
+        labelStyle: outbid ? pill('#FF6B5E', '#0E1511') : (winning ? pill('#F04B3E', '#1E1A14') : 'font-size: 12px; font-weight: 800; letter-spacing: 2px; color: #6B7280'),
+        pixels: pixels(art[i]),
+        style: 'height: 146px; box-sizing: border-box; padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between; border-radius: 16px; border: 3px solid ' + edge + '; ' + (winning ? 'background: #ECEEF2; opacity: 0.6; filter: saturate(0.5); box-shadow: none' : 'background: #F3F4F6; box-shadow: 0 3px 0 #0E1511'),
+        catStyle: 'font-size: 11px; font-weight: 800; letter-spacing: 1px; padding: 2px 8px; border-radius: 8px; border: 2px solid #0E1511; color: #0E1511; background: ' + b.cc,
+        bidderStyle: 'font-size: 14px; font-weight: 800; padding: 5px 10px; border-radius: 8px; border: 2px solid #0E1511; white-space: nowrap; background: ' + p[1] + '; color: ' + p[2],
+        barStyle: 'height: 100%; width: ' + b.pct + '%; background: ' + (b.danger ? '#FF6B5E' : '#1E2A44'),
+        timeStyle: 'font-family: Lilita One, sans-serif; font-size: 16px; width: 36px; text-align: right; color: ' + (b.danger ? '#D93A2E' : '#191919'),
+        extStyle: b.extended ? 'font-family: Lilita One, sans-serif; font-size: 15px; color: #22A35A' : 'display: none'
+      };
+    });
+    const vals = [10, 25, 50, 75, 100, 125, 150, 200, 250, 300, 'P', 'P'];
+    const spent = { 10: true, 100: true };
+    const hand = vals.map((v) => {
+      const proxy = v === 'P';
+      const base = 'height: 56px; border-radius: 10px; border: 2px solid #0E1511; font-family: Lilita One, sans-serif; box-shadow: 0 3px 0 #0E1511; ';
+      const look = proxy ? 'background: #1E2A44; color: #FFB81C; font-size: 12px;' : 'background: #FFFFFF; color: #1E1A14; font-size: 19px;';
+      return { label: proxy ? 'PROXY' : '$' + v, style: base + look + (spent[v] ? ' opacity: 0.3; text-decoration: line-through; box-shadow: none;' : '') };
+    });
+    const set = (name, color, n) => ({
+      name,
+      sq: 'width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid #0E1511; background: ' + color,
+      pips: [0, 1, 2].map((k) => ({ s: 'width: 7px; height: 7px; box-sizing: border-box; border-radius: 999px; ' + (k < n ? 'background: #191919' : 'border: 1.5px solid #6B7280') }))
+    });
+    return { bays, hand, sets: [set('Media', '#3A86FF', 2), set('Toys', '#E4572E', 1)] };
+  }
+}
+</script>
+</body>
+</html>

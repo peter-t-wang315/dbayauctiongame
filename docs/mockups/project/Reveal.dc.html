@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>dBay reveal</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#B07400}a:hover{color:#8A5E00}
+@keyframes dbay-flip{0%{transform:rotateY(90deg)}100%{transform:rotateY(0)}}
+.dbay-flip{animation:dbay-flip 380ms ease-out}
+@media (prefers-reduced-motion: reduce){.dbay-flip{animation:none}}
+</style>
+</helmet>
+<main style="width: 390px; height: 844px; box-sizing: border-box; background: #FFFFFF; color: #191919; font-family: 'Nunito', sans-serif; padding: 20px 16px 16px; display: flex; flex-direction: column; gap: 12px; overflow: hidden">
+  <header style="display: flex; align-items: baseline; justify-content: space-between">
+    <h1 style="margin: 0; font-family: 'Lilita One', sans-serif; font-weight: 400; font-size: 34px">The Reveal</h1>
+    <span style="font-size: 13px; font-weight: 800; color: #6B7280">{{progress}}</span>
+  </header>
+
+  <sc-if value="{{notDone}}" hint-placeholder-val="{{ true }}">
+    <section aria-live="polite" class="{{flipClass}}" style="height: 176px; flex: none; box-sizing: border-box; background: #FFFFFF; color: #1E1A14; border: 2px solid #0E1511; border-radius: 16px; box-shadow: 0 4px 0 #0E1511; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; position: relative">
+      <span style="font-size: 12px; font-weight: 800; letter-spacing: 2px; color: #5E5648">{{cur.cat}}</span>
+      <span style="font-size: 22px; font-weight: 800">{{cur.name}}</span>
+      <div style="display: flex; align-items: flex-end; justify-content: space-between">
+        <div style="display: flex; flex-direction: column">
+          <span style="font-size: 13px; font-weight: 800; color: #5E5648">Est. ${{cur.est}}</span>
+          <span style="font-family: 'Lilita One', sans-serif; font-size: 44px; line-height: 1; color: #8A5E00">{{cur.actualLabel}}</span>
+        </div>
+        <span style="{{cur.tagStyle}}">{{cur.tag}}</span>
+      </div>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{done}}" hint-placeholder-val="{{ false }}">
+    <section aria-label="Final scores" style="flex: none; display: flex; flex-direction: column; gap: 6px">
+      <sc-for list="{{scores}}" as="s" hint-placeholder-count="4">
+        <div style="{{s.rowStyle}}">
+          <span style="font-family: 'Lilita One', sans-serif; font-size: 22px; width: 28px">{{s.rank}}</span>
+          <span style="{{s.chipStyle}}">{{s.who}}</span>
+          <span style="margin-left: auto; font-family: 'Lilita One', sans-serif; font-size: 24px; color: #B07400">{{s.total}}</span>
+        </div>
+      </sc-for>
+    </section>
+  </sc-if>
+
+  <section aria-label="Your items" style="display: flex; flex-direction: column; gap: 6px">
+    <span style="font-size: 12px; font-weight: 800; letter-spacing: 1px; color: #6B7280">YOUR HAUL</span>
+    <sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+      <div style="height: 40px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 10px; background: #F3F4F6; border: 2px solid #0E1511; border-radius: 10px">
+        <span style="{{r.dot}}"></span>
+        <span style="flex: 1; min-width: 0; font-weight: 800; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span>
+        <span style="font-size: 12px; font-weight: 800; color: #6B7280">${{r.est}}</span>
+        <span style="font-family: 'Lilita One', sans-serif; font-size: 18px; width: 56px; text-align: right; color: {{r.valColor}}">{{r.val}}</span>
+      </div>
+    </sc-for>
+    <div style="{{bonusStyle}}">GLASS ×3 — COLLECTION DOUBLED! $485 → $970</div>
+  </section>
+
+  <div style="margin-top: auto; display: flex; gap: 8px">
+    <sc-if value="{{notDone}}" hint-placeholder-val="{{ true }}">
+      <button type="button" onClick="{{next}}" style="flex: 1; height: 60px; background: #1E2A44; color: #FFFFFF; border: 2px solid #0E1511; border-radius: 16px; box-shadow: 0 4px 0 #0E1511; font-family: 'Lilita One', sans-serif; font-size: 24px; cursor: pointer">Flip next</button>
+    </sc-if>
+    <sc-if value="{{done}}" hint-placeholder-val="{{ false }}">
+      <button type="button" onClick="{{restart}}" style="flex: 2; height: 60px; background: #1E2A44; color: #FFFFFF; border: 2px solid #0E1511; border-radius: 16px; box-shadow: 0 4px 0 #0E1511; font-family: 'Lilita One', sans-serif; font-size: 24px; cursor: pointer">Rematch</button>
+      <a href="Main.dc.html" style="flex: 1; height: 60px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #1E2A44; color: #FFFFFF; border: 2px solid #0E1511; border-radius: 16px; box-shadow: 0 4px 0 #0E1511; font-family: 'Lilita One', sans-serif; font-size: 22px; text-decoration: none">Leave</a>
+    </sc-if>
+  </div>
+</main>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { shown: 1 }; }
+  renderVals() {
+    const items = [
+      { name: 'Mystery Dynasty Bowl', cat: 'GLASS', cc: '#2EC4B6', est: 90, act: 340, tag: 'STEAL!' },
+      { name: 'Crystal Swan', cat: 'GLASS', cc: '#2EC4B6', est: 120, act: 60, tag: 'Ripped off!' },
+      { name: 'Grandma’s Teapot', cat: 'GLASS', cc: '#2EC4B6', est: 70, act: 85, tag: '' },
+      { name: 'Fuzzy Pink Snake', cat: 'TOYS', cc: '#E4572E', est: 120, act: 130, tag: '' },
+      { name: 'Vintage X-Ray', cat: 'MISC', cc: '#7A8793', est: 200, act: 90, tag: 'Ripped off!' },
+      { name: 'Display Case', cat: 'SPECIAL · WILD', cc: '#B07400', est: 100, act: 100, tag: '' }
+    ];
+    const n = this.state.shown;
+    const done = n > items.length;
+    const cur = items[Math.min(n, items.length) - 1];
+    const tagStyle = (t) => t === 'STEAL!'
+      ? 'font-family: Lilita One, sans-serif; font-size: 22px; padding: 4px 12px; border-radius: 10px; border: 2px solid #0E1511; background: #22A35A; color: #0E1511; transform: rotate(-6deg)'
+      : (t ? 'font-family: Lilita One, sans-serif; font-size: 20px; padding: 4px 12px; border-radius: 10px; border: 2px solid #0E1511; background: #FF6B5E; color: #0E1511; transform: rotate(5deg)' : 'display: none');
+    const chip = (bg, fg) => 'font-weight: 800; font-size: 15px; padding: 5px 10px; border-radius: 8px; border: 2px solid #0E1511; background: ' + bg + '; color: ' + fg;
+    const scores = [
+      ['1', '● You', '$1,290', '#F04B3E', '#1E1A14'], ['2', '▲ Pat', '$1,105', '#2F7CF6', '#1E1A14'],
+      ['3', '■ Sam', '$940', '#FFB81C', '#1E1A14'], ['4', '◆ Bot Billy', '$610', '#8BC53F', '#1E1A14']
+    ].map((s, i) => ({
+      rank: s[0], who: s[1], total: s[2], chipStyle: chip(s[3], s[4]),
+      rowStyle: 'height: 48px; box-sizing: border-box; display: flex; align-items: center; gap: 10px; padding: 0 12px; border-radius: 12px; border: 2px solid ' + (i === 0 ? '#B07400' : '#0E1511') + '; background: ' + (i === 0 ? '#FFF4D6' : '#F3F4F6')
+    }));
+    return {
+      done, notDone: !done,
+      progress: done ? 'Game over' : 'Item ' + n + ' of ' + items.length,
+      flipClass: 'dbay-flip',
+      cur: { name: cur.name, cat: cur.cat, est: cur.est, actualLabel: '$' + cur.act, tag: cur.tag, tagStyle: tagStyle(cur.tag) },
+      rows: items.map((it, i) => ({
+        name: it.name, est: it.est,
+        val: i < n ? '$' + it.act : '?',
+        valColor: i < n ? (it.act > it.est * 1.25 ? '#22A35A' : (it.act < it.est * 0.8 ? '#FF6B5E' : '#191919')) : '#6B7280',
+        dot: 'width: 10px; height: 10px; flex: none; border-radius: 3px; border: 1.5px solid #0E1511; background: ' + it.cc
+      })),
+      bonusStyle: n >= 3
+        ? 'height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 10px; border: 2px solid #0E1511; background: #2EC4B6; color: #0E1511; font-family: Lilita One, sans-serif; font-size: 16px; letter-spacing: 0.5px'
+        : 'display: none',
+      scores,
+      next: () => this.setState({ shown: n + 1 }),
+      restart: () => this.setState({ shown: 1 })
+    };
+  }
+}
+</script>
+</body>
+</html>

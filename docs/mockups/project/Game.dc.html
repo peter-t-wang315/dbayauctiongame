@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>dBay game, Classic</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#B07400}a:hover{color:#FFD36E}
+@keyframes dbay-shrink{from{width:100%}to{width:0%}}
+@keyframes dbay-pulse{0%,100%{box-shadow:inset 0 0 0 4px #F04B3E}50%{box-shadow:inset 0 0 0 7px #F04B3E}}
+@keyframes dbay-bump{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+.dbay-timer{animation:dbay-shrink 5s linear infinite}
+.dbay-pulse{animation:dbay-pulse 1.2s ease-in-out infinite}
+.dbay-bump{animation:dbay-bump 320ms ease-out}
+@media (prefers-reduced-motion: reduce){.dbay-timer,.dbay-pulse,.dbay-bump{animation:none}}
+</style>
+</helmet>
+<main class="{{frameClass}}" style="width: 390px; height: 844px; box-sizing: border-box; background: #FFFFFF; color: #191919; font-family: 'Nunito', sans-serif; padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; position: relative">
+
+  <div role="status" aria-live="polite" style="height: 44px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 4px 0 12px; color: #FFFFFF; background: #1E2A44; border: 2px solid #0E1511; border-radius: 12px; box-sizing: border-box">
+    <span style="font-family: 'Lilita One', sans-serif; font-size: 15px; color: #B07400; white-space: nowrap">R7<span style="color: #6B7280">/30</span></span>
+    <span style="flex: 1; min-width: 0; font-size: 14px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{statusText}}</span>
+    <button type="button" aria-label="Menu: players, log, settings" style="width: 40px; height: 36px; background: transparent; border: 0; color: #FFFFFF; cursor: pointer; display: flex; align-items: center; justify-content: center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg>
+    </button>
+  </div>
+
+  <div style="{{bannerStyle}}">
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <span style="font-family: 'Lilita One', sans-serif; font-size: 22px; letter-spacing: 0.5px">{{bannerTitle}}</span>
+      <sc-if value="{{myTurn}}" hint-placeholder-val="{{ true }}">
+        <span style="font-weight: 800; font-size: 14px">{{bannerHint}}</span>
+      </sc-if>
+      <sc-if value="{{notMyTurn}}" hint-placeholder-val="{{ false }}">
+        <button type="button" onClick="{{reset}}" style="height: 32px; padding: 0 12px; background: #FFFFFF; color: #1E1A14; border: 2px solid #0E1511; border-radius: 999px; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 13px; cursor: pointer">Try again</button>
+      </sc-if>
+    </div>
+    <div style="height: 8px; background: rgba(14,21,17,0.35); border-radius: 999px; overflow: hidden">
+      <div class="{{timerClass}}" style="height: 100%; width: 100%; background: #0E1511; border-radius: 999px"></div>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 8px; flex: none">
+    <sc-for list="{{bays}}" as="b" hint-placeholder-count="3">
+      <button type="button" onClick="{{b.tap}}" aria-label="{{b.aria}}" style="{{b.style}}">
+        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%">
+          <span style="font-size: 12px; font-weight: 800; letter-spacing: 2px; color: #6B7280">BAY {{b.num}}</span>
+          <span style="{{b.catStyle}}">{{b.cat}}</span>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: center; width: 100%">
+          <div aria-hidden="true" style="width: 72px; height: 72px; flex: none; box-sizing: border-box; padding: 4px; background: #FFFFFF; border: 2px solid #0E1511; border-radius: 10px; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr))">
+            <sc-for list="{{b.pixels}}" as="px" hint-placeholder-count="144">
+              <span style="{{px.s}}"></span>
+            </sc-for>
+          </div>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px">
+              <span style="font-size: 17px; font-weight: 800; color: #191919; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{b.item}}</span>
+              <span style="font-size: 13px; font-weight: 800; color: #6B7280; white-space: nowrap">Est. ${{b.est}}</span>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between">
+              <span class="{{b.bumpClass}}" style="font-family: 'Lilita One', sans-serif; font-size: 32px; color: #B07400; line-height: 1">{{b.topLabel}}</span>
+              <span style="{{b.bidderStyle}}">{{b.bidderLabel}}</span>
+            </div>
+          </div>
+        </div>
+        <span style="{{b.hintStyle}}">{{b.hint}}</span>
+      </button>
+    </sc-for>
+  </div>
+
+  <button type="button" onClick="{{openSheet}}" aria-label="Your collections. Tap to see details." style="height: 44px; flex: none; box-sizing: border-box; display: flex; align-items: center; gap: 10px; padding: 0 10px; background: #F3F4F6; border: 2px solid #0E1511; border-radius: 12px; color: #191919; font-family: 'Nunito', sans-serif; cursor: pointer; overflow: hidden">
+    <span style="font-size: 11px; font-weight: 800; letter-spacing: 1px; color: #6B7280">SETS</span>
+    <sc-for list="{{sets}}" as="c" hint-placeholder-count="3">
+      <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 800; white-space: nowrap">
+        <span style="{{c.sq}}"></span>{{c.name}}
+        <span style="display: inline-flex; gap: 2px">
+          <sc-for list="{{c.pips}}" as="p" hint-placeholder-count="3"><span style="{{p.s}}"></span></sc-for>
+        </span>
+      </span>
+    </sc-for>
+    <span style="font-size: 12px; font-weight: 800; color: #1E1A14; background: #FFB81C; border: 1.5px solid #0E1511; border-radius: 6px; padding: 1px 6px">WILD</span>
+    <svg style="margin-left: auto; flex: none" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
+  </button>
+
+  <sc-if value="{{sheetOpen}}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; inset: 0; background: rgba(14,21,17,0.6); display: flex; flex-direction: column; justify-content: flex-end; z-index: 5">
+      <button type="button" onClick="{{closeSheet}}" aria-label="Close collections" style="flex: 1; background: transparent; border: 0; cursor: pointer"></button>
+      <section aria-label="Your collections" style="background: #F3F4F6; border-top: 2px solid #0E1511; border-radius: 24px 24px 0 0; padding: 10px 16px 16px; display: flex; flex-direction: column; gap: 8px">
+        <div style="width: 48px; height: 5px; border-radius: 999px; background: #6B7280; align-self: center; margin-bottom: 4px"></div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between">
+          <h2 style="margin: 0; font-family: 'Lilita One', sans-serif; font-weight: 400; font-size: 26px">Your collections</h2>
+          <span style="font-size: 12px; font-weight: 800; color: #6B7280">3 of a kind = ×2</span>
+        </div>
+        <sc-for list="{{sheetRows}}" as="r" hint-placeholder-count="6">
+          <div style="{{r.rowStyle}}">
+            <span style="{{r.sq}}"></span>
+            <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+              <span style="font-weight: 800; font-size: 15px">{{r.name}}</span>
+              <span style="font-size: 12px; font-weight: 700; color: #6B7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.items}}</span>
+            </div>
+            <span style="{{r.noteStyle}}">{{r.note}}</span>
+            <span style="display: inline-flex; gap: 3px">
+              <sc-for list="{{r.pips}}" as="p" hint-placeholder-count="3"><span style="{{p.s}}"></span></sc-for>
+            </span>
+          </div>
+        </sc-for>
+        <div style="height: 48px; box-sizing: border-box; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 10px; border: 2px dashed #FFB81C">
+          <span style="font-size: 12px; font-weight: 800; color: #1E1A14; background: #FFB81C; border: 1.5px solid #0E1511; border-radius: 6px; padding: 1px 6px">WILD</span>
+          <span style="font-size: 13px; font-weight: 800">Display Case ×1: joins your best set at the end (+$100)</span>
+        </div>
+        <button type="button" onClick="{{closeSheet}}" style="height: 48px; margin-top: 4px; background: #1E2A44; color: #FFFFFF; border: 2px solid #0E1511; border-radius: 12px; box-shadow: 0 3px 0 #0E1511; font-family: 'Lilita One', sans-serif; font-size: 20px; cursor: pointer">Back to bidding</button>
+      </section>
+    </div>
+  </sc-if>
+
+  <div aria-label="Your bid cards" style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; flex: none; padding-top: 6px">
+    <sc-for list="{{hand}}" as="h" hint-placeholder-count="12">
+      <button type="button" onClick="{{h.tap}}" aria-label="{{h.aria}}" aria-pressed="{{h.pressed}}" style="{{h.style}}">{{h.label}}</button>
+    </sc-for>
+  </div>
+</main>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.state = this.fresh();
+  }
+  fresh() {
+    return {
+      selected: null,
+      myTurn: true,
+      lastBay: null,
+      msg: 'Red’s turn — that’s you!',
+      bays: [
+        { num: 1, cat: 'TOYS', catColor: '#E4572E', item: 'Fuzzy Pink Snake', est: 120, top: 75, proxy: false, bidder: 'pat', sprite: 'snake' },
+        { num: 2, cat: 'GLASS', catColor: '#2EC4B6', item: 'Mystery Dynasty Bowl', est: 90, top: null, proxy: false, bidder: null, sprite: 'bowl' },
+        { num: 3, cat: 'ANTIQUES', catColor: '#A47148', item: 'Pirate Treasure Map', est: 110, top: 150, proxy: false, bidder: 'me', sprite: 'map' }
+      ],
+      hand: [10, 25, 50, 75, 100, 125, 150, 200, 250, 300, 'P', 'P'].map((v, i) => ({ id: i, value: v === 'P' ? null : v, proxy: v === 'P', spent: v === 25 || v === 100 }))
+    };
+  }
+  sprite(name) {
+    const pal = { '.': 'transparent', k: '#0E1511', p: '#FF7EB6', w: '#FFFFFF', r: '#F04B3E', b: '#2EC4B6', g: '#B07400', t: '#E8C88A', n: '#A47148' };
+    const art = {
+      snake: ['............', '....kkkk....', '...kppppk...', '..kpwkppk...', '..kppppppk..', '...kkkpppk..', '......kppk..', '..kkkkppk...', '.kppppppk...', 'kppkkkkk....', 'kppppppppkr.', '.kkkkkkkkk..'],
+      bowl: ['............', '............', '....gggg....', '..kkkkkkkk..', '.kbbbbbbbbk.', '.kbwbbgbbbk.', '.kbbbgggbbk.', '..kbbbgbbk..', '...kbbbbk...', '....kkkk....', '...kggggk...', '...kkkkkk...'],
+      map: ['............', '.kkkkkkkkkk.', '.kttttttttk.', '.ktnttttttk.', '.kttnttrtrk.', '.kttnnttrtk.', '.ktttnnrtrk.', '.kttttnnttk.', '.kttttttntk.', '.kttttttttk.', '.kkkkkkkkkk.', '............']
+    };
+    const out = [];
+    art[name].forEach((row) => row.split('').forEach((ch) => out.push({ s: 'display: block; background: ' + pal[ch] })));
+    return out;
+  }
+  legal(card, bay) {
+    if (!card || card.spent) return { ok: false, why: '' };
+    if (bay.bidder === 'me') return { ok: false, why: '' };
+    if (bay.proxy && !card.proxy) return { ok: false, why: 'Proxy only' };
+    if (card.proxy) return { ok: true, why: '' };
+    if (bay.top !== null && card.value <= bay.top) return { ok: false, why: 'Beat $' + bay.top };
+    return { ok: true, why: '' };
+  }
+  renderVals() {
+    const s = this.state;
+    const players = {
+      me: { label: '● You', bg: '#F04B3E', fg: '#1E1A14' },
+      pat: { label: '▲ Pat', bg: '#2F7CF6', fg: '#1E1A14' }
+    };
+    const card = s.selected === null ? null : s.hand[s.selected];
+    const cardText = card ? (card.proxy ? 'PROXY' : '$' + card.value) : '';
+    const bays = s.bays.map((b, i) => {
+      const mine = b.bidder === 'me';
+      const L = card && !mine ? this.legal(card, b) : null;
+      let border = '#0E1511', opacity = '1', bg = '#F3F4F6', extra = 'box-shadow: 0 3px 0 #0E1511;';
+      if (mine) { opacity = '0.55'; bg = '#ECEEF2'; extra = 'box-shadow: none; filter: saturate(0.5);'; }
+      if (L && L.ok) { border = '#22A35A'; extra = 'box-shadow: 0 0 0 3px #22A35A, 0 3px 0 #0E1511;'; }
+      if (L && !L.ok) { opacity = '0.45'; bg = 'repeating-linear-gradient(135deg, #F3F4F6 0 10px, #E8EBF0 10px 20px)'; }
+      const bidder = b.bidder ? players[b.bidder] : null;
+      let hint = '', hintBg = '';
+      if (mine) { hint = '✓ You’re winning'; hintBg = 'background: #F04B3E; color: #1E1A14'; }
+      else if (L) { hint = L.ok ? 'Tap to bid ' + cardText : L.why; hintBg = L.ok ? 'background: #22A35A; color: #0E1511' : 'background: #0E1511; color: #191919'; }
+      return {
+        num: b.num, cat: b.cat, item: b.item, est: b.est,
+        pixels: this.sprite(b.sprite),
+        topLabel: b.top === null ? (b.proxy ? 'PROXY' : 'No bids') : (b.proxy ? 'PROXY' : '$' + b.top),
+        bumpClass: s.lastBay === i ? 'dbay-bump' : '',
+        catStyle: 'font-size: 11px; font-weight: 800; letter-spacing: 1px; padding: 3px 8px; border-radius: 8px; border: 2px solid #0E1511; background: ' + b.catColor + '; color: #0E1511',
+        bidderLabel: bidder ? bidder.label : 'Open',
+        bidderStyle: bidder
+          ? 'font-weight: 800; font-size: 14px; padding: 6px 10px; border-radius: 8px; border: 2px solid #0E1511; background: ' + bidder.bg + '; color: ' + bidder.fg
+          : 'font-weight: 800; font-size: 14px; padding: 6px 10px; border-radius: 8px; border: 2px dashed #6B7280; color: #6B7280',
+        hint,
+        hintStyle: hint ? 'position: absolute; left: 50%; top: 10px; transform: translateX(-50%); font-size: 12px; font-weight: 800; padding: 2px 10px; border-radius: 999px; white-space: nowrap; ' + hintBg : 'display: none',
+        aria: 'Bay ' + b.num + ', ' + b.item + ', estimated $' + b.est + (hint ? '. ' + hint : ''),
+        style: 'position: relative; height: 136px; box-sizing: border-box; width: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: stretch; padding: 10px 12px 12px; border-radius: 16px; font-family: Nunito, sans-serif; cursor: pointer; text-align: left; border: 2px solid ' + border + '; opacity: ' + opacity + '; background: ' + bg + '; ' + extra,
+        tap: () => {
+          if (!s.myTurn || !card || mine) return;
+          if (!this.legal(card, b).ok) return;
+          const nb = s.bays.map((x, j) => j === i ? Object.assign({}, x, { top: card.proxy ? x.top : card.value, proxy: card.proxy, bidder: 'me' }) : x);
+          const nh = s.hand.map((h) => h.id === card.id ? Object.assign({}, h, { spent: true }) : h);
+          this.setState({ bays: nb, hand: nh, selected: null, myTurn: false, lastBay: i, msg: 'You bid ' + cardText + ' on Bay ' + b.num + '!' });
+        }
+      };
+    });
+    const hand = s.hand.map((h, i) => {
+      const sel = s.selected === i;
+      const base = 'height: 56px; border-radius: 10px; border: 2px solid #0E1511; font-family: Lilita One, sans-serif; cursor: pointer; transition: transform 120ms ease-out; ';
+      const look = h.proxy ? 'background: #1E2A44; color: #FFB81C; border-color: #0E1511; font-size: 12px; ' : 'background: #FFFFFF; color: #1E1A14; font-size: 19px; ';
+      const st = h.spent ? 'opacity: 0.3; text-decoration: line-through; cursor: default; box-shadow: none; ' : (sel ? 'transform: translateY(-8px) scale(1.06); box-shadow: 0 0 0 3px #1E2A44, 0 5px 0 #0E1511; ' : 'box-shadow: 0 3px 0 #0E1511; ');
+      const off = !s.myTurn && !h.spent ? 'opacity: 0.6; ' : '';
+      return {
+        label: h.proxy ? 'PROXY' : '$' + h.value,
+        aria: (h.proxy ? 'Proxy' : '$' + h.value) + (h.spent ? ', spent' : ''),
+        pressed: sel ? 'true' : 'false',
+        style: base + look + st + off,
+        tap: () => {
+          if (!s.myTurn || h.spent) return;
+          this.setState({ selected: sel ? null : i, lastBay: null });
+        }
+      };
+    });
+    const sq = (c) => 'width: 14px; height: 14px; flex: none; border-radius: 4px; border: 1.5px solid #0E1511; background: ' + c;
+    const pips = (n, size) => [0, 1, 2].map((k) => ({ s: 'width: ' + size + 'px; height: ' + size + 'px; box-sizing: border-box; border-radius: 999px; ' + (k < n ? 'background: #191919' : 'border: 1.5px solid #6B7280') }));
+    const cats = [
+      { name: 'Toys & Plush', short: 'Toys', c: '#E4572E', items: ['Bean-Bag Bear', 'Wind-Up Robot'] },
+      { name: 'Pottery & Glass', short: 'Glass', c: '#2EC4B6', items: ['Crystal Swan'] },
+      { name: 'Books, Movies & Music', short: 'Media', c: '#3A86FF', items: ['Haunted Mixtape'] },
+      { name: 'Collectibles', short: 'Collect.', c: '#8E5BD9', items: [] },
+      { name: 'Antiques & Art', short: 'Antiques', c: '#A47148', items: [] },
+      { name: 'Everything Else', short: 'Misc', c: '#7A8793', items: [] }
+    ];
+    const sets = cats.filter((k) => k.items.length > 0).map((k) => ({ name: k.short, sq: sq(k.c), pips: pips(k.items.length, 7) }));
+    const sheetRows = cats.map((k) => {
+      const n = k.items.length;
+      return {
+        name: k.name, sq: sq(k.c), pips: pips(n, 10),
+        items: n ? k.items.join(', ') : 'None yet',
+        note: n === 2 ? 'One more = ×2!' : '',
+        noteStyle: n === 2 ? 'font-size: 11px; font-weight: 800; color: #1E1A14; background: #FFB81C; border-radius: 999px; padding: 2px 8px; white-space: nowrap' : 'display: none',
+        rowStyle: 'height: 48px; box-sizing: border-box; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 10px; border: 2px solid #0E1511; background: ' + (n ? '#E8EBF0' : '#F7F8FA') + '; opacity: ' + (n ? '1' : '0.6')
+      };
+    });
+    return {
+      frameClass: s.myTurn ? 'dbay-pulse' : '',
+      myTurn: s.myTurn,
+      notMyTurn: !s.myTurn,
+      statusText: s.msg,
+      bannerTitle: s.myTurn ? 'YOUR TURN' : '▲ PAT’S TURN',
+      bannerHint: card ? 'Now tap a bay' : 'Pick a card',
+      timerClass: s.myTurn ? 'dbay-timer' : '',
+      bannerStyle: 'height: 52px; flex: none; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 0 12px; border-radius: 12px; border: 2px solid #0E1511; color: ' + (s.myTurn ? '#1E1A14' : '#1E1A14') + '; background: ' + (s.myTurn ? '#F04B3E' : '#2F7CF6'),
+      reset: () => this.setState(this.fresh()),
+      bays,
+      hand,
+      sets,
+      sheetRows,
+      sheetOpen: !!s.sheet,
+      openSheet: () => this.setState({ sheet: true }),
+      closeSheet: () => this.setState({ sheet: false })
+    };
+  }
+}
+</script>
+</body>
+</html>
