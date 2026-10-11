@@ -66,11 +66,11 @@ Contracts = `packages/protocol/**`, room-core exported interfaces (`reduce`, `vi
 - **Owns:** repo root files (`package.json`, `pnpm-workspace.yaml`, `tsconfig.base.json`, eslint/prettier configs, `.nvmrc`, `.github/workflows/ci.yml`, `.env.example`, root `README.md`), all `package.json`/`tsconfig` of packages, `packages/protocol/**`, stubs: `packages/engine/` (interfaces + stub engine + `config.ts` skeleton), `packages/room-core/` (interfaces + stub), `packages/content/` (schema + 3-item fixture + `public` entry), `tools/mock-server/**`, `apps/web` and `apps/server` bare scaffolds (after WS0 merges, `apps/web` belongs to WS4/5/6/8 and `apps/server` to WS3b).
 - **Inputs:** `05-tech-stack.md`, `01-game-rules.md` (state vocabulary), `03-content.md` (schema).
 - **Deliverables:** workspace installs on Windows and Linux; pinned versions table in README; protocol types + zod schemas for every message in 05 section 6; PlayerView type; error codes; room-core interfaces; engine interface + stub; content schema (full + public projection); lint rules (import boundaries, no Date.now/Math.random in pure packages); CI workflow (typecheck, lint, test); mock server speaking the protocol with a scripted fake game (lobby -> Classic and Frenzy play with bay stacks and timers -> gift step -> reveal -> ended -> rematch) incl. reconnect and a bot seat; env var documentation.
-- **Acceptance:** `pnpm install && pnpm -r typecheck && pnpm -r lint && pnpm -r test` pass on clean checkout; importing `@auction/engine` from `apps/web` fails lint; zod round-trip tests for every message pass; `pnpm mock` serves a WS where a browser tab can complete join -> snapshot; versions are exact (no `^`); README lists them.
+- **Acceptance:** `pnpm install && pnpm -r typecheck && pnpm -r lint && pnpm -r test` pass on clean checkout; importing `@dbay/engine` from `apps/web` fails lint; zod round-trip tests for every message pass; `pnpm mock` serves a WS where a browser tab can complete join -> snapshot; versions are exact (no `^`); README lists them.
 - **Tests:** protocol schema tests (valid + invalid fixtures per message); lint-boundary test (a fixture violating import rules must fail ESLint).
 - **Read:** 05, 01, 03, this file.
 - **Kickoff prompt:**
-  > You are WS0 (Contracts) for the auction game repo. Read docs/05-tech-stack.md and docs/06-workstreams.md section WS0 first. Create the pnpm monorepo, pin exact dependency versions and record them in README, implement packages/protocol (types + zod) exactly per the SPEC blocks in 05, stub interfaces for engine/room-core/content, import-boundary lint rules, CI workflow, and tools/mock-server. Do not implement game rules. Branch ws0-contracts; finish all acceptance criteria before others start.
+  > You are WS0 (Contracts) for the dBay repo. Read docs/05-tech-stack.md and docs/06-workstreams.md section WS0 first. Create the pnpm monorepo, pin exact dependency versions and record them in README, implement packages/protocol (types + zod) exactly per the SPEC blocks in 05, stub interfaces for engine/room-core/content, import-boundary lint rules, CI workflow, and tools/mock-server. Do not implement game rules. Branch ws0-contracts; finish all acceptance criteria before others start.
 
 ### WS1 - Rules engine + bots
 - **Goal:** pure, seeded, deterministic implementation of `01-game-rules.md` and `02-modes-and-scaling.md`, plus bots and balance simulator.
@@ -82,7 +82,7 @@ Contracts = `packages/protocol/**`, room-core exported interfaces (`reduce`, `vi
 - **Tests:** engine unit tests (MUST); replay golden test (MUST); ~5 fast-check properties: never throws, cards conserved (every bid card is in a hand or on a bay or discarded as a winner), same seed same result, illegal moves no-op, game always terminates (SHOULD); bot-vs-bot smoke.
 - **Read:** 01, 02, 03, 05 section 7.
 - **Kickoff prompt:**
-  > You are WS1 (Rules engine) for the auction game. Read docs/01-game-rules.md, 02-modes-and-scaling.md, 05-tech-stack.md sections 4 and 7, and 06-workstreams.md WS1. Implement packages/engine as pure deterministic TypeScript (seeded RNG, time passed in, constants only in config.ts), cover every rule ID with a test, add bots and tools/sim. Do not touch other packages; request contract changes via the process in 06. Branch ws1-engine.
+  > You are WS1 (Rules engine) for dBay. Read docs/01-game-rules.md, 02-modes-and-scaling.md, 05-tech-stack.md sections 4 and 7, and 06-workstreams.md WS1. Implement packages/engine as pure deterministic TypeScript (seeded RNG, time passed in, constants only in config.ts), cover every rule ID with a test, add bots and tools/sim. Do not touch other packages; request contract changes via the process in 06. Branch ws1-engine.
 
 ### WS2 - Content
 - **Goal:** the 60 items and 9 specials as validated data.
@@ -112,10 +112,10 @@ Contracts = `packages/protocol/**`, room-core exported interfaces (`reduce`, `vi
 - **Inputs:** WS3a interfaces (stub OK); **complete Open Verifications in 05 section 17 first and append results to `research/tech-decisions.md`**.
 - **Deliverables:** Worker entry (`POST /api/rooms`, WS upgrade routing, Origin check, CORS, rate limits), Room class (hello/join handling, zod parse, wrapper order reduce->persist->setAlarm->send, load in `blockConcurrencyWhile`, alarms, hibernation, auto-response keepalive, deleteAll on expiry), `wrangler.jsonc` with `new_sqlite_classes` and envs (`dev`, `preview`, `production`), structured JSON logging, `.dev.vars.example`.
 - **Acceptance:** `wrangler dev` on Windows serves create + join + play against the real room-core; alarm fires after the DO is reloaded; bad secret rejected; bad Origin rejected (HTTP and WS); messages >2KB rejected; unknown code 404; expiry deletes storage.
-- **Tests (MUST, ~6 with vitest-pool-workers):** join; bid; alarm after reload (`runDurableObjectAlarm`); reconnect; bad secret; origin rejection.
+- **Tests (MUST, ~6 with @cloudflare/vitest-plugin):** join; bid; alarm after eviction (`evictDurableObject` + `runDurableObjectAlarm`); reconnect; bad secret; origin rejection.
 - **Read:** 05 (all), `research/tech-decisions.md`.
 - **Kickoff prompt:**
-  > You are WS3b (DO server shell). Read docs/05-tech-stack.md fully and 06-workstreams.md WS3b. First do the Open Verifications (section 17) against current PartyServer and vitest-pool-workers docs and record findings in docs/research/tech-decisions.md. Then implement apps/server: Worker + Room DO wrapper around room-core with the exact reduce->persist->setAlarm->send order, hibernation, alarms, origin checks, wrangler config, and the six integration tests. Branch ws3b-server; own only apps/server.
+  > You are WS3b (DO server shell). Read docs/05-tech-stack.md fully and 06-workstreams.md WS3b. First do the Open Verifications (section 17) against current PartyServer and @cloudflare/vitest-plugin docs (items 1, 2, 4, 5 already verified 2026-10-11) and record findings in docs/research/tech-decisions.md. Then implement apps/server: Worker + Room DO wrapper around room-core with the exact reduce->persist->setAlarm->send order, hibernation, alarms, origin checks, wrangler config, and the six integration tests. Branch ws3b-server; own only apps/server.
 
 ### WS4 - Frontend shell
 - **Goal:** Next.js app shell, networking client, landing/join/lobby.
@@ -126,7 +126,7 @@ Contracts = `packages/protocol/**`, room-core exported interfaces (`reduce`, `vi
 - **Tests:** unit tests for clock-offset median, rev gating, reconnect backoff (MUST for net logic); Playwright smoke vs mock (SHOULD).
 - **Read:** 04, 05 sections 5, 6, 11, 14.
 - **Kickoff prompt:**
-  > You are WS4 (Frontend shell). Read docs/04-ux-and-ui.md, docs/05-tech-stack.md sections 5, 6, 11 and 06-workstreams.md WS4. Build in apps/web: the networking client (useRoom, seq/acks, clock sync, reconnect, rev gating), landing, join and lobby screens, and design tokens, developing against tools/mock-server. Only import @auction/protocol and @auction/content/public. Own only the paths listed for WS4. Branch ws4-web-shell.
+  > You are WS4 (Frontend shell). Read docs/04-ux-and-ui.md, docs/05-tech-stack.md sections 5, 6, 11 and 06-workstreams.md WS4. Build in apps/web: the networking client (useRoom, seq/acks, clock sync, reconnect, rev gating), landing, join and lobby screens, and design tokens, developing against tools/mock-server. Only import @dbay/protocol and @dbay/content/public. Own only the paths listed for WS4. Branch ws4-web-shell.
 
 ### WS5 - Game UI
 - **Goal:** the playable game screen per 04 (mobile 390x844 without scrolling; desktop layout).
@@ -181,7 +181,7 @@ Contracts = `packages/protocol/**`, room-core exported interfaces (`reduce`, `vi
 | Schema | zod protocol + content schemas, public-projection no-leak | MUST | with WS0/WS2 |
 | Replay | Logged seed + events reproduce golden snapshots | MUST | ~0.25 d |
 | Room-core | bids, anti-snipe, auto-pass, reconnect, reject late/invalid, **redaction leak test** | MUST | with WS3a |
-| DO integration | ~6 tests, `@cloudflare/vitest-pool-workers`: join, bid, alarm after reload, reconnect, bad secret, origin reject | MUST | ~0.5 d |
+| DO integration | ~6 tests, `@cloudflare/vitest-plugin`: join, bid, alarm after reload, reconnect, bad secret, origin reject | MUST | ~0.5 d |
 | Client logic | clock offset, rev gating, reconnect backoff, legal-bay, diff->fx events, scoreboard | MUST | with WS4-8 |
 | Property | ~5 fast-check props (never throws, cards conserved, deterministic, illegal no-op, terminates) | SHOULD | ~0.25 d |
 | Simulator | Balance sim on content change; CI asserts every game ends | SHOULD | with WS1 |

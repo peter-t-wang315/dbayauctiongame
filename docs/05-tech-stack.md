@@ -19,11 +19,11 @@ Next.js on Vercel serves the UI. Each game room is one Cloudflare Durable Object
 | **Vercel** | Hosts the Next.js site for free (Hobby plan, non-commercial use only), deploys from git, gives preview URLs per PR. Does NOT host the game rooms. |
 | **Cloudflare Worker** | Tiny stateless HTTP entry point on Cloudflare. Handles `POST /api/rooms`, checks `Origin`, and forwards WebSocket upgrades to the right room. |
 | **Durable Object (DO)** | A stateful, single-threaded "room computer". One per room code. Holds the game state, all player sockets, and its own timers (alarms). Sleeps (hibernates) when idle. Messages are handled one at a time, so no race conditions. |
-| **PartyServer** | Open-source library (from the PartyKit authors) that wraps a DO with `onConnect/onMessage/onClose/onAlarm` style hooks and WebSocket hibernation. We use the library, NOT hosted PartyKit (hosted PartyKit shuts down 23 Oct 2026). |
+| **PartyServer** | Open-source library (from the PartyKit authors) that wraps a DO with `onStart/onConnect/onMessage/onClose/onError/onAlarm` hooks (never override `alarm()` or `webSocket*` yourself) and opt-in WebSocket hibernation (`static options = { hibernate: true }`). Verified against partyserver 0.5.10 (2026-10-11). We use the library, NOT hosted PartyKit (hosted PartyKit shuts down 23 Oct 2026). |
 | **Wrangler** | Cloudflare's CLI. `wrangler dev` runs the Worker + DO locally, `wrangler deploy` publishes, `wrangler tail` streams logs. Works natively on Windows. |
 | **pnpm monorepo** | One repo, several packages (`apps/*`, `packages/*`) sharing TypeScript types. pnpm workspaces link them. Lets many agents work in separate folders. |
 | **zod** | Runtime validation of every incoming message and of content data. |
-| **vitest + @cloudflare/vitest-pool-workers** | Test runner; the pool runs tests inside a real local Workers runtime so DO storage and alarms behave authentically. |
+| **vitest + @cloudflare/vitest-plugin** | Test runner. Requires vitest 4.1 or later and plugin 1.x, the successor to the deprecated `@cloudflare/vitest-pool-workers`. Tests run inside a real local workerd, so DO storage, alarms and hibernatable WebSockets behave authentically. Configure it with `cloudflareTest({ wrangler: { configPath: "./wrangler.jsonc" } })` from `@cloudflare/vitest-plugin`, inside vitest's `defineConfig`. Import `env` and `exports` from `cloudflare:workers` (use `exports.default.fetch`, since `SELF` is deprecated). Import `runDurableObjectAlarm`, `runInDurableObject`, `evictDurableObject` and `listDurableObjectIds` from `cloudflare:test`. Verified on Windows on 2026-10-11. |
 | **Playwright** | Browser end-to-end smoke test. |
 
 ### Why not Vercel-only
@@ -101,11 +101,11 @@ The browser never talks to Vercel for game traffic. Vercel never talks to Cloudf
 
 Justification:
 - **protocol has no workspace deps** so it can be imported anywhere (including the frontend) without dragging rules or hidden data along. Shared vocabulary (Category list, id brands, bid-card kinds) lives here.
-- **content is split into two entry points.** `@auction/content` (full) includes each item's hidden actual value; `@auction/content/public` is a projection with id, name, category, icon, estimated value only, plus the specials' public fields (name, `estimatedDisplay`, `fixedValue`). The web app may import only `/public`. This keeps real values out of the browser bundle: a view-layer leak test (room-core) plus a CI step grepping the built web bundle for the secret-field names back this up.
+- **content is split into two entry points.** `@dbay/content` (full) includes each item's hidden actual value; `@dbay/content/public` is a projection with id, name, category, icon, estimated value only, plus the specials' public fields (name, `estimatedDisplay`, `fixedValue`). The web app may import only `/public`. This keeps real values out of the browser bundle: a view-layer leak test (room-core) plus a CI step grepping the built web bundle for the secret-field names back this up.
 - **engine depends on content (full)** because scoring needs actual values. **room-core reaches content only via engine**, keeping one place that builds decks.
 - **web depends on protocol + content/public** for rendering item names/icons from ids in a snapshot. It never imports engine/room-core, so it cannot compute or see hidden state. Enforced by ESLint `no-restricted-imports` and `eslint-plugin-boundaries`-style rules configured in WS0; also tsconfig path restrictions.
 - **Time/randomness purity:** only the DO wrapper in `apps/server` calls `Date.now()`/`crypto`. Lint rule `no-restricted-globals`/`no-restricted-properties` bans `Date.now`, `new Date()`, `Math.random` in `engine`, `room-core`, `content`.
-- Package names are scoped `@auction/<name>` (rename at WS0 if desired; update this doc).
+- Package names are scoped `@dbay/<name>` (rename at WS0 if desired; update this doc).
 
 ## 5. Identity, room codes, join flow
 
@@ -171,7 +171,7 @@ ServerMsg =
 
 ```
 // SPEC (not code). Built ONLY by room-core view(state, playerId). Everything the screens in 04 show must be derivable from it
-// plus @auction/content/public (names, categories, est values, special display) keyed by id.
+// plus @dbay/content/public (names, categories, est values, special display) keyed by id.
 PlayerView = {
   code: string
   phase: "lobby" | "playing" | "reveal" | "ended"
@@ -225,7 +225,11 @@ HTTP: `POST /api/rooms` -> `201 {code}` | `403` bad origin | `429` rate limited.
 
 - App-level `ping{c}` / `pong{c, now}` for clock offset: on connect send 8 pings 200ms apart, then every 30s. For each sample: `rtt = recvTime - c`; `offset = now + rtt/2 - recvTime`. Offset estimate = median of offsets of the 5 lowest-RTT samples. Countdown rendering uses `serverNow ≈ Date.now() + offset` and `endsAt`.
 - Snapshots also carry `now` (serverNow) so a single snapshot is enough to roughly correct drift.
-- Transport keepalive: use PartyServer/DO `setWebSocketAutoResponse("ping","pong")` style text auto-response (does not wake a hibernated DO and is not billed as a request) every 15s from the client; a seat is marked disconnected after 30s with no traffic. **Open verification (section 17): confirm the exact API.**
+- Transport keepalive: use the native `this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair("ping","pong"))`, called in `onStart`. PartyServer has no wrapper for it. The DO answers without waking up and isn't billed for the time (each string is at most 2,048 characters). The client pings every 15s; a seat is marked disconnected after 30s with no traffic.
+- Client (partysocket 1.3.0):
+  - Set `maxEnqueuedMessages: 0`. The default is Infinity, which buffers actions while disconnected and replays stale bids after reconnecting.
+  - Send `hello` in the `open` listener, which fires on every reconnect.
+  - Pass `minReconnectionDelay: 500` and `maxReconnectionDelay: 5000`. The defaults are 3s–10s, too slow for rejoining.
 - Bids are judged against server time only; client clocks are never trusted.
 
 ## 7. Room state, loop, effects
@@ -345,7 +349,7 @@ No other secrets exist. Preview: `wrangler deploy --env preview` with its own `A
 - **Worker:** GitHub Actions on push to `main`: install, typecheck, lint, test, `wrangler deploy` (uses `CLOUDFLARE_API_TOKEN`), then `tools/smoke` creates a room and joins it, failing the job if it breaks. On PRs: typecheck, lint, tests only (target ~3 min).
 - **DO migrations:** `wrangler.jsonc` must declare the room class under `new_sqlite_classes` (SQLite-backed; required on free plan).
 - **Never deploy during a playtest** - a deploy drops all sockets and may end rooms with an unknown schema version.
-- **Version policy:** at WS0 pin EXACT versions (no `^`/`~`) for next, react, react-dom, typescript, zod, vitest, @cloudflare/vitest-pool-workers, wrangler, partyserver, motion (14.1.0), canvas-confetti, playwright, fast-check, eslint; `packageManager` field pins pnpm; `.nvmrc` pins Node. Record the table in root `README.md`. Upgrades are their own PRs. Dependabot/Renovate: optional, grouped weekly.
+- **Version policy:** at WS0 pin EXACT versions (no `^`/`~`) for next, react, react-dom, typescript, zod, vitest (4.1.0, tested), @cloudflare/vitest-plugin (1.4.0), wrangler, partyserver (0.5.10), partysocket (1.3.0), motion (14.1.0), canvas-confetti, playwright, fast-check, eslint; `packageManager` field pins pnpm; `.nvmrc` pins Node. Record the table in root `README.md`. Upgrades are their own PRs. Dependabot/Renovate: optional, grouped weekly.
 
 ## 16. Costs and free-tier limits (verified 2026-10-10/11)
 
@@ -360,11 +364,28 @@ Guardrails: free plan only, 2KB messages, 20 msg/s, 10 creates/h/IP, auto-expiri
 
 ## 17. Open verifications (do BEFORE WS3b starts)
 
-1. PartyServer: exact hooks and signatures for `onStart`, `onAlarm`, `onConnect/onMessage/onClose`, `hibernate: true` option, and per-connection state (`connection.setState`) size limits.
-2. Hibernation auto-response API (`setWebSocketAutoResponse`) availability through PartyServer.
+1. ✅ **VERIFIED 2026-10-11** (partyserver 0.5.10, partysocket 1.3.0):
+   - **Hooks:** `onStart`, `onConnect(conn, ctx)`, `onMessage(conn, msg)`, `onClose(conn, code, reason, wasClean)`, `onError` and `onAlarm` exist. `onStart` runs before the first fetch, socket event or alarm after a cold start or wake.
+   - **Alarms:** `this.ctx.storage.setAlarm(ms)` is the native DO API, one alarm per DO.
+   - **Hibernation:** `static options = { hibernate: true }`.
+   - **Per-connection state:** `connection.setState`/`connection.state` survives hibernation, with a **16 KiB limit** (shared with PartyServer's own metadata). Keep only `playerId`/seat there. Game state lives in DO storage.
+   - **Also available:** `this.broadcast(msg, without?)`, `getConnections()`, `this.sql`, and `getServerByName`.
+2. ✅ **VERIFIED:** auto-response is the native `ctx.setWebSocketAutoResponse` (see section 9). PartyServer has no wrapper.
 3. `blockConcurrencyWhile` usage around state load in `onStart`.
-4. `@cloudflare/vitest-pool-workers`: config for DO + SQLite storage isolation; using `runDurableObjectAlarm`; compatibility with the installed vitest version; Windows behaviour.
-5. How `wrangler.jsonc` declares `new_sqlite_classes` and the `routePartykitRequest`-style routing path used in section 3.
+4. ✅ **VERIFIED 2026-10-11:** `@cloudflare/vitest-plugin` 1.4.0 with vitest 4.1.0 passed a smoke test on Windows 11 / Node 22 covering WebSocket, hibernation, eviction, alarm and `runInDurableObject`. `vitest-pool-workers` is deprecated.
+   - **Alarms:** `runDurableObjectAlarm(stub)` runs a pending alarm immediately and returns `true`/`false`. There is no fake clock.
+   - **Simulating a wake:** `evictDurableObject(stub)` clears memory but keeps storage.
+   - **Remaining:**
+     - Run the smoke test against a real partyserver `Server`.
+     - Storage isolation is per file, so close open DO WebSockets in `afterEach`, or fall back to `--no-isolate --max-workers=1`.
+     - Use Istanbul for coverage, not V8.
+     - No dynamic `import()` inside DO handlers.
+     - On Windows, if `npm i` hits the arborist `edgesOut` error, `--legacy-peer-deps` works around it. pnpm is expected to be fine.
+5. ✅ **VERIFIED:**
+   - `routePartykitRequest(request, env, opts?)` matches `/parties/<kebab-binding>/<roomCode>`, so binding `Room` becomes `/parties/room/ABCDE`. Its options include `onBeforeConnect` (use it for the origin check) and `cors`.
+   - `wrangler.jsonc` needs `durable_objects.bindings` plus `migrations: [{ tag: "v1", new_sqlite_classes: ["Room"] }]`.
+   - SQLite-backed DOs are the only kind allowed on the Workers Free plan.
+   - Pin `partyserver` 0.5.10 and `partysocket` 1.3.0 exactly at WS0.
 6. Rate-limit mechanism choice (Workers rate limiting binding vs limiter DO) on the free plan.
 7. `deleteAll()` behaviour regarding pending alarms (call `deleteAlarm()` first).
 8. Vercel preview-origin allowlisting approach.
