@@ -273,4 +273,6 @@ type Item = { /* ...existing fields... */ sprite?: Sprite };          // missing
 1. Draw 6 category fallback sprites (MVP minimum).
 2. Draw per-item sprites (can be AI-drafted, then hand-tweaked in a pixel editor such as Piskel, which is free).
 
+**Status (WS2):** done. 6 category fallbacks (`CATEGORY_SPRITES`) and 60 item sprites (`ITEM_SPRITES`) live in `packages/content/src/sprites/`, exported from both entries and attached to every item as `sprite`. The shared palette is exported as `SHARED_PALETTE` (k, w); each sprite declares only its own colors (max 4) in `palette`. Specials have no sprite. Preview: `pnpm --filter @dbay/content sprites:preview` writes `packages/content/.preview/sprites.html` (gitignored).
+
 The mockup has 7 example sprites in `mockups/project/Game.dc.html` and `Frenzy.dc.html`: snake, bowl, map, bear, mixtape, alien, astronaut.

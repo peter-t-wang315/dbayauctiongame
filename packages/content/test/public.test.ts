@@ -1,6 +1,6 @@
 // Public projection no-leak tests (MUST). The public entry is bundled into the browser, so no
 // hidden field may appear in its values, its keys, its JSON, or its source text.
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { publicPack, getPublicCard } from '../src/public';
@@ -61,7 +61,14 @@ describe('public projection: no leak (MUST)', () => {
 
   it('public source files do not mention the secret fields in code or data', () => {
     // Comments are stripped by bundlers, so only check the data-bearing files for the field names.
-    for (const name of ['public.ts', 'public-items.ts', 'specials.ts', 'categories.ts']) {
+    const sprites = readdirSync(srcPath('sprites')).map((f) => `sprites/${f}`);
+    for (const name of [
+      'public.ts',
+      'public-items.ts',
+      'specials.ts',
+      'categories.ts',
+      ...sprites,
+    ]) {
       const src = readFileSync(srcPath(name), 'utf8')
         .split('\n')
         .filter((l) => !l.trim().startsWith('//'))

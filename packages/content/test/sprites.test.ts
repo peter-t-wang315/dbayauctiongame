@@ -33,6 +33,14 @@ describe('item sprites', () => {
     }
   });
 
+  it('all 60 items have a sprite, and no two items share one', () => {
+    expect(basePack.items).toHaveLength(60);
+    for (const item of basePack.items) expect(ITEM_SPRITES[item.id], item.id).toBeDefined();
+    expect(Object.keys(ITEM_SPRITES)).toHaveLength(60);
+    const seen = new Set(Object.values(ITEM_SPRITES).map((s) => s.rows.join('/')));
+    expect(seen.size).toBe(60);
+  });
+
   it('sprites are attached to items in both the full and the public pack', () => {
     for (const item of basePack.items) {
       if (ITEM_SPRITES[item.id]) expect(item.sprite, item.id).toEqual(ITEM_SPRITES[item.id]);

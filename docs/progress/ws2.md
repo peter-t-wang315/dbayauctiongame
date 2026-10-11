@@ -16,14 +16,14 @@
 
 - Art slice D: sprites for glass (10) and collectibles (10), wired into `ITEM_SPRITES`.
 
+- Art slice E/F: sprites for antiques (10) and misc (10); all 60 items have sprites; tests for coverage/uniqueness; sprite files covered by the no-secret-words check; 03 sprites status note.
+
 ## In progress
 - Nothing.
 
 ## Next
-1. (done: slice B)
-2. Slice E: sprites for antiques + misc in `src/sprites/{antiques,misc}.ts`; add to `ITEM_SPRITES` in `src/sprites/index.ts` (toys, media, glass, collectibles done).
-3. Slice F: add "all 60 items have a sprite" test, add sprite files to the no-secret-words check in `test/public.test.ts`, 03 sprites notes, eyeball the preview.
-4. Update PR #2 body (art box, swaps, preview command), keep draft, "Pre-PR review: pending".
+1. Pre-PR review (pending): fresh reviewer before un-drafting.
+2. User eyeballs `pnpm --filter @dbay/content sprites:preview` and requests tweaks (sprites were authored by grid reasoning, not visually inspected).
 
 ## Gotchas / decisions
 - Schema (`src/schema.ts`, WS0 contract) NOT changed.
