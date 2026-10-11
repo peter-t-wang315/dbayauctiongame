@@ -1,14 +1,23 @@
-// WS0 placeholder. WS4 builds the real landing page (docs/04-ux-and-ui.md).
-import { CATEGORIES } from '@dbay/content/public';
-import { PROTOCOL_VERSION } from '@dbay/protocol';
+import Link from 'next/link';
+import { Wordmark } from '../components/shell/Wordmark';
+import { LandingActions } from './LandingActions';
 
 export default function Home() {
   return (
-    <main>
-      <h1>dBay</h1>
-      <p>
-        Protocol v{PROTOCOL_VERSION}. Categories: {CATEGORIES.map((c) => c.name).join(', ')}.
-      </p>
+    <main className="page" style={{ alignItems: 'center', gap: 24, paddingTop: 48 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+        <Wordmark />
+        <p style={{ margin: 0, fontWeight: 700, color: 'var(--text-dim)' }}>
+          Bid fast. Hope it&apos;s real gold.
+        </p>
+      </div>
+      <LandingActions />
+      <Link
+        href="/rules"
+        style={{ minHeight: 44, display: 'inline-flex', alignItems: 'center', fontWeight: 800 }}
+      >
+        How to play
+      </Link>
     </main>
   );
 }

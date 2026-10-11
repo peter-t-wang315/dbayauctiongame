@@ -1,0 +1,94 @@
+/* dBay design tokens (docs/04-ux-and-ui.md sections 2, 12, 13).
+   White is the default theme; dark is an opt-in toggle via [data-theme="dark"].
+   The OS dark-mode setting is intentionally ignored (section 13). */
+
+:root {
+  /* surfaces and text (light, default) */
+  --bg: #ffffff;
+  --bg-raised: #f3f4f6;
+  --bg-muted: #eceef2;
+  --card: #ffffff;
+  --ink: #0e1511;
+  --text: #191919;
+  --text-dim: #6b7280;
+  --line: #e5e7eb;
+  --navy: #1e2a44;
+  --on-navy: #ffffff;
+  --gold: #b07400;
+  --ok: #22a35a;
+  --danger: #ff6b5e;
+  --danger-text: #b3261e;
+  --focus: #1e2a44;
+  --dim-opacity: 0.45;
+
+  /* player palette (section 12): identity = color + shape + name, never color alone */
+  --p-red: #f04b3e;
+  --p-blue: #2f7cf6;
+  --p-yellow: #ffb81c;
+  --p-green: #8bc53f;
+  --p-purple: #a97cf8;
+  --p-teal: #22bfae;
+  /* text on every player chip is ink */
+  --on-p-red: #1e1a14;
+  --on-p-blue: #1e1a14;
+  --on-p-yellow: #1e1a14;
+  --on-p-green: #1e1a14;
+  --on-p-purple: #1e1a14;
+  --on-p-teal: #1e1a14;
+  /* shapes are mandatory next to each color */
+  --shape-red: '●';
+  --shape-blue: '▲';
+  --shape-yellow: '■';
+  --shape-green: '◆';
+  --shape-purple: '★';
+  --shape-teal: '✚';
+
+  /* category accents (icon + label are always shown as well) */
+  --cat-toys: #e4572e;
+  --cat-media: #3a86ff;
+  --cat-glass: #2ec4b6;
+  --cat-collectibles: #8e5bd9;
+  --cat-antiques: #a47148;
+  --cat-misc: #7a8793;
+
+  /* spacing scale */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+
+  /* radii, borders, shadow */
+  --r-chip: 8px;
+  --r-card: 12px;
+  --r-bay: 16px;
+  --r-sheet: 24px;
+  --r-pill: 999px;
+  --border: 2px solid var(--ink);
+  --shadow: 0 3px 0 var(--ink);
+  --shadow-pressed: 0 1px 0 var(--ink);
+
+  /* touch target minimum (WCAG 2.5.8 plus our own rule) */
+  --hit: 44px;
+
+  --font-display: var(--font-lilita), 'Lilita One', system-ui, sans-serif;
+  --font-body: var(--font-nunito), 'Nunito', system-ui, sans-serif;
+}
+
+:root[data-theme='dark'] {
+  --bg: #1b2a22;
+  --bg-raised: #25382e;
+  --bg-muted: #2c4236;
+  --card: #fff6e0;
+  --ink: #0e1511;
+  --text: #f6efdd;
+  --text-dim: #b9b39f;
+  --line: #3a5446;
+  --navy: #2d3f66;
+  --gold: #f2b93b;
+  --ok: #5fd59a;
+  --danger: #ff6b5e;
+  --danger-text: #ff6b5e;
+  --focus: #8ab4ff;
+}
