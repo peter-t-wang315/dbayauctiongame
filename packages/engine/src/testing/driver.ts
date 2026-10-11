@@ -13,6 +13,8 @@ export interface PlayOptions {
   levels: BotLevel[];
   /** Hard stop for the simulated clock; a game still running then is reported non-terminating. */
   maxMs?: number;
+  /** Bot reaction-time range in ms (default: CONFIG.botDelayMinMs..botDelayMaxMs). */
+  reactionMs?: [number, number];
   /** Seed for bot reaction delays (separate from the game seed). */
   driverSeed?: string;
 }
@@ -32,8 +34,8 @@ export function playGame(o: PlayOptions): PlayResult {
   const { engine } = o;
   const start = 1_000_000;
   const drv = initRng(o.driverSeed ?? `${o.setup.seed}|driver`);
-  const delay = () =>
-    CONFIG.botDelayMinMs + nextInt(drv, 'misc', CONFIG.botDelayMaxMs - CONFIG.botDelayMinMs + 1);
+  const [dMin, dMax] = o.reactionMs ?? [CONFIG.botDelayMinMs, CONFIG.botDelayMaxMs];
+  const delay = () => dMin + nextInt(drv, 'misc', dMax - dMin + 1);
   const created = engine.setup(o.setup, start);
   let state = created.state;
   const events: PlayResult['events'] = created.events.map((e) => ({ t: start, e }));

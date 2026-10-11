@@ -289,6 +289,22 @@ importers:
         specifier: 4.23.15
         version: 4.23.15
 
+  tools/sim:
+    dependencies:
+      '@dbay/content':
+        specifier: workspace:*
+        version: link:../../packages/content
+      '@dbay/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
+      '@dbay/protocol':
+        specifier: workspace:*
+        version: link:../../packages/protocol
+    devDependencies:
+      tsx:
+        specifier: 4.23.15
+        version: 4.23.15
+
 packages:
 
   '@cacheable/memory@2.2.0':

@@ -1,0 +1,20 @@
+{
+  "name": "@dbay/sim",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p .",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests",
+    "start": "tsx src/main.ts"
+  },
+  "dependencies": {
+    "@dbay/content": "workspace:*",
+    "@dbay/engine": "workspace:*",
+    "@dbay/protocol": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "4.23.15"
+  }
+}
