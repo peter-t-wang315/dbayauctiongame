@@ -91,6 +91,25 @@ Use your judgement here. Don't wait to be asked for routine git hygiene. The det
   - it's rebased on `main`
 
   Keep PRs small and focused. Title `WS<n>: <summary>`. The body lists the acceptance-criteria checkboxes, the tests run, and any doc or contract changes. Open a **draft PR** early if parallel agents need to see the work in progress.
+- **Pre-PR review (required before every code PR).** Before opening or un-drafting a PR, the authoring agent must have the change reviewed:
+  1. **Machine checks first.** Typecheck, lint and tests must pass.
+  2. **Spawn a fresh reviewer subagent.** It must not be the author. Use Sonnet at medium effort, or the built-in `/code-review`. Give it:
+     - the diff against `main`
+     - the workstream's acceptance criteria from 06
+     - the relevant rule IDs and doc sections
+  3. **The reviewer reports only blocking issues:**
+     - rule or logic bugs
+     - hidden values or the seed leaking into a `PlayerView`
+     - protocol or contract changes inside a feature PR
+     - missing MUST-tier tests
+     - unmet acceptance criteria
+     - security problems
+
+     Style suggestions are optional, non-blocking notes.
+  4. **The author fixes the blocking issues and the reviewer re-checks.** Maximum 2 review rounds. If blockers remain after round 2, open the PR as a **draft** and list the unresolved issues in the body.
+  5. **Note it in the PR body:** "Pre-PR review: passed (n rounds)", or the open items.
+
+  Docs-only PRs skip this step.
 - **Merging to `main`** happens via squash-merge after CI passes. Merge your own PR only when the user has allowed it for that work. Otherwise, leave it open and say so.
 - **Always say what you did.** At the end of a session, report which branch you're on, what was committed and pushed, and any open PRs.
 
