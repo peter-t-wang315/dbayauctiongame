@@ -9,7 +9,7 @@ pnpm --filter @dbay/sim start -- --games 1000 [--players 3,4,5,6] [--modes class
   [--override-file tuning.json | --override '{...}']
 ```
 
-- `--lengths`: game length presets (`LENGTH_PRESETS`). Length targets are Quick 8-12 min, Standard 15-25 min.
+- `--lengths`: game length presets (`LENGTH_PRESETS`). Median-length targets per mode x preset: Classic Quick 8-12 min, Classic Standard 15-25 (3 players 12-15), Frenzy Quick 6-8, Frenzy Standard 10-15. Classic also reports rounds played (median / max; target <= ~50). Standard collection share is accepted up to 95% (ASSUMED, pending playtest).
 - `--override` / `--override-file`: deep-merge JSON into `LENGTH_PRESETS` for tuning experiments without editing `config.ts`, e.g. `{"standard":{"ROUNDS_BY_PLAYERS":{"3":120}}}`.
 - Exit code 1 on any non-terminating game, or with `--assert` on a hard-limit FAIL.
 

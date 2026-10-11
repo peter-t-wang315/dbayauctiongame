@@ -88,13 +88,13 @@ This doc defines shared rules plus Classic mode. Frenzy overrides are in `02-mod
 - **R36 Reveal data**: each scorable card exposes `estValue`, `actualValue`, delta, for STEAL!/Ripped off! tags (UX in 04).
 
 ## 8. Per-player-count table (ASSUMED)
-The host picks a **game length** in the lobby (`length`: `quick` or `standard`, default `standard`; independent of mode). Each length is a preset of constants (`LENGTH_PRESETS` in `packages/engine/src/config.ts`). Bays do not depend on length.
+The host picks a **game length** in the lobby (`length`: `quick` or `standard`, default `standard`; independent of mode). Each length is a preset of constants (`LENGTH_PRESETS` in `packages/engine/src/config.ts`). Classic bays are in the first table column (R1); Frenzy uses fewer bays (`FRENZY_BAYS_BY_PLAYERS`, 02 section 2) so the same deck spreads over more auction slots: Quick {3:2, 4:2, 5:3, 6:4}, Standard {3:2, 4:2, 5:3, 6:3} (ASSUMED).
 
-**Standard** (~8 deck cards per player; target 15-25 min):
+**Standard** (~8 deck cards per player; Classic target 15-25 min, 12-15 min at 3 players; Classic rounds capped near 50):
 | Players | Bays | Deck | Items | Display Case | Gift | Cats in play | Classic rounds | Calls N |
 |---|---|---|---|---|---|---|---|---|
-| 3 | 3 | 24 | 21 | 2 | 1 | 6 | 110 | 330 |
-| 4 | 3 | 32 | 28 | 2 | 2 | 6 | 58 | 232 |
+| 3 | 3 | 24 | 21 | 2 | 1 | 6 | 50 | 150 |
+| 4 | 3 | 32 | 28 | 2 | 2 | 6 | 50 | 200 |
 | 5 | 4 | 40 | 35 | 3 | 2 | 6 | 42 | 210 |
 | 6 | 4 | 48 | 42 | 3 | 3 | 6 | 33 | 198 |
 
@@ -106,17 +106,18 @@ The host picks a **game length** in the lobby (`length`: `quick` or `standard`, 
 | 5 | 4 | 30 | 26 | 2 | 2 | 6 | 23 | 115 |
 | 6 | 4 | 36 | 31 | 3 | 2 | 6 | 19 | 114 |
 
-Rationale: the original single table (now Quick, with more categories at 3-4 players) gave 6 cards per player; Standard adds about a third more cards and keeps specials at about the same share. Classic rounds are large because the close roll (R17) must spread the deck over enough calls to fill the target time; a round of 3 players is only about 15 s. Frenzy uses the same decks (02). The pack has 6 categories x 10 items, 5 Display Cases, 4 Gifts, so the largest deck (6 players, Standard: 42 items = 7 per category, 3 + 3 specials) fits. Bid cards stay at 12 per player (R2) at both lengths; Standard at 3-4 players with the longest bay ages is where auto-skips (R13) are most common (about 3-5% of calls in the sim).
+Rationale: the original single table (now Quick, with more categories at 3-4 players) gave 6 cards per player; Standard adds about a third more cards and keeps specials at about the same share. Classic rounds are capped near 50 (a 3-player Standard game is accepted at 12-15 min instead of 15-25, ASSUMED); the close roll (R17) is tuned so the deck is sold within those rounds. Frenzy uses the same decks (02). The pack has 6 categories x 10 items, 5 Display Cases, 4 Gifts, so the largest deck (6 players, Standard: 42 items = 7 per category, 3 + 3 specials) fits. Bid cards stay at 12 per player (R2) at both lengths; Standard at 3-4 players with the longest bay ages is where auto-skips (R13) are most common (about 3-5% of calls in the sim).
 
 ## 9. Tunable constants (`packages/engine/config.ts`)
 | Name | Default | Rationale |
 |---|---|---|
 | `BID_VALUES` | [10,25,50,75,100,125,150,200,250,300] | R2 |
 | `PROXIES_PER_PLAYER` | 2 | R2 |
-| `BAYS_BY_PLAYERS` | {3:3,4:3,5:4,6:4} | R1 |
+| `BAYS_BY_PLAYERS` | {3:3,4:3,5:4,6:4} | R1 (Classic) |
+| `LENGTH_PRESETS[length].FRENZY_BAYS_BY_PLAYERS` | section 8 | R1 for Frenzy (02 section 2) |
 | `LENGTH_PRESETS[length].DECK_BY_PLAYERS` | section 8 | R4 |
-| `LENGTH_PRESETS[length].ROUNDS_BY_PLAYERS` | section 8 | R7; Standard targets 15-25 min, Quick 8-12 (human pacing, 02 section 5) |
-| `LENGTH_PRESETS[length].CLOSE_BY_PLAYERS` (`pBase`, `pMax`, `maxBayAgeCycles`) | Quick {3: .02/.07/7, 4: .04/.12/4, 5: .05/.15/3, 6: .05/.15/3}; Standard {3: .008/.036/10, 4: .025/.08/6, 5: .03/.085/5, 6: .04/.10/4} | R17; the deck is mostly sold by ~85% of calls; per player count because the deck-to-bay ratio differs |
+| `LENGTH_PRESETS[length].ROUNDS_BY_PLAYERS` | section 8 | R7; targets per mode x preset in 02 section 5 (human pacing) |
+| `LENGTH_PRESETS[length].CLOSE_BY_PLAYERS` (`pBase`, `pMax`, `maxBayAgeCycles`) | Quick {3: .02/.07/7, 4: .04/.12/4, 5: .05/.15/3, 6: .05/.15/3}; Standard {3: .014/.055/8, 4: .025/.08/6, 5: .03/.085/5, 6: .04/.10/4} | R17; the deck is mostly sold by ~85% of calls; per player count because the deck-to-bay ratio differs |
 | `bidWindowMs` | 5000 (3000/8000) | R11 |
 | `relaxedMultiplier` | 1.5 | WCAG 2.2.1 |
 | `callGapMs` | 1500 | R12 readability |

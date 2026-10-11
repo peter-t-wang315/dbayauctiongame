@@ -75,3 +75,5 @@ Part 2: human-pacing mode in tools/sim; tune LENGTH_PRESETS; update docs 01 s8-9
 - Done (slice 1): sim reports median length + Classic rounds played (median/max), per mode x preset x players length targets, Standard collection ok up to 95%. New preset field `FRENZY_BAYS_BY_PLAYERS` (Quick {3:2,4:2,5:3,6:4}, Standard {3:2,4:2,5:3,6:3}); Frenzy timers Quick 35-50 s (cap 100 s), Standard 40-55 s (cap 110 s); Classic Standard 3p/4p rounds 50, 3p close .014/.055/8. Replay snapshots regenerated.
 - 100-150 game human-pacing results so far: Frenzy Quick 6.2/8.2/7.0/6.3 min (3-6p), Standard 9.2/12.4/10.5/12.6; Classic Standard 3p 12.2 min (50 rounds), 4p 16.1 (max 50).
 - Next: docs 01 s8-9, 02 (targets, s2/s4/s7), 04 progress-bar note, sim README, 1000-game runs, PR body.
+- Done (slice 2): docs 01 s8-9, 02 (s2, s4, s5 targets, s7 results), one-line 04 note, sim README, 1000-game human + bot runs. Final presets: see config.ts. Misses: Frenzy Quick 4p 8.2 min, Frenzy Standard 3p 9.2 min, collection share (Quick Frenzy 71-76%, Standard 86-93% accepted), spread >4x at Quick Classic 5-6p and Frenzy Quick 6p.
+- Next: pre-PR review by caller; real pack rerun after WS2.
