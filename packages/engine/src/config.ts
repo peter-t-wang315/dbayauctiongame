@@ -21,6 +21,17 @@ export interface LengthPreset {
   /** F2: a Frenzy bay's open timer is uniform in [min, max]. */
   frenzyOpenMinMs: number;
   frenzyOpenMaxMs: number;
+  /** F2: a bay's timer never runs past openedAt + this. */
+  frenzyHardCapMs: number;
+  /** F3: re-arm delay for a bay with no bids. */
+  frenzyIdleRecheckMs: number;
+  /** F7: elapsed time that triggers the last round. */
+  frenzyMaxMs: number;
+  /** R17: close probability ramps from pBase to pMax over the game. */
+  pBase: number;
+  pMax: number;
+  /** R17: a bay is force-closed after this many cycles (x players calls). */
+  maxBayAgeCycles: number;
 }
 
 // ASSUMED. Placeholder: both presets equal the original single table until tuned (docs/02).
@@ -34,6 +45,12 @@ const BASE_PRESET: LengthPreset = {
   ROUNDS_BY_PLAYERS: { 3: 30, 4: 25, 5: 20, 6: 18 },
   frenzyOpenMinMs: 18000,
   frenzyOpenMaxMs: 30000,
+  frenzyHardCapMs: 60000,
+  frenzyIdleRecheckMs: 10000,
+  frenzyMaxMs: 1500000,
+  pBase: 0.05,
+  pMax: 0.15,
+  maxBayAgeCycles: 3,
 };
 
 export const LENGTH_PRESETS: Record<GameLength, LengthPreset> = {
@@ -58,9 +75,6 @@ export const CONFIG = {
   callGapMs: 1500,
   skipGapMs: 1000,
   // R17
-  pBase: 0.05,
-  pMax: 0.15,
-  maxBayAgeCycles: 3,
   // R29-R30
   giftChoiceMs: 15000,
   // R37
@@ -76,11 +90,8 @@ export const CONFIG = {
   collectionMultiplier: 2,
   // Frenzy F2-F8
   antiSnipeMs: 3000,
-  frenzyHardCapMs: 60000,
-  frenzyIdleRecheckMs: 10000,
   frenzyMaxIdleExpiries: 2,
   bidCooldownMs: 1000,
-  frenzyMaxMs: 1500000,
   frenzyLastRoundMaxMs: 15000,
   // 05 section 8: bot seats act after a human-like delay
   botDelayMinMs: 800,

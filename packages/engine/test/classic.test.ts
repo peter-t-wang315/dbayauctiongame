@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CONFIG } from '../src/config';
+import { CONFIG, LENGTH_PRESETS } from '../src/config';
 import { topOf } from '../src/game';
 import type { BidCard, EngineState, GameEvent, StackEntry } from '../src/types';
 import {
@@ -309,10 +309,16 @@ describe('R17 close roll', () => {
   it('R17: forced close once the bay is maxBayAgeCycles x players calls old', () => {
     const g = newGame(3);
     const s = clone(g.state);
-    stackOn(s, 0, [['p1', v(50)]], { first: 1 - CONFIG.maxBayAgeCycles * 3, last: 0 });
+    stackOn(s, 0, [['p1', v(50)]], {
+      first: 1 - LENGTH_PRESETS.standard.maxBayAgeCycles * 3,
+      last: 0,
+    });
     expect(kinds(expire(s).events)).toContain('sold');
     const s2 = clone(g.state);
-    stackOn(s2, 0, [['p1', v(50)]], { first: 2 - CONFIG.maxBayAgeCycles * 3, last: 0 });
+    stackOn(s2, 0, [['p1', v(50)]], {
+      first: 2 - LENGTH_PRESETS.standard.maxBayAgeCycles * 3,
+      last: 0,
+    });
     // one call younger: not forced, so only the random roll can sell it (rng-dependent)
     s2.rng.closes = 123;
     const roll = expire(s2);

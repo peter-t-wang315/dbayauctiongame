@@ -233,12 +233,13 @@ function finishCall(state: EngineState, ctx: Ctx, t: number, gapMs: number): voi
 /** R17-R18: roll each eligible bay in index order; refill sold bays afterwards. */
 function closeRoll(state: EngineState, ctx: Ctx, callNo: number, players: number): void {
   const total = state.callsTotal;
-  const p = CONFIG.pBase + ((CONFIG.pMax - CONFIG.pBase) * callNo) / total;
+  const pre = presetOf(state.length);
+  const p = pre.pBase + ((pre.pMax - pre.pBase) * callNo) / total;
   const sold: EngineBay[] = [];
   for (const bay of state.bays) {
     if (bay.card === null || bay.stack.length === 0) continue; // R18
     if ((bay.lastBidCall ?? 0) >= callNo) continue; // not on the call that placed the latest bid
-    const forced = callNo - (bay.firstBidCall ?? callNo) >= CONFIG.maxBayAgeCycles * players;
+    const forced = callNo - (bay.firstBidCall ?? callNo) >= pre.maxBayAgeCycles * players;
     if (forced || nextFloat(state.rng, 'closes') < p) {
       sell(state, ctx, bay);
       sold.push(bay);
@@ -405,7 +406,7 @@ function frenzyExpire(state: EngineState, ctx: Ctx, bay: EngineBay, t: number): 
     sell(state, ctx, bay);
   } else if (!state.round.last && (bay.idleExpiries ?? 0) < CONFIG.frenzyMaxIdleExpiries) {
     bay.idleExpiries = (bay.idleExpiries ?? 0) + 1;
-    bay.closesAt = t + Math.round(CONFIG.frenzyIdleRecheckMs * scaleOf(state));
+    bay.closesAt = t + Math.round(presetOf(state.length).frenzyIdleRecheckMs * scaleOf(state));
     return;
   } else {
     discardUnsold(ctx, bay);
@@ -419,7 +420,7 @@ function frenzyExpire(state: EngineState, ctx: Ctx, bay: EngineBay, t: number): 
 }
 
 function frenzyTick(state: EngineState, ctx: Ctx, now: number): void {
-  const capTime = state.startedAt + CONFIG.frenzyMaxMs;
+  const capTime = state.startedAt + presetOf(state.length).frenzyMaxMs;
   while (state.stage === 'bidding') {
     let due: EngineBay | null = null;
     for (const bay of state.bays)
@@ -480,7 +481,9 @@ export function nextDeadlineOf(state: EngineState): number | null {
   if (state.stage === 'gifts') return state.gift?.endsAt ?? null;
   if (state.stage !== 'bidding') return null;
   if (state.mode === 'classic') return state.call?.endsAt ?? null;
-  let min: number | null = state.round.last ? null : state.startedAt + CONFIG.frenzyMaxMs;
+  let min: number | null = state.round.last
+    ? null
+    : state.startedAt + presetOf(state.length).frenzyMaxMs;
   for (const bay of state.bays)
     if (bay.card !== null && bay.closesAt !== undefined && (min === null || bay.closesAt < min))
       min = bay.closesAt;
@@ -538,7 +541,8 @@ export function runAction(
       placeCard(ctx, p, action.card, bay);
       p.cooldownUntil = now + CONFIG.bidCooldownMs;
       const sc = scaleOf(state);
-      const cap = (bay.openedAt as number) + Math.round(CONFIG.frenzyHardCapMs * sc);
+      const cap =
+        (bay.openedAt as number) + Math.round(presetOf(state.length).frenzyHardCapMs * sc);
       const closes = bay.closesAt as number;
       const next = Math.max(closes, Math.min(now + Math.round(CONFIG.antiSnipeMs * sc), cap));
       if (next > closes) {

@@ -64,7 +64,7 @@ describe('F2 bay timer', () => {
     const s = clone(frenzy().state);
     s.bays[0]!.closesAt = T0 + 59000;
     const r = act(s, bid('v10', 0, 'p0'), T0 + 58500);
-    expect(r.state.bays[0]!.closesAt).toBe(T0 + CONFIG.frenzyHardCapMs);
+    expect(r.state.bays[0]!.closesAt).toBe(T0 + LENGTH_PRESETS.standard.frenzyHardCapMs);
   });
 });
 
@@ -90,11 +90,11 @@ describe('F3 expiry', () => {
     const card = s.bays[0]!.card;
     const t1 = s.bays[0]!.closesAt!;
     s = engine.tick(s, t1).state;
-    expect(s.bays[0]!.closesAt).toBe(t1 + CONFIG.frenzyIdleRecheckMs);
+    expect(s.bays[0]!.closesAt).toBe(t1 + LENGTH_PRESETS.standard.frenzyIdleRecheckMs);
     expect(s.bays[0]!.card).toBe(card);
     const t2 = s.bays[0]!.closesAt!;
     s = engine.tick(s, t2).state;
-    expect(s.bays[0]!.closesAt).toBe(t2 + CONFIG.frenzyIdleRecheckMs);
+    expect(s.bays[0]!.closesAt).toBe(t2 + LENGTH_PRESETS.standard.frenzyIdleRecheckMs);
     expect(s.bays[0]!.idleExpiries).toBe(2);
     const t3 = s.bays[0]!.closesAt!;
     const r = engine.tick(s, t3);
@@ -199,7 +199,7 @@ describe('F7 rounds mapping, halfway and last round', () => {
     const s = clone(frenzy().state);
     s.bays.forEach((b) => (b.closesAt = T0 + 55000));
     expect(engine.nextDeadline(s)).toBe(T0 + 55000);
-    const capAt = T0 + CONFIG.frenzyMaxMs;
+    const capAt = T0 + LENGTH_PRESETS.standard.frenzyMaxMs;
     s.bays.forEach((b) => (b.closesAt = capAt + 40000));
     expect(engine.nextDeadline(s)).toBe(capAt);
     const r = engine.tick(s, capAt);
