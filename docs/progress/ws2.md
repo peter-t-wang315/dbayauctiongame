@@ -14,12 +14,14 @@
 
 - Art slice C: sprites for toys (10) and media (10) in `src/sprites/{toys,media}.ts`; `ITEM_SPRITES` + `withSprite()` in `src/sprites/index.ts`, applied in `base-pack.ts` and `public.ts` (so full and public items both carry `sprite`). Preview script `packages/content/scripts/sprites-preview.ts` (`pnpm --filter @dbay/content sprites:preview`, writes gitignored `packages/content/.preview/sprites.html`); added `tsx` devDependency to content.
 
+- Art slice D: sprites for glass (10) and collectibles (10), wired into `ITEM_SPRITES`.
+
 ## In progress
 - Nothing.
 
 ## Next
 1. (done: slice B)
-2. Slices D-E: sprites for glass+collectibles, then antiques+misc in `src/sprites/<cat>.ts`; add each to `ITEM_SPRITES` in `src/sprites/index.ts` (toys, media done).
+2. Slice E: sprites for antiques + misc in `src/sprites/{antiques,misc}.ts`; add to `ITEM_SPRITES` in `src/sprites/index.ts` (toys, media, glass, collectibles done).
 3. Slice F: add "all 60 items have a sprite" test, add sprite files to the no-secret-words check in `test/public.test.ts`, 03 sprites notes, eyeball the preview.
 4. Update PR #2 body (art box, swaps, preview command), keep draft, "Pre-PR review: pending".
 
