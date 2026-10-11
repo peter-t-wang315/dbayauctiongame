@@ -1,5 +1,6 @@
 // Balance simulator core (docs/02 section 5): plays many bot games and aggregates metrics.
 import { activePack, type ContentPack } from '@dbay/content';
+import type { GameLength } from '@dbay/protocol';
 import { createEngine } from '@dbay/engine/real';
 import { playGame, synthPack } from '@dbay/engine/testing';
 
@@ -16,6 +17,10 @@ export interface BatchOptions {
   pack: ContentPack;
   /** Bot reaction time range, ms. Human-like by default. */
   reactionMs: [number, number];
+  /** 'human' = people-like timing (see tools/sim/README.md). Default 'bot'. */
+  pacing?: 'bot' | 'human';
+  /** Game length preset. Default 'standard'. */
+  length?: GameLength;
 }
 
 export interface BatchResult {
@@ -23,6 +28,10 @@ export interface BatchResult {
   players: number;
   games: number;
   levels: Level[];
+  length: GameLength;
+  pacing: 'bot' | 'human';
+  /** Classic: auto-skipped calls (no legal bid) / calls. */
+  autoSkipRate: number;
   nonTerminating: number;
   rejected: number;
   lengthMin: { mean: number; p95: number; max: number };
@@ -63,6 +72,8 @@ export function runBatch(o: BatchOptions): BatchResult {
   const levelItems: Record<string, number[]> = {};
   const levelSeats: Record<string, number> = {};
   let nonTerminating = 0;
+  let autoSkips = 0;
+  let calls = 0;
   let rejected = 0;
   let dryPlayers = 0;
   let collectors = 0;
@@ -84,6 +95,7 @@ export function runBatch(o: BatchOptions): BatchResult {
         mode: o.mode,
         bidWindowMs: 5000,
         relaxed: false,
+        length: o.length ?? 'standard',
         players: Array.from({ length: n }, (_, i) => ({
           id: `p${i}`,
           isBot: true,
@@ -92,6 +104,7 @@ export function runBatch(o: BatchOptions): BatchResult {
       },
       levels: Array.from({ length: n }, (_, i) => levelOf(i)),
       reactionMs: o.reactionMs,
+      pacing: o.pacing ?? 'bot',
       maxMs: 3 * 3600_000,
     });
     rejected += r.rejected;
@@ -122,12 +135,14 @@ export function runBatch(o: BatchOptions): BatchResult {
     const dryCut = r.startMs + 0.75 * dur;
     for (const p of r.state.players) if ((r.dryAt[p.id] ?? Infinity) < dryCut) dryPlayers++;
     for (const { e } of r.events) {
+      if (e.kind === 'autoPass') autoSkips++;
       if (e.kind === 'sold') {
         sold++;
         if (e.amount === 'proxy') proxySold++;
       } else if (e.kind === 'unsold') unsold++;
     }
     deckCards += r.state.deckSize;
+    calls += r.state.callsTotal;
     for (const gl of r.state.giftLog) {
       gifts++;
       if (gl.card === null) fizzles++;
@@ -149,6 +164,9 @@ export function runBatch(o: BatchOptions): BatchResult {
     players: n,
     games: o.games,
     levels: o.levels,
+    length: o.length ?? 'standard',
+    pacing: o.pacing ?? 'bot',
+    autoSkipRate: calls ? autoSkips / calls : 0,
     nonTerminating,
     rejected,
     lengthMin: {
@@ -181,6 +199,7 @@ export interface Check {
 export function evaluate(r: BatchResult): Check[] {
   const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
   const checks: Check[] = [];
+  const [lo, hi] = r.length === 'quick' ? [8, 12] : [15, 25];
   const add = (name: string, value: string, status: Check['status'], target: string) =>
     checks.push({ name, value, status, target });
   add(
@@ -194,10 +213,10 @@ export function evaluate(r: BatchResult): Check[] {
     `${r.lengthMin.mean.toFixed(1)} / ${r.lengthMin.p95.toFixed(1)} / ${r.lengthMin.max.toFixed(1)}`,
     r.lengthMin.max >= 40
       ? 'FAIL'
-      : r.lengthMin.mean >= 15 && r.lengthMin.mean <= 25
+      : r.lengthMin.mean >= lo && r.lengthMin.mean <= hi
         ? 'ok'
         : 'warn',
-    '15-25 (hard <40)',
+    `${lo}-${hi} (hard <40)`,
   );
   add(
     'items per player (mean / worst seat)',
@@ -224,6 +243,12 @@ export function evaluate(r: BatchResult): Check[] {
     dev.toFixed(1),
     !same ? 'ok' : dev <= 8 ? 'ok' : 'warn',
     same ? '<=8 (same skill)' : 'n/a (mixed skill)',
+  );
+  add(
+    'auto-skip rate (classic calls)',
+    pct(r.autoSkipRate),
+    r.autoSkipRate < 0.05 ? 'ok' : 'warn',
+    '<5% (rare)',
   );
   add('unsold share', pct(r.unsoldShare), r.unsoldShare < 0.1 ? 'ok' : 'warn', '<10%');
   add(
