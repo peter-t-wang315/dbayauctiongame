@@ -7,12 +7,13 @@
 - Slice 1: net client in `apps/web/lib/net` (RoomClient, useRoom/RoomProvider, clock, rev gate, backoff, wake lock, config), `apps/web/lib/identity`, unit tests (14, green).
 - Slice 2: tokens (`styles/tokens.css`), `app/globals.css`, root layout (next/font Lilita One + Nunito, light default), landing `/`, `app/r/[code]/layout.tsx` (RoomShell/RoomProvider + reconnect overlay + fatal cards) and `page.tsx` (join form -> lobby -> GameSlot), shell components (Wordmark, PlayerChip, BottomSheet, MessageCard, ReconnectOverlay, MoreSheet, JoinForm, GameSlot, audioUnlock hook), lobby (Lobby, PlayerGrid with rename/kick/remove bot, mode/bid window/relaxed, add bot, start). typecheck, lint, build all clean.
 
+- Slice 3: Playwright smoke (`pnpm --filter @dbay/web test:e2e`, spawns the mock itself, Next dev on :3100): create -> join from 2nd context -> refresh restores seat -> kill/restart mock shows Reconnecting then recovers / re-offers join; 390px no h-scroll and all tap targets >= 44px. 2/2 pass. Added devDep `@playwright/test` 1.60.0 (needs `pnpm exec playwright install chromium` once).
+
 ## In progress
-- Nothing.
+- Nothing. Draft PR opened.
 
 ## Next
-- Slice 3: run against `pnpm mock` (+ `pnpm --filter @dbay/web dev`) in a real browser at 390px: create -> join from second context -> start; refresh restores seat; kill/restart mock reconnects. Fix whatever breaks. Then Playwright smoke (SHOULD) if time allows, then open the draft PR (see below).
-- Draft PR: `gh pr create --draft --base ws0-contracts --head ws4-web-shell --title "WS4: frontend shell, net client and lobby"` with the 06 WS4 acceptance checkboxes, tests run, open questions, "Pre-PR review: pending".
+- Pre-PR subagent review (caller), then address findings. Optional polish: mode default follows player count, instant "room not found" once the server has a room-exists check.
 
 ## Gotchas / decisions
 - No `partysocket`: own small reconnect in RoomClient (500ms doubling to 5s, jitter), no new deps.
