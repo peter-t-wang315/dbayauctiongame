@@ -1,0 +1,96 @@
+// Category fallback sprites (docs/03-content.md "Sprites"). Public data, shown when an item has none.
+import type { CategoryDef, Sprite } from '../schema';
+import { sprite } from './util';
+
+export const CATEGORY_SPRITES: Record<CategoryDef['id'], Sprite> = {
+  // Teddy bear head.
+  toys: sprite({ b: '#C98B4F', t: '#EFCB94' }, [
+    '..kk....kk..',
+    '.kbbk..kbbk.',
+    '.kbbkkkkbbk.',
+    '..kbbbbbbk..',
+    '.kbbbbbbbbk.',
+    '.kbbkbbkbbk.',
+    '.kbbbbbbbbk.',
+    '.kbttttttbk.',
+    '.kbttkkttbk.',
+    '..kbttttbk..',
+    '...kbbbbk...',
+    '....kkkk....',
+  ]),
+  // Disc with a spindle hole.
+  media: sprite({ u: '#3A86FF', c: '#9CC4FF' }, [
+    '...kkkkkk...',
+    '..kuuuuuuk..',
+    '.kuwwuuuuuk.',
+    '.kuwcuuuuuk.',
+    'kuuuuuuuuuuk',
+    'kuuuukkuuuuk',
+    'kuuuukkuuuuk',
+    'kuuuuuuuuuuk',
+    '.kuuuuuuuuk.',
+    '.kuuuuuuuuk.',
+    '..kuuuuuuk..',
+    '...kkkkkk...',
+  ]),
+  // Vase.
+  glass: sprite({ c: '#2EC4B6', d: '#1B8A80' }, [
+    '...kkkkkk...',
+    '....kcck....',
+    '....kcck....',
+    '..kcccccck..',
+    '.kccwccccdk.',
+    'kcwccccccddk',
+    'kcwccccccddk',
+    'kccccccccddk',
+    '.kcccccccdk.',
+    '.kccccccddk.',
+    '..kddddddk..',
+    '...kkkkkk...',
+  ]),
+  // Gold coin with a purple gem.
+  collectibles: sprite({ y: '#F2B705', o: '#C98A00', v: '#8E5BD9' }, [
+    '...kkkkkk...',
+    '..kyyyyyyk..',
+    '.kyywyyyyok.',
+    'kyyyyvvyyyok',
+    'kyyyvvvvyyok',
+    'kyyvvvvvvyok',
+    'kyyyvvvvyyok',
+    'kyyyyvvyyyok',
+    '.kyyyyyyyok.',
+    '.kyyyyyoook.',
+    '..kooooook..',
+    '...kkkkkk...',
+  ]),
+  // Framed landscape.
+  antiques: sprite({ n: '#A47148', g: '#7FB069', u: '#8ECAE6' }, [
+    '............',
+    'kkkkkkkkkkkk',
+    'knnnnnnnnnnk',
+    'knkkkkkkkknk',
+    'knkuuuwuuknk',
+    'knkuuuuuuknk',
+    'knkuugguuknk',
+    'knkggggggknk',
+    'knkkkkkkkknk',
+    'knnnnnnnnnnk',
+    'kkkkkkkkkkkk',
+    '............',
+  ]),
+  // Cardboard box.
+  misc: sprite({ n: '#C99A5B', d: '#9A6F3A', t: '#EBD3A4' }, [
+    '............',
+    '.kkkkkkkkkk.',
+    'knnnnddnnnnk',
+    'knnnnddnnnnk',
+    'kkkkkkkkkkkk',
+    'knnnnnnnnnnk',
+    'knnnttttnnnk',
+    'knnnttttnnnk',
+    'knnnnnnnnnnk',
+    'knnnnnnnnnnk',
+    'kddddddddddk',
+    'kkkkkkkkkkkk',
+  ]),
+};

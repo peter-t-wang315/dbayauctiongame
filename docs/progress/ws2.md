@@ -10,11 +10,13 @@
   - `misc-unicycle` -> `misc-e-bike` "Electric Bicycle, Battery Included" (misc, est 250, actual 265, fair).
   - 03 tables, items files, public-items and brand denylist (added pikachu, charizard, schwinn; pokemon was already there) updated.
 
+- Art slice B: `src/sprites/{util,categories,index}.ts`: `sprite()` helper, `SHARED_PALETTE` (k, w), `CATEGORY_SPRITES` (6), exported from both entries; `test/sprites.test.ts` covers fallbacks (and has the `checkSprite` helper to reuse for items).
+
 ## In progress
 - Nothing.
 
 ## Next
-1. Slice B: category fallback sprites in `src/sprites/categories.ts` (`CATEGORY_SPRITES`), export from both entries.
+1. (done: slice B)
 2. Slices C-E: 60 item sprites in `src/sprites/{toys,media,glass,collectibles,antiques,misc}.ts`, merged into items (full pack and public items).
 3. Slice F: sprite tests + `sprites:preview` script.
 4. Update PR #2 body (art box, swaps, preview command), keep draft, "Pre-PR review: pending".

@@ -7,6 +7,7 @@ import { SPECIALS } from './specials';
 
 export type { CategoryDef, PublicItem, PublicPack, PublicSpecial, Sprite } from './schema';
 export { CATEGORIES } from './categories';
+export { CATEGORY_SPRITES, SHARED_PALETTE } from './sprites';
 
 export const publicPack: PublicPack = {
   packId: 'base',
