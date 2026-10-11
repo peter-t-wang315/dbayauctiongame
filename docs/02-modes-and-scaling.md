@@ -75,3 +75,25 @@ Additional metric: Classic auto-skip rate (R13, calls with no legal bid / calls)
 
 ## 6. Simulator pacing (ASSUMED)
 `tools/sim` has two bot pacings. **Bot pacing** (default): every seat polls on a 1.5-4 s timer and acts at once. **Human pacing** (`--pacing human`): the Classic caller acts uniformly 40-90% into the bid window (2-4.5 s of 5 s) and lets the window expire 10% of the time; Frenzy seats look at the board every 1.5-5 s and bid with probability 0.8 when the policy has a bid; gift choices take 2-6 s. Length targets apply to human pacing. See `tools/sim/README.md`.
+
+## 7. Latest sim results (1000 games per cell, all-careful bots, synthetic 60-item pack, human pacing)
+| preset | mode | n | len mean/p95/max | items | collect | autoskip | spread | nonterm |
+|---|---|---|---|---|---|---|---|---|
+| quick | classic | 3 | 9.2 / 10.4 / 11.6 | 5.67 / 5.64 | 67.4% | 4.4% | 2.34x | 0 |
+| quick | classic | 4 | 9.5 / 10.6 / 11.7 | 5.75 / 5.71 | 64.2% | 2.0% | 3.17x | 0 |
+| quick | classic | 5 | 9.6 / 10.3 / 10.5 | 5.59 / 5.56 | 62.7% | 0.8% | 4.26x | 0 |
+| quick | classic | 6 | 9.9 / 10.2 / 10.5 | 4.89 / 4.83 | 54.7% | 0.0% | 6.65x | 0 |
+| quick | frenzy | 3 | 7.3 / 7.8 / 8.5 | 5.67 / 5.61 | 70.5% | 0.0% | 2.19x | 0 |
+| quick | frenzy | 4 | 10.0 / 10.6 / 11.2 | 5.75 / 5.72 | 70.2% | 0.0% | 2.69x | 0 |
+| quick | frenzy | 5 | 9.6 / 10.1 / 10.5 | 5.60 / 5.56 | 73.4% | 0.0% | 3.20x | 0 |
+| quick | frenzy | 6 | 11.6 / 12.1 / 12.5 | 5.67 / 5.63 | 75.8% | 0.0% | 3.98x | 0 |
+| standard | classic | 3 | 17.3 / 19.3 / 27.2 | 7.67 / 7.64 | 89.0% | 4.9% | 1.84x | 0 |
+| standard | classic | 4 | 16.3 / 18.2 / 19.4 | 7.50 / 7.46 | 88.2% | 3.1% | 2.17x | 0 |
+| standard | classic | 5 | 16.1 / 17.7 / 18.3 | 7.60 / 7.55 | 90.3% | 1.9% | 2.51x | 0 |
+| standard | classic | 6 | 17.0 / 17.5 / 18.2 | 7.33 / 7.29 | 86.2% | 0.6% | 3.25x | 0 |
+| standard | frenzy | 3 | 13.1 / 13.8 / 14.5 | 7.66 / 7.63 | 89.6% | 0.0% | 1.80x | 0 |
+| standard | frenzy | 4 | 17.9 / 18.7 / 19.7 | 7.50 / 7.46 | 91.5% | 0.0% | 2.01x | 0 |
+| standard | frenzy | 5 | 16.8 / 17.5 / 18.3 | 7.60 / 7.57 | 92.1% | 0.0% | 2.24x | 0 |
+| standard | frenzy | 6 | 20.4 / 21.1 / 21.9 | 7.50 / 7.47 | 92.5% | 0.0% | 2.39x | 0 |
+
+Misses (see PR): Frenzy 3 players is short (Quick 7.3, Standard 13.1 min; longer timers would exceed 100-130 s per auction); collection share is 62-92% (above the 70% target, mostly Standard, structural with ~8 cards per player and at most 6 categories; random-skill bots still reach 68-75%); Classic score spread at 6 players is 3.3x (Standard) to 6.7x (Quick); Classic auto-skip is 4.9-5.2% at 3 players Standard. Bot-pacing results are in the PR description.

@@ -33,34 +33,34 @@ exports[`golden > golden classic 4p 1`] = `
 
 exports[`golden > golden frenzy 5p 1`] = `
 {
-  "endMs": 232983,
-  "events": 349,
+  "endMs": 961862,
+  "events": 357,
   "sold": 40,
-  "state": "5708fe46",
+  "state": "cb7aaf5b",
   "totals": [
     [
-      "p3",
-      1265,
+      "p0",
+      1550,
       1,
     ],
     [
       "p1",
-      1210,
+      1350,
       2,
     ],
     [
-      "p0",
-      1160,
+      "p2",
+      1270,
       3,
     ],
     [
-      "p2",
-      1005,
+      "p3",
+      920,
       4,
     ],
     [
       "p4",
-      820,
+      910,
       5,
     ],
   ],

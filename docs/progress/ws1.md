@@ -64,3 +64,8 @@ Part 2: human-pacing mode in tools/sim; tune LENGTH_PRESETS; update docs 01 s8-9
 - Collection share (careful bots, Standard, 6 cats): 86-91%, structural (random bots 68-75%); cannot be fixed within 6 categories. Report to user.
 - Standard 3p Classic auto-skip about 5%.
 - Next: tune Frenzy timers (presets), docs 01/02 updates, preset deck tests, final 1000-game runs, PR.
+
+## Part 2 final (ws1-length-presets)
+- Done: presets tuned, docs 01/02 updated, sim README, preset deck tests, 1000-game runs (tables in docs/02 section 7 and the PR body).
+- Misses: Frenzy 3p short (Quick 7.3 / Standard 13.1 min); collection share 62-92% (structural); Classic 6p spread 3.3x-6.7x; 3p Standard Classic auto-skip about 5%.
+- Next: pre-PR subagent review (by caller), real pack rerun after WS2, user decision on Frenzy timer length (60-130 s per auction is long).
