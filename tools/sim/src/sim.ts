@@ -32,6 +32,7 @@ export interface BatchResult {
   seatWinShare: number[];
   levelWinShare: Record<string, number>;
   levelMeanScore: Record<string, number>;
+  levelMeanItems: Record<string, number>;
   unsoldShare: number;
   proxyWinShare: number;
   giftFizzleShare: number;
@@ -45,6 +46,10 @@ export function pickPack(name: string): ContentPack {
   return activePack.items.length >= 60 ? activePack : synthPack();
 }
 
+const median = (xs: number[]) => {
+  const s = [...xs].sort((a, b) => a - b);
+  return s[Math.floor(s.length / 2)] ?? 0;
+};
 const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 
 export function runBatch(o: BatchOptions): BatchResult {
@@ -55,6 +60,7 @@ export function runBatch(o: BatchOptions): BatchResult {
   const wins = new Array<number>(n).fill(0);
   const levelWins: Record<string, number> = {};
   const levelScores: Record<string, number[]> = {};
+  const levelItems: Record<string, number[]> = {};
   const levelSeats: Record<string, number> = {};
   let nonTerminating = 0;
   let rejected = 0;
@@ -104,6 +110,7 @@ export function runBatch(o: BatchOptions): BatchResult {
       const lvl = levelOf(seat);
       itemsBySeat[seat]!.push(p.items.length);
       (levelScores[lvl] ??= []).push(p.total);
+      (levelItems[lvl] ??= []).push(p.items.length);
       if (p.collections.length > 0) collectors++;
       if (p.rank === 1) {
         wins[seat]! += 1 / top.length;
@@ -131,9 +138,11 @@ export function runBatch(o: BatchOptions): BatchResult {
   const seatMeans = itemsBySeat.map(mean);
   const levelWinShare: Record<string, number> = {};
   const levelMeanScore: Record<string, number> = {};
+  const levelMeanItems: Record<string, number> = {};
   for (const l of Object.keys(levelSeats)) {
     levelWinShare[l] = done ? (levelWins[l] ?? 0) / done : 0;
     levelMeanScore[l] = mean(levelScores[l] ?? []);
+    levelMeanItems[l] = mean(levelItems[l] ?? []);
   }
   return {
     mode: o.mode,
@@ -153,10 +162,11 @@ export function runBatch(o: BatchOptions): BatchResult {
     seatWinShare: wins.map((w) => (done ? w / done : 0)),
     levelWinShare,
     levelMeanScore,
+    levelMeanItems,
     unsoldShare: deckCards ? unsold / deckCards : 0,
     proxyWinShare: sold ? proxySold / sold : 0,
     giftFizzleShare: gifts ? fizzles / gifts : 0,
-    scoreSpread: mean(spreads),
+    scoreSpread: median(spreads),
   };
 }
 

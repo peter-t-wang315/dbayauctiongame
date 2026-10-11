@@ -4,7 +4,7 @@ import type { BotLevel } from '../bots';
 import type { RealEngine } from '../engine';
 import { CONFIG } from '../config';
 import { initRng, nextInt } from '../rng';
-import type { EngineState, GameEvent, GameSetup } from '../types';
+import type { EngineAction, EngineState, GameEvent, GameSetup } from '../types';
 
 export interface PlayOptions {
   engine: RealEngine;
@@ -28,6 +28,8 @@ export interface PlayResult {
   /** Simulated time at which each player first had an empty hand (bidding stage). */
   dryAt: Record<string, number>;
   rejected: number;
+  /** Every accepted step in order: a tick (no action) or an applied action. Replayable. */
+  trace: Array<{ t: number; action?: EngineAction }>;
 }
 
 export function playGame(o: PlayOptions): PlayResult {
@@ -39,6 +41,7 @@ export function playGame(o: PlayOptions): PlayResult {
   const created = engine.setup(o.setup, start);
   let state = created.state;
   const events: PlayResult['events'] = created.events.map((e) => ({ t: start, e }));
+  const trace: PlayResult['trace'] = [];
   const next = state.players.map(() => start + delay());
   const dryAt: Record<string, number> = {};
   let rejected = 0;
@@ -58,6 +61,7 @@ export function playGame(o: PlayOptions): PlayResult {
       const r = engine.tick(state, t);
       state = r.state;
       for (const e of r.events) events.push({ t, e });
+      trace.push({ t });
       noteDry();
       if (state.stage === 'done') break;
     }
@@ -74,6 +78,7 @@ export function playGame(o: PlayOptions): PlayResult {
       }
       state = res.state;
       for (const e of res.events) events.push({ t, e });
+      trace.push({ t, action });
       noteDry();
     });
   }
@@ -83,6 +88,7 @@ export function playGame(o: PlayOptions): PlayResult {
     startMs: start,
     endMs: t,
     events,
+    trace,
     dryAt,
     rejected,
   };

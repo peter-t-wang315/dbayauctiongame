@@ -28,7 +28,7 @@ function worth(idx: PackIndex, me: EnginePlayer, cardId: string): number {
     return 100 + (best >= 2 ? 80 : best === 1 ? 20 : 0);
   }
   const n = owned(info.category);
-  return info.est * (n >= 2 ? 1.9 : n === 1 ? 1.25 : 1);
+  return info.est * (n >= 2 ? 1.5 : n === 1 ? 1.1 : 1);
 }
 
 const costOf = (c: BidCard): number => (c.kind === 'proxy' ? PROXY_COST : (c.value ?? 0));
@@ -36,38 +36,51 @@ const costOf = (c: BidCard): number => (c.kind === 'proxy' ? PROXY_COST : (c.val
 interface Pick {
   card: BidCard;
   bay: number;
-  margin: number;
+  score: number;
 }
 
+/**
+ * Bid cards have no value of their own (only the tiebreak), and a player wins roughly half as many
+ * items as they have cards, so cards are plentiful: both smart bots are willing to pay up to
+ * `k` x their estimate in face value. Careful also keeps Proxies for valuable items and
+ * limits how many cards it has locked on bays.
+ */
+const PARAMS = {
+  greedy: { k: 1.6, proxyMin: 100, maxOnBays: 12, byWorth: false },
+  careful: { k: 1.6, proxyMin: 140, maxOnBays: 6, byWorth: true },
+} as const;
+
 function bestBid(
-  level: BotLevel,
+  level: Exclude<BotLevel, 'random'>,
   idx: PackIndex,
   state: EngineState,
   me: EnginePlayer,
 ): Pick | null {
-  const k = level === 'careful' ? 0.9 : 1.0;
+  const prm = PARAMS[level];
   const onBays = state.bays.reduce((s, b) => s + b.stack.filter((e) => e.by === me.id).length, 0);
-  if (level === 'careful' && onBays >= 3) return null;
+  if (onBays >= prm.maxOnBays) return null;
   const perBay = new Map<number, Pick>();
   for (const { card, bay } of legalBids(state, me)) {
     const b = state.bays[bay];
     if (!b || b.card === null) continue;
-    const ceiling = worth(idx, me, b.card) * k;
+    const w = worth(idx, me, b.card);
     const cost = costOf(card);
-    if (card.kind === 'proxy' && ceiling < PROXY_COST) continue;
-    if (cost > ceiling) continue;
-    const margin = ceiling - cost;
+    if (card.kind === 'proxy' ? w < prm.proxyMin : cost > w * prm.k) continue;
+    const score = prm.byWorth ? w - 0.25 * cost : w * prm.k - cost;
     const cur = perBay.get(bay);
-    // Prefer the cheapest card that works on each bay; Proxies only when no face card does.
+    // Greedy: cheapest card that works. Careful: the smallest card that reaches ~0.9 x worth (hard to
+    // outbid), else the largest below it. Proxies only when no face card works.
+    const key = (c: BidCard) =>
+      !prm.byWorth || costOf(c) >= w * 0.9 ? costOf(c) : 100000 - costOf(c);
     if (
       !cur ||
       (cur.card.kind === 'proxy' && card.kind === 'value') ||
-      (cur.card.kind === card.kind && cost < costOf(cur.card))
+      (cur.card.kind === card.kind && card.kind === 'value' && key(card) < key(cur.card))
     )
-      perBay.set(bay, { card, bay, margin });
+      perBay.set(bay, { card, bay, score });
   }
   let best: Pick | null = null;
-  for (const p of perBay.values()) if (!best || p.margin > best.margin) best = p;
+  for (const p of perBay.values()) if (!best || p.score > best.score) best = p;
   return best;
 }
 

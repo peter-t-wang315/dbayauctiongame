@@ -1,0 +1,68 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`golden > golden classic 4p 1`] = `
+{
+  "endMs": 183308,
+  "events": 252,
+  "sold": 24,
+  "state": "b892413e",
+  "totals": [
+    [
+      "p1",
+      1185,
+      1,
+    ],
+    [
+      "p2",
+      820,
+      2,
+    ],
+    [
+      "p3",
+      510,
+      3,
+    ],
+    [
+      "p0",
+      260,
+      4,
+    ],
+  ],
+}
+`;
+
+exports[`golden > golden frenzy 5p 1`] = `
+{
+  "endMs": 181502,
+  "events": 244,
+  "sold": 30,
+  "state": "d0429f29",
+  "totals": [
+    [
+      "p1",
+      1980,
+      1,
+    ],
+    [
+      "p2",
+      1540,
+      2,
+    ],
+    [
+      "p3",
+      730,
+      3,
+    ],
+    [
+      "p4",
+      465,
+      4,
+    ],
+    [
+      "p0",
+      260,
+      5,
+    ],
+  ],
+}
+`;
