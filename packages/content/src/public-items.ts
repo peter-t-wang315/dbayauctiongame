@@ -269,11 +269,11 @@ export const PUBLIC_ITEMS: PublicItem[] = [
   },
   {
     kind: 'item',
-    id: 'collectibles-rookie-card',
-    name: 'Rookie Trading Card',
+    id: 'collectibles-holo-monster-card',
+    name: 'Holo Pocket-Critter Card, 1st Edition',
     category: 'collectibles',
     estimatedValue: 200,
-    flavor: 'Kept in a sleeve since 1987. Worth the paranoia.',
+    flavor: 'Shiny, sleeved, and guarded like a small dragon.',
   },
   {
     kind: 'item',
@@ -477,10 +477,10 @@ export const PUBLIC_ITEMS: PublicItem[] = [
   },
   {
     kind: 'item',
-    id: 'misc-unicycle',
-    name: 'Unicycle',
+    id: 'misc-e-bike',
+    name: 'Electric Bicycle, Battery Included',
     category: 'misc',
     estimatedValue: 250,
-    flavor: 'Half a bike, double the confidence.',
+    flavor: 'Pedal-assist for people who want credit anyway.',
   },
 ];

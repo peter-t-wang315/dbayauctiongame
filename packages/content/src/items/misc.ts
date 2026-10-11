@@ -94,12 +94,12 @@ export const MISC_ITEMS: ItemDef[] = [
   },
   {
     kind: 'item',
-    id: 'misc-unicycle',
-    name: 'Unicycle',
+    id: 'misc-e-bike',
+    name: 'Electric Bicycle, Battery Included',
     category: 'misc',
     estimatedValue: 250,
     actualValue: 265,
     tier: 'fair',
-    flavor: 'Half a bike, double the confidence.',
+    flavor: 'Pedal-assist for people who want credit anyway.',
   },
 ];

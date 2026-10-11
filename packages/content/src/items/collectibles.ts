@@ -34,13 +34,13 @@ export const COLLECTIBLES_ITEMS: ItemDef[] = [
   },
   {
     kind: 'item',
-    id: 'collectibles-rookie-card',
-    name: 'Rookie Trading Card',
+    id: 'collectibles-holo-monster-card',
+    name: 'Holo Pocket-Critter Card, 1st Edition',
     category: 'collectibles',
     estimatedValue: 200,
     actualValue: 320,
     tier: 'good',
-    flavor: 'Kept in a sleeve since 1987. Worth the paranoia.',
+    flavor: 'Shiny, sleeved, and guarded like a small dragon.',
   },
   {
     kind: 'item',
