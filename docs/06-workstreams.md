@@ -34,13 +34,13 @@ Soft edges: WS1 and WS3a start against WS0's stub engine/interfaces and swap in 
 | 4 | WS8 (after WS5 exposes feedback hooks) | 1 |
 | 5 | WS7 alone | 1 |
 
-Max concurrency: 2 agents at a time on the Pro plan (see README "Working within usage limits"); "parallel" below means no file conflicts, not run-all-at-once. No two parallel WS own the same path (tables below). Shared files (root `package.json`, lockfile, CI config) are touched only by WS0 and WS7; any other WS needing a new dependency adds it only in its own package's `package.json` and mentions it in the PR (lockfile conflicts resolved by rebasing and `pnpm install`).
+Max concurrency: 3 coding agents (plus 1 reviewer) at a time on the Pro plan, each following the checkpoint protocol (see README "Working within usage limits"); "parallel" below means no file conflicts, not run-all-at-once. No two parallel WS own the same path (tables below). Shared files (root `package.json`, lockfile, CI config) are touched only by WS0 and WS7; any other WS needing a new dependency adds it only in its own package's `package.json` and mentions it in the PR (lockfile conflicts resolved by rebasing and `pnpm install`).
 
 ## 3. Conventions
 
 - **Branches:** one branch per WS: `ws0-contracts`, `ws1-engine`, `ws2-content`, `ws3a-room-core`, `ws3b-server`, `ws4-web-shell`, `ws5-game-ui`, `ws6-reveal-rules`, `ws8-juice`, `ws7-integration`. Sub-branches `ws1-engine/scoring` allowed. Contract changes: `contract/<short-name>`.
 - **PRs:** one PR per WS (or per milestone slice), title `WS1: <summary>`; body lists acceptance criteria with checkboxes, tests run, and any contract/doc changes. Squash-merge. Rebase on main before opening.
-- **Commits:** conventional style `ws1: add scoring`. Never commit secrets. Agents commit/push only when told.
+- **Commits:** conventional style `ws1: add scoring`. Never commit secrets. Agents commit and push after every slice, per the README checkpoint protocol; they merge only when told.
 - **Ownership:** touch only owned paths. Need something elsewhere? Open a note in the PR / ask the owner; do not edit.
 - **Docs:** if behaviour differs from docs, fix the doc in the same PR (docs 01-04 changes need the rule ID kept stable).
 

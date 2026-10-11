@@ -6,7 +6,7 @@ This is a browser version of the 2001 *eBay Electronic Talking Auction Game*, re
 2. Friends join with a room code and a username.
 3. Everyone plays live.
 
-> **Status:** planning complete, no code yet. Next step: **WS0 Contracts** (see [06-workstreams.md](06-workstreams.md)).
+> **Status:** WS0 done, in PR #1 (`ws0-contracts`), awaiting user review. Coding continues on branches stacked on it (see Git workflow, "Stacked branches"). Next step: **WS1 Rules engine**. Per-workstream progress lives in `docs/progress/`.
 
 ## Start here (new session or new agent)
 1. Read this file.
@@ -73,7 +73,7 @@ This is a browser version of the 2001 *eBay Electronic Talking Auction Game*, re
 The project is built on the Pro plan. Usage is capped per rolling window and per week, and every subagent spends from the same budget. **Plan work to finish within limits, not to maximize parallelism.** This section overrides the concurrency suggestions in 06.
 
 - **Do it yourself first.** Handle work inline in the main session. Only spawn a subagent when it really saves effort or the user asks: a large isolated research sweep, the pre-PR review, or a truly independent workstream.
-- **Parallelism: at most 2 agents at a time.** The "parallel" workstreams in 06 mean *no file conflicts*, not "run them all at once". The default is **one workstream per session**, run sequentially.
+- **Parallelism: at most 3 coding subagents at a time**, plus at most 1 reviewer subagent. Only run workstreams in parallel when 06 says they have no file conflicts. Parallel agents spend the usage window faster; they don't stretch it. If several agents run at once, they can all be cut off at the same moment, which is why the checkpoint protocol below is mandatory.
 - **Model choice:**
   - **Sonnet** is the default for coding and reviews.
   - **Haiku** is for mechanical or bulk work: lookups, data entry such as the 60 items and sprites, simple refactors.
@@ -83,9 +83,23 @@ The project is built on the Pro plan. Usage is capped per rolling window and per
 - **Cheap checks before expensive ones.** Run typecheck, lint and tests locally; they're free. Fix what they catch *before* asking any agent to review.
 - **Pre-PR review stays, but lean.** One reviewer, focused on the diff only. Round 2 happens only if round 1 found blockers.
 - **Checkpoint often.** Commit and push at safe points (see Git workflow), and update the Status checklist. If the session hits a usage limit, the next session resumes from the repo with nothing lost.
+
+### Checkpoint protocol (every coding agent, mandatory)
+An agent cannot tell when the usage limit is about to hit. Requests just start failing mid-task and the agent's in-context reasoning is lost; only what is on disk and in git survives. So agents must keep their saved place current **at all times**, not at the end of their work.
+1. **Work in small slices.** A slice is a coherent step of about 30–60 minutes of work, for example "R1–R6 deck setup + tests". Never hold more than one slice of uncommitted work.
+2. **Commit and push after every slice**, even if the workstream isn't done. WIP commits are fine on feature branches (`ws1: wip deck setup, tests pass`). If tests are red, still commit and push, but say so in the message and the progress file.
+3. **Keep `docs/progress/<ws>.md` up to date** (for example `docs/progress/ws1.md`) and commit it in the same commit as the slice. It has these sections:
+   - **Branch / base:** the branch name and what it is stacked on.
+   - **Done:** finished slices and the rule IDs they cover.
+   - **In progress:** the current slice and how far it got.
+   - **Next:** the exact next step, specific enough that a fresh agent can start it without re-planning.
+   - **Gotchas / decisions:** anything non-obvious learned, ASSUMED values chosen, and open questions for the user.
+4. **One agent per branch.** Use a separate git worktree (`isolation: worktree`) for each parallel coding agent, so partial work never collides.
+
+**Resuming after a cutoff:** the new session reads this README, then `docs/progress/*.md`, then `git log` and `git status` on each WS branch and worktree. Commit or discard any leftover uncommitted changes, then relaunch each agent with its kickoff prompt from 06 plus "Continue from `docs/progress/<ws>.md`; do not redo finished slices."
 - **Size sessions to fit.** One workstream, or one clear slice of one, per session. Stop at a clean checkpoint rather than starting something big near the end of a window.
 - **Batch questions to the user.** Ask in one message instead of many back-and-forth turns.
-- **Before kicking off a multi-agent batch,** tell the user how many agents and which models, and get a go-ahead.
+- **Before kicking off a multi-agent batch,** tell the user how many agents and which models, and get a go-ahead. The user can check remaining usage with `/usage` first.
 
 **Recommended pacing for the build:**
 1. WS0 alone.
@@ -134,6 +148,11 @@ Use your judgement here. Don't wait to be asked for routine git hygiene. The det
   5. **Note it in the PR body:** "Pre-PR review: passed (n rounds)", or the open items.
 
   Docs-only PRs skip this step.
+- **Stacked branches (while a PR awaits review).** Coding may continue before an earlier PR is merged. Branch the new work off the unmerged branch, for example `ws1-engine` off `ws0-contracts`, and open its PR as a draft with that branch as the base. Rules:
+  - Record the base in `docs/progress/<ws>.md`.
+  - When the base PR changes, rebase the stacked branch onto it.
+  - After the base is squash-merged, rebase onto `main` with `git rebase --onto main <old-base> <branch>`, then retarget the PR to `main`.
+  - Do not merge anything without the user's go-ahead.
 - **Merging to `main`** happens via squash-merge after CI passes. Merge your own PR only when the user has allowed it for that work. Otherwise, leave it open and say so.
 - **Always say what you did.** At the end of a session, report which branch you're on, what was committed and pushed, and any open PRs.
 
