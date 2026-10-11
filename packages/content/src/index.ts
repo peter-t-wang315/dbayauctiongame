@@ -5,7 +5,7 @@ import type { ContentPack } from './schema';
 
 export * from './schema';
 export { CATEGORIES } from './categories';
-export { CATEGORY_SPRITES, SHARED_PALETTE } from './sprites';
+export { CATEGORY_SPRITES, ITEM_SPRITES, SHARED_PALETTE } from './sprites';
 export { basePack, BASE_PACK_ID } from './base-pack';
 export { fixturePack } from './fixture';
 

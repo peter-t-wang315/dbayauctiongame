@@ -4,16 +4,17 @@ import { CATEGORIES } from './categories';
 import { PUBLIC_ITEMS } from './public-items';
 import type { PublicPack } from './schema';
 import { SPECIALS } from './specials';
+import { withSprite } from './sprites';
 
 export type { CategoryDef, PublicItem, PublicPack, PublicSpecial, Sprite } from './schema';
 export { CATEGORIES } from './categories';
-export { CATEGORY_SPRITES, SHARED_PALETTE } from './sprites';
+export { CATEGORY_SPRITES, ITEM_SPRITES, SHARED_PALETTE } from './sprites';
 
 export const publicPack: PublicPack = {
   packId: 'base',
   version: 1,
   categories: CATEGORIES,
-  items: PUBLIC_ITEMS,
+  items: PUBLIC_ITEMS.map(withSprite),
   specials: SPECIALS,
 };
 

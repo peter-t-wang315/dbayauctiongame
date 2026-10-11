@@ -8,6 +8,7 @@ import { TOYS_ITEMS } from './items/toys';
 import { CATEGORIES } from './categories';
 import type { ContentPack } from './schema';
 import { SPECIALS } from './specials';
+import { withSprite } from './sprites';
 
 export const BASE_PACK_ID = 'base';
 
@@ -23,6 +24,6 @@ export const basePack: ContentPack = {
     ...COLLECTIBLES_ITEMS,
     ...ANTIQUES_ITEMS,
     ...MISC_ITEMS,
-  ],
+  ].map(withSprite),
   specials: SPECIALS,
 };

@@ -1,6 +1,7 @@
-import { CATEGORIES, SpriteSchema } from '../src/index';
+import { CATEGORIES, SpriteSchema, basePack } from '../src/index';
 import type { Sprite } from '../src/index';
-import { CATEGORY_SPRITES, SHARED_PALETTE } from '../src/sprites';
+import { publicPack } from '../src/public';
+import { CATEGORY_SPRITES, ITEM_SPRITES, SHARED_PALETTE } from '../src/sprites';
 import { describe, expect, it } from 'vitest';
 
 function checkSprite(name: string, s: Sprite) {
@@ -22,6 +23,25 @@ function checkSprite(name: string, s: Sprite) {
   for (const k of own) expect(used.has(k), `${name}: palette key ${k} unused`).toBe(true);
   expect(used.has('k'), `${name}: has an ink outline`).toBe(true);
 }
+
+describe('item sprites', () => {
+  it('every authored sprite is valid and belongs to a real item', () => {
+    const ids = new Set(basePack.items.map((i) => i.id));
+    for (const [id, s] of Object.entries(ITEM_SPRITES)) {
+      expect(ids.has(id), `unknown item id ${id}`).toBe(true);
+      checkSprite(id, s);
+    }
+  });
+
+  it('sprites are attached to items in both the full and the public pack', () => {
+    for (const item of basePack.items) {
+      if (ITEM_SPRITES[item.id]) expect(item.sprite, item.id).toEqual(ITEM_SPRITES[item.id]);
+    }
+    for (const item of publicPack.items) {
+      if (ITEM_SPRITES[item.id]) expect(item.sprite, item.id).toEqual(ITEM_SPRITES[item.id]);
+    }
+  });
+});
 
 describe('category fallback sprites', () => {
   it('exist for all 6 categories and are valid', () => {
