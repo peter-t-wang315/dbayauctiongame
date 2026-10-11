@@ -69,3 +69,9 @@ Part 2: human-pacing mode in tools/sim; tune LENGTH_PRESETS; update docs 01 s8-9
 - Done: presets tuned, docs 01/02 updated, sim README, preset deck tests, 1000-game runs (tables in docs/02 section 7 and the PR body).
 - Misses: Frenzy 3p short (Quick 7.3 / Standard 13.1 min); collection share 62-92% (structural); Classic 6p spread 3.3x-6.7x; 3p Standard Classic auto-skip about 5%.
 - Next: pre-PR subagent review (by caller), real pack rerun after WS2, user decision on Frenzy timer length (60-130 s per auction is long).
+
+## Part 3: length-presets retune (branch ws1-length-presets-retune, pushes to ws1-length-presets; PR #6)
+- Branch / base: `ws1-length-presets-retune` from `origin/ws1-length-presets`.
+- Done (slice 1): sim reports median length + Classic rounds played (median/max), per mode x preset x players length targets, Standard collection ok up to 95%. New preset field `FRENZY_BAYS_BY_PLAYERS` (Quick {3:2,4:2,5:3,6:4}, Standard {3:2,4:2,5:3,6:3}); Frenzy timers Quick 35-50 s (cap 100 s), Standard 40-55 s (cap 110 s); Classic Standard 3p/4p rounds 50, 3p close .014/.055/8. Replay snapshots regenerated.
+- 100-150 game human-pacing results so far: Frenzy Quick 6.2/8.2/7.0/6.3 min (3-6p), Standard 9.2/12.4/10.5/12.6; Classic Standard 3p 12.2 min (50 rounds), 4p 16.1 (max 50).
+- Next: docs 01 s8-9, 02 (targets, s2/s4/s7), 04 progress-bar note, sim README, 1000-game runs, PR body.

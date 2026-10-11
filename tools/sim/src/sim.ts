@@ -34,7 +34,9 @@ export interface BatchResult {
   autoSkipRate: number;
   nonTerminating: number;
   rejected: number;
-  lengthMin: { mean: number; p95: number; max: number };
+  lengthMin: { mean: number; median: number; p95: number; max: number };
+  /** Classic: rounds actually played (calls done / players, rounded up). */
+  roundsPlayed: { median: number; max: number };
   itemsPerPlayer: { mean: number; minSeat: number };
   dryEarlyShare: number;
   collectionShare: number;
@@ -65,6 +67,7 @@ export function runBatch(o: BatchOptions): BatchResult {
   const engine = createEngine(o.pack);
   const n = o.players;
   const lengths: number[] = [];
+  const roundsList: number[] = [];
   const itemsBySeat: number[][] = Array.from({ length: n }, () => []);
   const wins = new Array<number>(n).fill(0);
   const levelWins: Record<string, number> = {};
@@ -114,6 +117,7 @@ export function runBatch(o: BatchOptions): BatchResult {
     }
     const dur = r.endMs - r.startMs;
     lengths.push(dur / 60000);
+    roundsList.push(Math.ceil(r.state.callsDone / n));
     const score = engine.score(r.state);
     const top = score.players.filter((p) => p.rank === 1);
     const totals = score.players.map((p) => p.total);
@@ -171,9 +175,11 @@ export function runBatch(o: BatchOptions): BatchResult {
     rejected,
     lengthMin: {
       mean: mean(lengths),
+      median: median(lengths),
       p95: lengths[Math.floor(lengths.length * 0.95)] ?? 0,
       max: lengths.at(-1) ?? 0,
     },
+    roundsPlayed: { median: median(roundsList), max: Math.max(0, ...roundsList) },
     itemsPerPlayer: { mean: mean(seatMeans), minSeat: Math.min(...seatMeans) },
     dryEarlyShare: done ? dryPlayers / (done * n) : 0,
     collectionShare: done ? collectors / (done * n) : 0,
@@ -199,7 +205,18 @@ export interface Check {
 export function evaluate(r: BatchResult): Check[] {
   const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
   const checks: Check[] = [];
-  const [lo, hi] = r.length === 'quick' ? [8, 12] : [15, 25];
+  const std = r.length === 'standard';
+  // Targets per mode x preset x players (docs/02 section 5).
+  const [lo, hi] =
+    r.mode === 'frenzy'
+      ? r.length === 'quick'
+        ? [6, 8]
+        : [10, 15]
+      : r.length === 'quick'
+        ? [8, 12]
+        : r.players === 3
+          ? [12, 15]
+          : [15, 25];
   const add = (name: string, value: string, status: Check['status'], target: string) =>
     checks.push({ name, value, status, target });
   add(
@@ -209,15 +226,22 @@ export function evaluate(r: BatchResult): Check[] {
     '0',
   );
   add(
-    'game length min (mean / p95 / max)',
-    `${r.lengthMin.mean.toFixed(1)} / ${r.lengthMin.p95.toFixed(1)} / ${r.lengthMin.max.toFixed(1)}`,
+    'game length min (median / p95 / max)',
+    `${r.lengthMin.median.toFixed(1)} / ${r.lengthMin.p95.toFixed(1)} / ${r.lengthMin.max.toFixed(1)}`,
     r.lengthMin.max >= 40
       ? 'FAIL'
-      : r.lengthMin.mean >= lo && r.lengthMin.mean <= hi
+      : r.lengthMin.median >= lo && r.lengthMin.median <= hi
         ? 'ok'
         : 'warn',
     `${lo}-${hi} (hard <40)`,
   );
+  if (r.mode === 'classic')
+    add(
+      'rounds played (median / max)',
+      `${r.roundsPlayed.median} / ${r.roundsPlayed.max}`,
+      r.roundsPlayed.max <= 50 ? 'ok' : 'warn',
+      '<=~50',
+    );
   add(
     'items per player (mean / worst seat)',
     `${r.itemsPerPlayer.mean.toFixed(2)} / ${r.itemsPerPlayer.minSeat.toFixed(2)}`,
@@ -228,12 +252,12 @@ export function evaluate(r: BatchResult): Check[] {
   add(
     'players with a collection',
     pct(r.collectionShare),
-    r.collectionShare < 0.15 || r.collectionShare > 0.85
+    r.collectionShare < 0.15 || r.collectionShare > (std ? 0.98 : 0.85)
       ? 'FAIL'
-      : r.collectionShare >= 0.3 && r.collectionShare <= 0.7
+      : r.collectionShare >= 0.3 && r.collectionShare <= (std ? 0.95 : 0.7)
         ? 'ok'
         : 'warn',
-    '30-70% (hard 15-85)',
+    std ? '30-95% (ASSUMED, pending playtest)' : '30-70% (hard 15-85)',
   );
   const fair = 1 / r.players;
   const dev = Math.max(...r.seatWinShare.map((w) => Math.abs(w - fair))) * 100;

@@ -53,7 +53,11 @@ export function initState(idx: PackIndex, setup: GameSetup, now: number): Engine
   const rng = initRng(setup.seed);
   const deck = buildDeck(idx, count, rng, setup.length);
   const deckSize = deck.length;
-  const bays = Array.from({ length: CONFIG.BAYS_BY_PLAYERS[count] }, (_, i) => ({
+  const bayCount =
+    setup.mode === 'frenzy'
+      ? presetOf(setup.length).FRENZY_BAYS_BY_PLAYERS[count]
+      : CONFIG.BAYS_BY_PLAYERS[count];
+  const bays = Array.from({ length: bayCount }, (_, i) => ({
     idx: i,
     card: deck.shift() ?? null,
     stack: [],

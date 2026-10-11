@@ -18,6 +18,8 @@ export interface LengthPreset {
   DECK_BY_PLAYERS: Record<PlayerCount, DeckSpec>;
   /** R7. */
   ROUNDS_BY_PLAYERS: Record<PlayerCount, number>;
+  /** R1 for Frenzy (02 section 2): fewer bays stretch the same deck over more auction slots. */
+  FRENZY_BAYS_BY_PLAYERS: Record<PlayerCount, number>;
   /** F2: a Frenzy bay's open timer is uniform in [min, max]. */
   frenzyOpenMinMs: number;
   frenzyOpenMaxMs: number;
@@ -49,12 +51,13 @@ const QUICK: LengthPreset = {
     5: { items: 26, displayCase: 2, gift: 2, catsInPlay: 6 },
     6: { items: 31, displayCase: 3, gift: 2, catsInPlay: 6 },
   },
+  FRENZY_BAYS_BY_PLAYERS: { 3: 2, 4: 2, 5: 3, 6: 4 },
   ROUNDS_BY_PLAYERS: { 3: 52, 4: 36, 5: 23, 6: 19 },
-  frenzyOpenMinMs: 60000,
-  frenzyOpenMaxMs: 100000,
-  frenzyHardCapMs: 180000,
-  frenzyIdleRecheckMs: 25000,
-  frenzyMaxMs: 720000,
+  frenzyOpenMinMs: 35000,
+  frenzyOpenMaxMs: 50000,
+  frenzyHardCapMs: 100000,
+  frenzyIdleRecheckMs: 15000,
+  frenzyMaxMs: 600000,
   CLOSE_BY_PLAYERS: {
     3: { pBase: 0.02, pMax: 0.07, maxBayAgeCycles: 7 },
     4: { pBase: 0.04, pMax: 0.12, maxBayAgeCycles: 4 },
@@ -71,14 +74,15 @@ const STANDARD: LengthPreset = {
     5: { items: 35, displayCase: 3, gift: 2, catsInPlay: 6 },
     6: { items: 42, displayCase: 3, gift: 3, catsInPlay: 6 },
   },
-  ROUNDS_BY_PLAYERS: { 3: 110, 4: 58, 5: 42, 6: 33 },
-  frenzyOpenMinMs: 80000,
-  frenzyOpenMaxMs: 130000,
-  frenzyHardCapMs: 240000,
-  frenzyIdleRecheckMs: 30000,
-  frenzyMaxMs: 1500000,
+  FRENZY_BAYS_BY_PLAYERS: { 3: 2, 4: 2, 5: 3, 6: 3 },
+  ROUNDS_BY_PLAYERS: { 3: 50, 4: 50, 5: 42, 6: 33 },
+  frenzyOpenMinMs: 40000,
+  frenzyOpenMaxMs: 55000,
+  frenzyHardCapMs: 110000,
+  frenzyIdleRecheckMs: 15000,
+  frenzyMaxMs: 1080000,
   CLOSE_BY_PLAYERS: {
-    3: { pBase: 0.008, pMax: 0.036, maxBayAgeCycles: 10 },
+    3: { pBase: 0.014, pMax: 0.055, maxBayAgeCycles: 8 },
     4: { pBase: 0.025, pMax: 0.08, maxBayAgeCycles: 6 },
     5: { pBase: 0.03, pMax: 0.085, maxBayAgeCycles: 5 },
     6: { pBase: 0.04, pMax: 0.1, maxBayAgeCycles: 4 },
