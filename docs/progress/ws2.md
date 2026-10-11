@@ -14,11 +14,11 @@
 - Status: `pnpm -r typecheck` green; `pnpm -r lint` green; `pnpm -r test` green (content: 34 tests).
 
 ## In progress
-- Commit + push + draft PR.
+- Draft PR open: https://github.com/peter-t-wang315/dbayauctiongame/pull/2 (base ws0-contracts).
 
 ## Next
-1. Commit `ws2: 60 items, 9 specials, public projection and content tests`, push `origin ws2-content`.
-2. Open draft PR against `ws0-contracts` (see PR body checklist).
+1. Pre-PR review (pending): needs a fresh reviewer subagent before un-drafting; not done in this run.
+2. Decide on art (open question below).
 
 ## Gotchas / decisions
 - Schema (`src/schema.ts`, WS0 contract) NOT changed.
