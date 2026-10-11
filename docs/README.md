@@ -69,6 +69,31 @@ This is a browser version of the 2001 *eBay Electronic Talking Auction Game*, re
 - [ ] **M4:** juice and polish (WS8)
 - [ ] **M5:** playtest with friends, then tune constants with the simulator
 
+## Git workflow for sessions and agents
+Use your judgement here. Don't wait to be asked for routine git hygiene. The detailed branch and PR naming per workstream is in [06-workstreams.md](06-workstreams.md).
+
+- **Commit and push periodically.** Commit whenever you reach a safe checkpoint:
+  - typecheck, lint and tests pass for what you touched
+  - the change is a coherent step
+  - no secrets or local-only files are included
+
+  Push after committing, so work is never stranded on one machine. Also commit or push whenever the user tells you to. Never commit broken builds to `main`. If unsure, commit to a feature branch instead.
+- **Start a new branch when new work begins.** Branch off up-to-date `main` when you start:
+  - a new workstream
+  - a new feature
+  - a contract change
+  - a fix unrelated to your current branch
+
+  Stay on the current branch when the work is a direct continuation of it. Name branches per 06, for example `ws1-engine`, `ws5-game-ui/hand`, `contract/add-gift-stage` or `fix/reconnect-loop`. Docs-only tweaks may go straight to `main`.
+- **Open a PR when the feature is reviewable.** That means:
+  - its acceptance criteria (06) are met, or it's a meaningful, self-contained slice
+  - CI is green
+  - it's rebased on `main`
+
+  Keep PRs small and focused. Title `WS<n>: <summary>`. The body lists the acceptance-criteria checkboxes, the tests run, and any doc or contract changes. Open a **draft PR** early if parallel agents need to see the work in progress.
+- **Merging to `main`** happens via squash-merge after CI passes. Merge your own PR only when the user has allowed it for that work. Otherwise, leave it open and say so.
+- **Always say what you did.** At the end of a session, report which branch you're on, what was committed and pushed, and any open PRs.
+
 ## Conventions
 - Docs are the source of truth. If code needs to differ from them, update the doc in the same PR.
 - `ASSUMED` values are expected to change. Tune them in `packages/engine/config.ts`, not inline.
