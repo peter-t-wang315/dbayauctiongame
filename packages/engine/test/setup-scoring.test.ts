@@ -7,27 +7,9 @@ import { hashString, initRng, nextFloat, shuffle } from '../src/rng';
 import { scoreCards, scoreGame } from '../src/scoring';
 import { initState } from '../src/setup';
 import { synthPack } from '../src/testing/synthPack';
-import type { GameSetup } from '../src/types';
+import { mkSetup } from './helpers';
 
 const idx = indexPack(synthPack());
-
-export function mkSetup(
-  n: number,
-  seed = 'seed-1',
-  mode: 'classic' | 'frenzy' = 'classic',
-): GameSetup {
-  return {
-    seed,
-    mode,
-    bidWindowMs: 5000,
-    relaxed: false,
-    players: Array.from({ length: n }, (_, i) => ({
-      id: `p${i}`,
-      isBot: false,
-      connected: true,
-    })),
-  };
-}
 
 describe('R1 bays by player count', () => {
   it.each([
