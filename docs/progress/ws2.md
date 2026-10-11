@@ -1,29 +1,37 @@
 # WS2 (Content) progress
 
 ## Branch / base
-- Branch `ws2-content`, stacked on `origin/ws0-contracts` (WS0 not merged yet).
+- Branch `ws2-content`, stacked on `origin/ws0-contracts` (WS0 not merged yet; origin/ws0-contracts = be8d24d at start).
 - Draft PR targets `ws0-contracts`.
 
 ## Done
-- (slice 0) Setup: branch created, `pnpm install` ok.
-- (slice 1) `packages/content/src/items/toys.ts` and `media.ts`: 20 items authored from 03 section 3.1 and 3.2. Generated once by a scratch script that parses the 03 tables (not committed); values copied verbatim.
+- Setup: branch created, `pnpm install` ok.
+- Slice 1 (`2246d89`): `src/items/toys.ts`, `src/items/media.ts` (20 items, 03 section 3.1-3.2).
+- Slice 2: `src/items/{glass,collectibles,antiques,misc}.ts` (40 items, 03 section 3.3-3.6). All 60 items authored verbatim from the 03 tables.
+- Slice 3: `src/specials.ts` (5 Display Case + 4 Gift, 03 section 4), `src/base-pack.ts` (`basePack`, packId `base`, version 1, 60 items + 9 specials), `activePack` in `src/index.ts` now = `basePack`; `basePack` and `BASE_PACK_ID` exported from index.
+- Slice 4: public projection `src/public.ts` + `src/public-items.ts` (60 public items: id, name, category, estimatedValue, flavor; NO actualValue/tier), specials shared from `src/specials.ts`. `getPublicCard` kept (mock-server uses it).
+- Slice 5 tests: `test/base-pack.test.ts` (zod validation of every item/special and the whole pack, counts 60/10 per category, 5+4 specials, 69 total, unique ids, 03 sums per category and total 6,920/8,575, tier counts 9/33/15/3 overall and per category, tier ratio bounds, est multiple of 5 and 30-300, flavor <=12 words, names 2-40, brand denylist, no duplicate names). `test/public.test.ts` (no-leak: no `actualValue`/`actual`/`tier` key, JSON check, public equals full minus secrets, source text check, no import of full data). Existing `test/content.test.ts` (WS0) kept.
+- Status: `pnpm -r typecheck` green; `pnpm -r lint` green; `pnpm -r test` green (content: 34 tests).
 
 ## In progress
-- Slice 2: glass, collectibles, antiques, misc items (same generator approach).
+- Commit + push + draft PR.
 
 ## Next
-1. Generate `src/items/{glass,collectibles,antiques,misc}.ts` from 03 section 3.3-3.6 (the scratch generator parses `| \`id\` |` rows of section 3 and writes one file per category; if the scratch file is gone, hand-copy the rows exactly).
-2. Add `src/items/index.ts` or `src/base-pack.ts`: `BASE_ITEMS` (60, category order toys, media, glass, collectibles, antiques, misc) and the 9 specials (`special-display-case-1..5`, `special-gift-1..4`, per 03 section 4).
-3. Switch `src/index.ts` `activePack` to the base pack. KEEP `src/fixture.ts` (exported; protocol test uses literal ids; engine stub imports `activePack`).
-4. Write `src/public.ts` as a hand-written public projection with NO `actualValue` / `tier` (generate once from base pack, then the test enforces `publicPack` equals `toPublicPack(activePack)`). Public module must not import `./index`, `./fixture` or the `items/` files (test checks this). Keep `getPublicCard` export (mock-server uses it).
-5. Tests in `packages/content/test/`: zod validation of all base data (MUST), counts (60 items, 10 per category, 5 displayCase + 4 gift, unique ids), tier counts 9/33/15/3, per-category actual sums (8575 total; per cat 1420/1435/1435/1415/1425/1445), tier ratio bounds, flavor <=12 words, name length 2-40, brand denylist, public no-leak (no `actualValue`/`tier` key anywhere, including the JSON), web-bundle-facing public file has no `actualValue` text.
-6. Run `pnpm -r typecheck`, `pnpm -r lint`, `pnpm --filter @dbay/content test` after each slice.
+1. Commit `ws2: 60 items, 9 specials, public projection and content tests`, push `origin ws2-content`.
+2. Open draft PR against `ws0-contracts` (see PR body checklist).
 
 ## Gotchas / decisions
-- Schema (`src/schema.ts`) is the WS0 contract: NOT changed. Items have no icon field; `sprite` is optional in the schema and left absent (category fallback sprite per 03 "Sprites"). Art keys are therefore not authored in WS2.
-- Schema allows est 25-400; base pack uses 30-300.
-- Prettier config: single quotes, printWidth 100 (root `.prettierrc.json`).
-- Mock server (`tools/mock-server`) uses `getPublicCard` and `publicPack`; engine stub uses `activePack`. Both keep working with the base pack.
+- Schema (`src/schema.ts`, WS0 contract) NOT changed.
+- Items have no icon/art key field in the schema. `sprite` is optional and left absent, so the category fallback applies (03 "Sprites"). No art keys authored in WS2.
+- `src/fixture.ts` kept (exported, unused by activePack now). Protocol test uses literal ids and does not import it.
+- Item data files were generated once from the 03 markdown tables by a scratch script (not committed). Values were not hand-typed twice; the tests check per-category sums and tier counts against 03 sections 2.4 and 3.7.
+- `src/public-items.ts` was generated the same way from the 03 tables, without the secret columns. `public.test.ts` checks it equals `toPublicPack(activePack)`, so a drift fails CI.
+- Public modules (`public.ts`, `public-items.ts`, `specials.ts`, `categories.ts`) must not contain the words actualValue/tier/actual in code; a test enforces this.
+- Prettier config: single quotes, printWidth 100.
+- Mock server uses `publicPack` and `getPublicCard`; engine stub uses `activePack` (now 69 cards). Both tests pass.
+- No separate "validator script" was added; the content test suite is the validator (`pnpm --filter @dbay/content test`).
 
 ## Open questions
-- None yet. (03 section 2.3 says base pack tiers are ASSUMED and to be tuned by the simulator; values here are the authored ones from 03.)
+- 03 section 2.3 marks the values as ASSUMED and to be tuned by the simulator. Values here are the authored ones from 03 unchanged.
+- Art: no per-item sprites yet (03 "Sprites" authoring order: category fallbacks first). Is this in WS2 scope or a later art task?
+- `special-gift` and `special-display-case` have no per-special sprite; the same applies.
