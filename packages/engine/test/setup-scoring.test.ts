@@ -44,10 +44,13 @@ describe('R3/R4 deck build', () => {
     expect(idx.displayCases).toHaveLength(5);
     expect(idx.gifts).toHaveLength(4);
   });
-  it.each([3, 4, 5, 6] as PlayerCount[])('R4: deck for %i players follows the table', (n) => {
-    const s = initState(idx, mkSetup(n), 0);
+  const cases = (['quick', 'standard'] as const).flatMap((l) =>
+    ([3, 4, 5, 6] as PlayerCount[]).map((n) => [l, n] as const),
+  );
+  it.each(cases)('R4: %s deck for %i players follows the table', (length, n) => {
+    const s = initState(idx, { ...mkSetup(n), length }, 0);
     const all = [...s.bays.map((b) => b.card as string), ...s.deck];
-    const spec = LENGTH_PRESETS.standard.DECK_BY_PLAYERS[n];
+    const spec = LENGTH_PRESETS[length].DECK_BY_PLAYERS[n];
     expect(all).toHaveLength(spec.items + spec.displayCase + spec.gift);
     expect(new Set(all).size).toBe(all.length);
     const items = all.filter((id) => idx.cards.get(id)?.kind === 'item');
@@ -64,7 +67,25 @@ describe('R3/R4 deck build', () => {
     expect(perCat.size).toBe(spec.catsInPlay);
     const counts = [...perCat.values()];
     expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(1);
+    // enough items for the categories in play: catsInPlay <= 6 and ceil(items / cats) <= 10 per category
+    expect(spec.catsInPlay).toBeLessThanOrEqual(6);
+    expect(Math.ceil(spec.items / spec.catsInPlay)).toBeLessThanOrEqual(10);
+    expect(spec.displayCase).toBeLessThanOrEqual(idx.displayCases.length);
+    expect(spec.gift).toBeLessThanOrEqual(idx.gifts.length);
   });
+  it.each(([3, 4, 5, 6] as PlayerCount[]).map((n) => [n]))(
+    'R4: Standard has more deck cards per player than Quick at %i players',
+    (n) => {
+      const per = (l: 'quick' | 'standard') => {
+        const d = LENGTH_PRESETS[l].DECK_BY_PLAYERS[n];
+        return (d.items + d.displayCase + d.gift) / n;
+      };
+      expect(per('quick')).toBeGreaterThanOrEqual(5.5);
+      expect(per('quick')).toBeLessThanOrEqual(6.5);
+      expect(per('standard')).toBeGreaterThanOrEqual(7.5);
+      expect(per('standard')).toBeLessThanOrEqual(8.5);
+    },
+  );
   it('R4: a tiny pack (WS0 fixture) still builds a deck', () => {
     const s = initState(indexPack(fixturePack), mkSetup(3), 0);
     expect(s.deckSize).toBe(5);

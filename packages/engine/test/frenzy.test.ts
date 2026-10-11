@@ -163,12 +163,14 @@ describe('F6 no auto-skip / no dry turns', () => {
 describe('F7 rounds mapping, halfway and last round', () => {
   it('F7: display round = floor(resolved / D x R) + 1', () => {
     const s = clone(frenzy().state);
-    expect(s.round).toMatchObject({ n: 1, of: 20 });
-    s.resolved = 14; // D = 30, R = 20 -> floor(15/30*20)+1 = 11 after the next resolution
+    const D = s.deckSize;
+    const R = s.round.of;
+    expect(s.round).toMatchObject({ n: 1, of: R });
+    s.resolved = 14; // after the next resolution: floor(15 / D x R) + 1
     stackOn(s, 0, [['p1', v(50)]]);
     const r = engine.tick(s, s.bays[0]!.closesAt!);
     expect(r.state.resolved).toBe(15);
-    expect(r.state.round.n).toBe(11);
+    expect(r.state.round.n).toBe(Math.floor((15 / D) * R) + 1);
   });
   it('F7: Halfway fires once resolved >= ceil(D/2)', () => {
     const s = clone(frenzy().state);
