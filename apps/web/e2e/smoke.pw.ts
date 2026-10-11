@@ -68,11 +68,23 @@ test('create -> lobby -> second player -> bot -> start; refresh restores seat; m
   await stopMock();
   await expect(guest.getByText('Reconnecting...')).toBeVisible({ timeout: 10_000 });
   await startMock();
-  // the restarted mock has no such room (state is in memory): demo code rooms only. Verify the UI
-  // gives up cleanly instead of hanging (room gone -> fatal card).
-  await expect(guest.getByRole('heading', { name: /No such room|Reconnecting/ })).toBeVisible({
-    timeout: 20_000,
+  // the restarted mock has no such room (state is in memory): the client must stop retrying and
+  // show the terminal "room gone" card, with a cleared seat.
+  await expect(guest.getByRole('heading', { name: 'This room no longer exists' })).toBeVisible({
+    timeout: 30_000,
   });
+  await expect(guest.getByText('Reconnecting...')).toHaveCount(0);
+  await expect(guest.getByRole('button', { name: 'Create a new room' })).toBeVisible();
+  expect(await guest.evaluate((c) => localStorage.getItem(`dbay:id:${c}`), code)).toBeNull();
+  const tiny = await guest.evaluate(() =>
+    Array.from(document.querySelectorAll('button, a'))
+      .map((el) => el.getBoundingClientRect())
+      .filter((r) => r.width > 0 && (r.height < 43.5 || r.width < 43.5)).length,
+  );
+  expect(tiny).toBe(0);
+  expect(await guest.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await guest.getByRole('link', { name: 'Back to home' }).click();
+  await expect(guest.getByRole('button', { name: 'CREATE A ROOM' })).toBeVisible();
 
   await hostCtx.close();
   await guestCtx.close();

@@ -6,11 +6,16 @@ import type { ReactNode } from 'react';
 import { normalizeRoomCode } from '@dbay/protocol';
 import { RoomProvider, useRoom } from '../../lib/net/useRoom';
 import type { Fatal } from '../../lib/net/client';
+import { CreateRoomButton } from './CreateRoomButton';
 import { MessageCard } from './MessageCard';
 import { ReconnectOverlay } from './ReconnectOverlay';
 
 export const FATAL_COPY: Record<Fatal, { title: string; body: string }> = {
   notfound: { title: 'No such room', body: 'Check the code and try again.' },
+  gone: {
+    title: 'This room no longer exists',
+    body: 'It may have expired or the server restarted. Your seat is gone.',
+  },
   full: { title: 'Room is full', body: 'This room is full (6/6).' },
   started: {
     title: 'Game in progress',
@@ -27,16 +32,34 @@ function Inner({ children }: { children: ReactNode }) {
   const room = useRoom();
   if (room.fatal) {
     const copy = FATAL_COPY[room.fatal];
+    const gone = room.fatal === 'gone';
     return (
       <MessageCard
         title={copy.title}
         actions={
-          <Link className="btn" href="/">
-            Home
-          </Link>
+          <>
+            <Link className="btn" href="/">
+              {gone ? 'Back to home' : 'Home'}
+            </Link>
+            {gone && <CreateRoomButton />}
+          </>
         }
       >
         <p className="hint">{copy.body}</p>
+      </MessageCard>
+    );
+  }
+  if (room.unreachable) {
+    return (
+      <MessageCard
+        title="Can't reach the room"
+        actions={
+          <button className="btn" type="button" onClick={room.retry}>
+            Try again
+          </button>
+        }
+      >
+        <p className="hint">Check your connection. Your seat is kept while the room lasts.</p>
       </MessageCard>
     );
   }

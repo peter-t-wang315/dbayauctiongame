@@ -13,7 +13,7 @@ import {
 } from 'react';
 import type { PlayerView } from '@dbay/protocol';
 import { RoomClient, type ActionInput, type RoomState, type SendResult } from './client';
-import { wsUrl } from './config';
+import { httpBase, wsUrl } from './config';
 import { holdWakeLock } from './wakeLock';
 
 export interface UseRoom extends RoomState {
@@ -23,6 +23,8 @@ export interface UseRoom extends RoomState {
   send: (action: ActionInput) => Promise<SendResult>;
   join: (name: string) => void;
   leave: () => void;
+  /** Restart the reconnect backoff after `unreachable`. */
+  retry: () => void;
   /** Estimated server time in ms; use with `endsAt` for countdowns. */
   serverNow: () => number;
   /** True when the player is the host (lobby controls). */
@@ -41,13 +43,19 @@ const SERVER_STATE: RoomState = {
   fatal: null,
   error: null,
   attempt: 0,
+  unreachable: false,
 };
 
 export function RoomProvider({ code, children }: { code: string; children: ReactNode }) {
   const [client, setClient] = useState<RoomClient | null>(null);
 
   useEffect(() => {
-    const c = new RoomClient({ code, url: wsUrl(code) });
+    const c = new RoomClient({
+      code,
+      url: wsUrl(code),
+      probe: probeServer,
+      isHidden: () => typeof document !== 'undefined' && document.visibilityState === 'hidden',
+    });
     setClient(c);
     c.start();
     const onVisible = () => {
@@ -79,6 +87,7 @@ export function RoomProvider({ code, children }: { code: string; children: React
   );
   const join = useCallback((name: string) => client?.join(name), [client]);
   const leave = useCallback(() => client?.leave(), [client]);
+  const retry = useCallback(() => client?.retry(), [client]);
   const serverNow = useCallback(() => (client ? client.serverNow() : Date.now()), [client]);
 
   const value = useMemo<UseRoom>(
@@ -88,13 +97,24 @@ export function RoomProvider({ code, children }: { code: string; children: React
       send,
       join,
       leave,
+      retry,
       serverNow,
       isHost: !!state.view && state.view.hostId === state.view.me,
     }),
-    [state, code, send, join, leave, serverNow],
+    [state, code, send, join, leave, retry, serverNow],
   );
 
   return <RoomContext.Provider value={value}>{children}</RoomContext.Provider>;
+}
+
+/** Does the game host answer HTTP at all? (no-cors: an opaque response still proves it is up.) */
+async function probeServer(): Promise<boolean> {
+  try {
+    await fetch(httpBase(), { mode: 'no-cors', cache: 'no-store', signal: AbortSignal.timeout(4000) });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 const noopSubscribe = () => () => {};

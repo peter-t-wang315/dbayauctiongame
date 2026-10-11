@@ -239,4 +239,130 @@ describe('RoomClient', () => {
     expect(c.getState().fatal).toBe('notfound');
     c.dispose();
   });
+
+  describe('room gone / unreachable', () => {
+    const seat = () =>
+      localStorage.setItem('dbay:id:ABCDE', JSON.stringify({ playerId: 'p1', secret: 's' }));
+    const makeP = (probe: () => Promise<boolean>, extra: object = {}) =>
+      new RoomClient({
+        code: 'ABCDE',
+        url: 'ws://x/parties/room/ABCDE',
+        createSocket: (u) => new FakeSocket(u),
+        random: () => 0.5,
+        probe,
+        ...extra,
+      });
+    /** Drop the latest socket without it ever opening, then run the backoff timer. */
+    const failNext = async () => {
+      FakeSocket.all.at(-1)!.drop();
+      await vi.advanceTimersByTimeAsync(5000);
+    };
+
+    it('ROOM_NOT_FOUND on hello is terminal "gone" and clears the secret', () => {
+      seat();
+      const c = make();
+      c.start();
+      const s = FakeSocket.all[0]!;
+      s.open();
+      s.recv({ t: 'err', code: 'ROOM_NOT_FOUND' });
+      expect(c.getState().fatal).toBe('gone');
+      expect(localStorage.getItem('dbay:id:ABCDE')).toBeNull();
+      vi.advanceTimersByTime(60_000);
+      expect(FakeSocket.all).toHaveLength(1); // no more retries
+      c.dispose();
+    });
+
+    it('ROOM_NOT_FOUND with no seat (typo on first visit) stays "notfound"', () => {
+      const c = make();
+      c.start();
+      FakeSocket.all[0]!.open();
+      FakeSocket.all[0]!.recv({ t: 'err', code: 'ROOM_NOT_FOUND' });
+      expect(c.getState().fatal).toBe('notfound');
+      c.dispose();
+    });
+
+    it('server reachable but websocket refused after being connected -> gone', async () => {
+      seat();
+      const c = makeP(async () => true);
+      c.start();
+      FakeSocket.all[0]!.open();
+      FakeSocket.all[0]!.drop(); // transient drop: no strike
+      await vi.advanceTimersByTimeAsync(500);
+      await failNext();
+      expect(c.getState().fatal).toBeNull(); // one strike
+      await failNext();
+      expect(c.getState().fatal).toBe('gone');
+      expect(localStorage.getItem('dbay:id:ABCDE')).toBeNull();
+      c.dispose();
+    });
+
+    it('server down (probe false) never means gone; gives up as unreachable after the time cap', async () => {
+      seat();
+      const c = makeP(async () => false, { giveUpMs: 20_000 });
+      c.start();
+      FakeSocket.all[0]!.open();
+      FakeSocket.all[0]!.drop();
+      for (let i = 0; i < 30 && !c.getState().unreachable; i++) await failNext();
+      const st = c.getState();
+      expect(st.fatal).toBeNull();
+      expect(st.unreachable).toBe(true);
+      const n = FakeSocket.all.length;
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(FakeSocket.all).toHaveLength(n); // stopped
+      c.dispose();
+    });
+
+    it('also gives up after the attempt cap, and retry() restarts the backoff', async () => {
+      seat();
+      const c = makeP(async () => false, { maxAttempts: 4 });
+      c.start();
+      FakeSocket.all[0]!.open();
+      FakeSocket.all[0]!.drop();
+      for (let i = 0; i < 10 && !c.getState().unreachable; i++) await failNext();
+      expect(c.getState().unreachable).toBe(true);
+      const n = FakeSocket.all.length;
+      c.retry();
+      expect(c.getState()).toMatchObject({ unreachable: false, attempt: 0 });
+      expect(FakeSocket.all).toHaveLength(n + 1);
+      // server is back with the room: seat restored
+      const s = FakeSocket.all.at(-1)!;
+      s.open();
+      s.recv({ t: 'welcome', v: 1, playerId: 'p1', code: 'ABCDE' });
+      s.recv({ t: 'snap', rev: 1, now: 1, view: view(1) });
+      expect(c.getState()).toMatchObject({ status: 'open', unreachable: false, playerId: 'p1' });
+      c.dispose();
+    });
+
+    it('a hidden tab pauses instead of giving up; becoming visible restarts', async () => {
+      seat();
+      let hidden = true;
+      const c = makeP(async () => false, { maxAttempts: 3, isHidden: () => hidden });
+      c.start();
+      FakeSocket.all[0]!.open();
+      FakeSocket.all[0]!.drop();
+      for (let i = 0; i < 6; i++) await failNext();
+      expect(c.getState().unreachable).toBe(false);
+      const n = FakeSocket.all.length;
+      hidden = false;
+      c.resume();
+      expect(FakeSocket.all).toHaveLength(n + 1);
+      c.dispose();
+    });
+
+    it('a transient drop with the room still there recovers the seat', async () => {
+      seat();
+      const c = makeP(async () => true);
+      c.start();
+      FakeSocket.all[0]!.open();
+      FakeSocket.all[0]!.drop();
+      await vi.advanceTimersByTimeAsync(500);
+      const s = FakeSocket.all[1]!;
+      s.open();
+      s.recv({ t: 'welcome', v: 1, playerId: 'p1', code: 'ABCDE' });
+      s.recv({ t: 'snap', rev: 1, now: 1, view: view(1) });
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(c.getState()).toMatchObject({ status: 'open', fatal: null, unreachable: false });
+      c.dispose();
+    });
+  });
 });

@@ -23,6 +23,7 @@ export type Fatal =
   | 'expired'
   | 'ended'
   | 'notfound'
+  | 'gone'
   | 'full'
   | 'started'
   | 'version';
@@ -41,6 +42,8 @@ export interface RoomState {
   error: { code: ErrorCode; msg?: string } | null;
   /** Consecutive failed reconnect attempts (0 while connected). */
   attempt: number;
+  /** Gave up reconnecting (server unreachable for too long). The UI offers `retry()`. */
+  unreachable: boolean;
 }
 
 export type SendResult = { ok: true } | { ok: false; code: ErrorCode | 'OFFLINE' | 'TIMEOUT' };
@@ -66,6 +69,16 @@ export interface RoomClientOptions {
   createSocket?: (url: string) => SocketLike;
   now?: () => number;
   random?: () => number;
+  /**
+   * HTTP reachability check of the game host: resolves true when the server answers at all (any
+   * status), false on a network error. Lets us tell "room gone" (server up, WS refused) from
+   * "server down". Without it, failures before ever opening count as a missing room (legacy).
+   */
+  probe?: () => Promise<boolean>;
+  /** True while the tab is backgrounded: the client pauses instead of giving up. */
+  isHidden?: () => boolean;
+  giveUpMs?: number;
+  maxAttempts?: number;
 }
 
 const WS_OPEN = 1;
@@ -76,6 +89,12 @@ const ACK_TIMEOUT_MS = 5000;
 /** Connection failures before ever opening that we read as "no such room". */
 const NEVER_OPENED_LIMIT = 3;
 const KICK_CLOSE_CODE = 4000;
+/** Stop retrying and show "Can't reach the room" after this long without a connection (~2 min)... */
+export const RECONNECT_GIVE_UP_MS = 120_000;
+/** ...or after this many failed attempts (backoff is at its 5s cap from attempt 4, so ~30 = 2.5 min). */
+export const RECONNECT_MAX_ATTEMPTS = 30;
+/** Failed connects, with the server reachable over HTTP, after which a known room is declared gone. */
+export const ROOM_GONE_STRIKES = 2;
 
 export class RoomClient {
   readonly code: string;
@@ -99,6 +118,15 @@ export class RoomClient {
   private pendingJoin: string | null = null;
   private hasBeenOpen = false;
   private failuresBeforeOpen = 0;
+  private socketOpened = false;
+  /** When the current run of failed connections began (ms), or null while connected. */
+  private outageSince: number | null = null;
+  private reachableStrikes = 0;
+  private epoch = 0;
+  private readonly probe?: () => Promise<boolean>;
+  private readonly isHidden: () => boolean;
+  private readonly giveUpMs: number;
+  private readonly maxAttempts: number;
   private disposed = false;
   /** Seeded from the clock: the server dedups by highest seq, so a page refresh must not restart at 1. */
   private seq: number;
@@ -108,6 +136,10 @@ export class RoomClient {
     this.url = opts.url;
     this.now = opts.now ?? Date.now;
     this.random = opts.random ?? Math.random;
+    this.probe = opts.probe;
+    this.isHidden = opts.isHidden ?? (() => false);
+    this.giveUpMs = opts.giveUpMs ?? RECONNECT_GIVE_UP_MS;
+    this.maxAttempts = opts.maxAttempts ?? RECONNECT_MAX_ATTEMPTS;
     this.createSocket = opts.createSocket ?? ((u) => new WebSocket(u) as unknown as SocketLike);
     this.seq = this.now();
     this.state = {
@@ -120,6 +152,7 @@ export class RoomClient {
       fatal: null,
       error: null,
       attempt: 0,
+      unreachable: false,
     };
   }
 
@@ -167,10 +200,23 @@ export class RoomClient {
     }
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
     this.reconnectTimer = null;
-    if (!this.socket) {
-      this.set({ attempt: 0 });
-      this.connect();
-    }
+    if (!this.socket) this.restart();
+  }
+
+  /** "Try again" after giving up: restart the backoff from scratch. */
+  retry(): void {
+    if (this.disposed || this.state.fatal) return;
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = null;
+    if (!this.socket) this.restart();
+  }
+
+  private restart(): void {
+    this.outageSince = null;
+    this.reachableStrikes = 0;
+    this.epoch++;
+    this.set({ attempt: 0, unreachable: false });
+    this.connect();
   }
 
   /** First-time join (or re-join after BAD_SECRET). */
@@ -224,6 +270,7 @@ export class RoomClient {
       return;
     }
     this.socket = sock;
+    this.socketOpened = false;
     sock.onopen = () => {
       if (this.socket === sock) this.onOpen();
     };
@@ -254,9 +301,13 @@ export class RoomClient {
 
   private onOpen(): void {
     this.hasBeenOpen = true;
+    this.socketOpened = true;
     this.failuresBeforeOpen = 0;
+    this.outageSince = null;
+    this.reachableStrikes = 0;
+    this.epoch++;
     this.gate.reset();
-    this.set({ status: 'open', attempt: 0 });
+    this.set({ status: 'open', attempt: 0, unreachable: false });
     const id = loadIdentity(this.code);
     if (id) {
       this.raw({
@@ -282,25 +333,54 @@ export class RoomClient {
     if (this.disposed) return;
     if (code === KICK_CLOSE_CODE) return this.fatal('kicked');
     if (this.state.fatal) return;
-    if (!this.hasBeenOpen) {
-      this.failuresBeforeOpen++;
-      if (this.failuresBeforeOpen >= NEVER_OPENED_LIMIT) return this.fatal('notfound');
+    const failedConnect = !this.socketOpened;
+    this.socketOpened = false;
+    const nowMs = this.now();
+    if (this.outageSince === null) this.outageSince = nowMs;
+    if (failedConnect) {
+      if (this.probe) this.checkRoomGone();
+      else if (!this.hasBeenOpen && ++this.failuresBeforeOpen >= NEVER_OPENED_LIMIT)
+        return this.fatal('notfound');
     }
     const attempt = this.state.attempt;
-    this.set({ status: this.hasBeenOpen ? 'reconnecting' : 'connecting', attempt: attempt + 1 });
+    const status = this.hasBeenOpen ? 'reconnecting' : 'connecting';
+    if (nowMs - this.outageSince >= this.giveUpMs || attempt + 1 >= this.maxAttempts) {
+      // A backgrounded tab pauses (timers are throttled, the network may be gone); resume() restarts.
+      this.set({ status, attempt: attempt + 1, unreachable: !this.isHidden() });
+      return;
+    }
+    this.set({ status, attempt: attempt + 1 });
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
       this.connect();
     }, backoffDelay(attempt, this.random));
   }
 
+  /**
+   * A connect failed. If the server still answers over HTTP, the room is what is missing (a WS 404
+   * looks like any other failure to a browser): after a couple of those, stop (05 section 11).
+   */
+  private checkRoomGone(): void {
+    const epoch = this.epoch;
+    void this.probe!().then((reachable) => {
+      if (this.disposed || this.state.fatal || epoch !== this.epoch) return;
+      if (!reachable) {
+        this.reachableStrikes = 0;
+        return;
+      }
+      const limit = this.hasBeenOpen ? ROOM_GONE_STRIKES : NEVER_OPENED_LIMIT;
+      if (++this.reachableStrikes >= limit) this.fatal(this.hasBeenOpen ? 'gone' : 'notfound');
+    });
+  }
+
   private fatal(reason: Fatal): void {
-    if (reason === 'kicked' || reason === 'banned') clearIdentity(this.code);
+    if (reason !== 'full' && reason !== 'started' && reason !== 'version') clearIdentity(this.code);
+    this.epoch++;
     this.teardownSocket();
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
     this.reconnectTimer = null;
     this.failPending('OFFLINE');
-    this.set({ fatal: reason, status: 'closed', joining: false, needsJoin: false });
+    this.set({ fatal: reason, status: 'closed', joining: false, needsJoin: false, unreachable: false });
   }
 
   private failPending(code: 'OFFLINE'): void {
@@ -361,7 +441,8 @@ export class RoomClient {
   private onErr(code: ErrorCode, msg?: string): void {
     switch (code) {
       case 'ROOM_NOT_FOUND':
-        return this.fatal('notfound');
+        // Known room (we had a seat or a snapshot) vs a typo'd code on first visit.
+        return this.fatal(loadIdentity(this.code) || this.state.view ? 'gone' : 'notfound');
       case 'ROOM_FULL':
         return this.fatal('full');
       case 'GAME_IN_PROGRESS':
