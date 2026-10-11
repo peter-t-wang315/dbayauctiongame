@@ -136,7 +136,14 @@ export class MockRoom {
       return boundPlayer;
     }
     if (msg.t === 'leave') {
-      this.disconnect(boundPlayer);
+      if (this.phase === 'lobby') {
+        // Leaving the lobby frees the seat (05 section 6.1).
+        this.players = this.players.filter((p) => p.id !== boundPlayer);
+        if (this.hostId === boundPlayer) this.hostId = this.players.find((p) => !p.isBot)?.id ?? '';
+        this.broadcast();
+      } else {
+        this.disconnect(boundPlayer);
+      }
       return null;
     }
     this.action(boundPlayer, msg, now);

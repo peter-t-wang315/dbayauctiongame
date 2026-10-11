@@ -114,6 +114,10 @@ export default tseslint.config(
           ROOM_CORE,
           SERVER_APP,
           { group: ['@dbay/content/src/*'], message: 'Use @dbay/content/public.' },
+          {
+            group: ['**/packages/engine/**', '**/packages/room-core/**', '**/packages/content/**'],
+            message: 'Import workspace packages by name; relative paths bypass the boundaries.',
+          },
         ],
       ),
     },

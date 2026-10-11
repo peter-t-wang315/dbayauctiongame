@@ -327,7 +327,15 @@ export function parseClientFrame(raw: string): ParseResult<ClientMsg> {
     return { ok: false, code: 'BAD_MESSAGE' };
   }
   const parsed = ClientMsgSchema.safeParse(json);
-  if (!parsed.success) return { ok: false, code: 'BAD_MESSAGE' };
+  if (!parsed.success) {
+    // A join/rename that is otherwise well-formed but has a bad name gets NAME_INVALID (05 section 6.4).
+    const t = (json as { t?: unknown } | null)?.t;
+    const onlyName = parsed.error.issues.every((i) => i.path[0] === 'name');
+    return {
+      ok: false,
+      code: (t === 'join' || t === 'rename') && onlyName ? 'NAME_INVALID' : 'BAD_MESSAGE',
+    };
+  }
   const msg = parsed.data;
   if ((msg.t === 'join' || msg.t === 'hello') && msg.v !== PROTOCOL_VERSION) {
     return { ok: false, code: 'VERSION_MISMATCH' };

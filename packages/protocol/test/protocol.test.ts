@@ -173,10 +173,20 @@ describe('client messages', () => {
     });
     it(`${t}: invalid fixtures are rejected`, () => {
       for (const bad of invalidClient[t as ClientMsg['t']]) {
-        expect(parseClientFrame(JSON.stringify(bad))).toEqual({ ok: false, code: 'BAD_MESSAGE' });
+        expect(parseClientFrame(JSON.stringify(bad)).ok).toBe(false);
       }
     });
   }
+
+  it('returns NAME_INVALID for a bad name on join and rename', () => {
+    for (const bad of [
+      { t: 'join', v, name: '' },
+      { t: 'join', v, name: 'x'.repeat(17) },
+      { t: 'rename', seq: 1, name: '   ' },
+    ]) {
+      expect(parseClientFrame(JSON.stringify(bad))).toEqual({ ok: false, code: 'NAME_INVALID' });
+    }
+  });
 
   it('trims names', () => {
     const r = parseClientFrame(JSON.stringify({ t: 'join', v, name: '  Sam  ' }));

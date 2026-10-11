@@ -1,6 +1,7 @@
 // HTTP + WebSocket mock of the Worker (05 sections 5-6): POST /api/rooms and /parties/room/:code.
 import { createServer, type Server } from 'node:http';
 import {
+  MAX_INBOUND_BYTES,
   ROOM_CODE_ALPHABET,
   ROOM_CODE_LENGTH,
   normalizeRoomCode,
@@ -64,7 +65,7 @@ export function startMockServer(port = 8787, log = console.log): Promise<MockSer
     res.writeHead(404).end();
   });
 
-  const wss = new WebSocketServer({ noServer: true });
+  const wss = new WebSocketServer({ noServer: true, maxPayload: MAX_INBOUND_BYTES });
   http.on('upgrade', (req, socket, head) => {
     const match = /^\/parties\/room\/([^/?]+)/.exec(req.url ?? '');
     const code = match ? normalizeRoomCode(decodeURIComponent(match[1]!)) : null;

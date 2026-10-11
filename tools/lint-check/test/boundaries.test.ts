@@ -21,6 +21,13 @@ describe('import boundaries', () => {
     }
   });
 
+  it('apps/web cannot reach packages through relative paths', async () => {
+    const code = `import x from '../../../packages/engine/src/index';
+export default x;
+`;
+    expect(await ruleIds(code, 'apps/web/app/bad.ts')).toContain('no-restricted-imports');
+  });
+
   it('apps/web may import protocol and public content', async () => {
     const code = `import { CATEGORIES } from '@dbay/content/public';\nimport { PROTOCOL_VERSION } from '@dbay/protocol';\nexport const x = [CATEGORIES, PROTOCOL_VERSION];\n`;
     expect(await ruleIds(code, 'apps/web/app/ok.ts')).toEqual([]);
