@@ -1,19 +1,25 @@
 // The real rules engine. `createEngine(pack)` binds the content lookups; `engine` uses the active
-// pack. NOT yet re-exported from index.ts (public API is frozen; see docs/progress/ws1.md).
+// pack. index.ts exports `engine` as the public engine (contract PR engine-real-and-length).
 import { activePack, type ContentPack } from '@dbay/content';
 import type { PlayerId } from '@dbay/protocol';
 import { CONFIG } from './config';
-import { botActionFor, type BotLevel } from './bots';
+import { botActionFor } from './bots';
 import { nextDeadlineOf, runAction, runTick, startGame, type Ctx } from './game';
 import { indexPack, type PackIndex } from './pack';
 import { scorableCount, scoreGame } from './scoring';
 import { initState } from './setup';
-import type { ApplyResult, Engine, EngineAction, EngineState, GameEvent, GameSetup } from './types';
+import type {
+  ApplyResult,
+  BotLevel,
+  Engine,
+  EngineAction,
+  EngineState,
+  GameEvent,
+  GameSetup,
+} from './types';
 
 export interface RealEngine extends Engine {
-  /** R37: how long `reveal` lasts before `ended`, from the final state. */
-  revealDelayMs(state: EngineState): number;
-  /** botAction with an explicit skill level (the plain `botAction` uses 'careful'). */
+  /** botAction with an explicit skill level (same as `botAction(state, player, now, level)`). */
   botActionAt(
     level: BotLevel,
     state: EngineState,
@@ -50,8 +56,8 @@ export function createEngine(pack: ContentPack): RealEngine {
     score(state: EngineState) {
       return scoreGame(idx, state);
     },
-    botAction(state, player, now) {
-      return botActionFor('careful', idx, state, player, now);
+    botAction(state, player, now, level = 'careful') {
+      return botActionFor(level, idx, state, player, now);
     },
     botActionAt(level, state, player, now) {
       return botActionFor(level, idx, state, player, now);

@@ -5,9 +5,9 @@ import type { PlayerId } from '@dbay/protocol';
 import { legalBids, topOf } from './game';
 import type { PackIndex } from './pack';
 import { hashString } from './rng';
-import type { BidCard, EngineAction, EnginePlayer, EngineState } from './types';
+import type { BidCard, BotLevel, EngineAction, EnginePlayer, EngineState } from './types';
 
-export type BotLevel = 'random' | 'greedy' | 'careful';
+export type { BotLevel };
 
 /** What a Proxy is "worth spending" in face-value terms when comparing against an item. */
 const PROXY_COST = 150;

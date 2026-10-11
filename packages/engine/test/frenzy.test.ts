@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CONFIG } from '../src/config';
+import { CONFIG, LENGTH_PRESETS } from '../src/config';
 import { T0, act, clone, engine, kinds, mkSetup, newGame, player, px, stackOn, v } from './helpers';
 
 const frenzy = (n = 5, seed = 'f1') => newGame(n, 'frenzy', seed);
@@ -43,8 +43,8 @@ describe('F2 bay timer', () => {
       const s = frenzy(5, seed).state;
       for (const b of s.bays) {
         expect(b.openedAt).toBe(T0);
-        expect(b.closesAt! - T0).toBeGreaterThanOrEqual(CONFIG.frenzyOpenMinMs);
-        expect(b.closesAt! - T0).toBeLessThanOrEqual(CONFIG.frenzyOpenMaxMs);
+        expect(b.closesAt! - T0).toBeGreaterThanOrEqual(LENGTH_PRESETS.standard.frenzyOpenMinMs);
+        expect(b.closesAt! - T0).toBeLessThanOrEqual(LENGTH_PRESETS.standard.frenzyOpenMaxMs);
       }
     }
     const [x, y] = [frenzy(5, 'a').state, frenzy(5, 'b').state];
@@ -79,7 +79,9 @@ describe('F3 expiry', () => {
     expect(r.state.players[1]!.won).toEqual([before]);
     expect(r.state.bays[0]!.card).toBe(next);
     expect(r.state.bays[0]!.openedAt).toBe(at);
-    expect(r.state.bays[0]!.closesAt! - at).toBeGreaterThanOrEqual(CONFIG.frenzyOpenMinMs);
+    expect(r.state.bays[0]!.closesAt! - at).toBeGreaterThanOrEqual(
+      LENGTH_PRESETS.standard.frenzyOpenMinMs,
+    );
     expect(r.state.resolved).toBe(1);
   });
   it('F3: an empty bay re-arms +10000 up to 2 times, then is discarded unsold and refilled', () => {
@@ -211,8 +213,10 @@ describe('F8 Relaxed', () => {
   it('F8: durations x1.5 (open, anti-snipe, idle, hard cap); cooldown unscaled', () => {
     const s = engine.setup({ ...mkSetup(5, 'r', 'frenzy'), relaxed: true }, T0).state;
     for (const b of s.bays) {
-      expect(b.closesAt! - T0).toBeGreaterThanOrEqual(CONFIG.frenzyOpenMinMs * 1.5);
-      expect(b.closesAt! - T0).toBeLessThanOrEqual(CONFIG.frenzyOpenMaxMs * 1.5);
+      expect(b.closesAt! - T0).toBeGreaterThanOrEqual(
+        LENGTH_PRESETS.standard.frenzyOpenMinMs * 1.5,
+      );
+      expect(b.closesAt! - T0).toBeLessThanOrEqual(LENGTH_PRESETS.standard.frenzyOpenMaxMs * 1.5);
     }
     const c = clone(s);
     c.bays[0]!.closesAt = T0 + 20000;

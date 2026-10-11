@@ -38,3 +38,23 @@ Nothing. Remaining optional work: tune warnings (needs a user decision on consta
 3. Collections: 73-84% of players complete one at 3-4 players (and in Frenzy at all sizes) with careful bots; target is 30-70%. Trying 5/6 categories in play at 3/4 players gives about 71% / 68%. Raise `catsInPlay` (01 section 8)? Human players are probably less collection-driven than the bots.
 4. Score spread winner/last (median) is above 4x at 6 players (about 5.7x classic): one unlucky seat gets few items.
 5. Frenzy bot skill is flat: careful does not beat random bots there (the Frenzy sim is mostly decided by who bids fast).
+
+---
+
+# Follow-up: real engine export + game length presets
+
+## Branch / base
+Part 1: `contract/engine-real-and-length`, base `ws1-engine` (draft PR base `ws1-engine`). Part 2: `ws1-engine/length-presets`, base the contract branch. User decisions: new lobby option `length: 'quick'|'standard'` (default standard, independent of mode); Standard ~8 deck cards/player, Quick ~6; catsInPlay 3p 4->5, 4p 5->6 (max 6).
+
+## Done
+- Contract PR: `index.ts` exports `engine`/`createEngine`/`RealEngine`; `Engine.botAction(..., level?)` and `Engine.revealDelayMs`; `GameSetup.length`, `EngineState.length`; protocol v2 `length` on setOpts and PlayerView.opts (optional); `LENGTH_PRESETS`/`presetOf` in config.ts (placeholders equal to the old values; DECK_BY_PLAYERS, ROUNDS_BY_PLAYERS, frenzyOpenMin/MaxMs moved from CONFIG into presets); mock-server echoes `length`; docs/05 updated; golden snapshots regenerated (additive `length` field).
+
+## In progress
+Nothing.
+
+## Next
+Part 2: human-pacing mode in tools/sim; tune LENGTH_PRESETS; update docs 01 s8-9 and 02; preset deck tests.
+
+## Gotchas / decisions
+- `stubEngine` kept for tests; `engine` is the real one.
+- `length` is optional everywhere (absent = standard) so apps/web on another branch keeps typechecking.

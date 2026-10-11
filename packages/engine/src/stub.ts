@@ -1,7 +1,7 @@
 // WS0 stub engine: deals hands and fills bays deterministically so room-core and the mock server
 // can be built against real types. It plays no rules. WS1 replaces it with the real engine.
 import { activePack } from '@dbay/content';
-import { CONFIG, type PlayerCount } from './config';
+import { CONFIG, presetOf, type PlayerCount } from './config';
 import type { BidCard, Engine, EngineState } from './types';
 
 export function startingHand(): BidCard[] {
@@ -27,6 +27,7 @@ export const stubEngine: Engine = {
       mode: setup.mode,
       bidWindowMs: setup.bidWindowMs,
       relaxed: setup.relaxed,
+      length: setup.length ?? 'standard',
       stage: 'bidding',
       players: setup.players.map((p, seat) => ({
         ...p,
@@ -45,8 +46,13 @@ export const stubEngine: Engine = {
       colorBag: [],
       call: null,
       callsDone: 0,
-      callsTotal: CONFIG.ROUNDS_BY_PLAYERS[count] * count,
-      round: { n: 1, of: CONFIG.ROUNDS_BY_PLAYERS[count], halfway: false, last: false },
+      callsTotal: presetOf(setup.length).ROUNDS_BY_PLAYERS[count] * count,
+      round: {
+        n: 1,
+        of: presetOf(setup.length).ROUNDS_BY_PLAYERS[count],
+        halfway: false,
+        last: false,
+      },
       saleSeq: 0,
       giftSales: {},
       gift: null,
@@ -81,5 +87,8 @@ export const stubEngine: Engine = {
   },
   botAction() {
     return null;
+  },
+  revealDelayMs() {
+    return CONFIG.revealBaseMs;
   },
 };

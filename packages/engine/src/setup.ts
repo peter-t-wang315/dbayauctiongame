@@ -1,5 +1,6 @@
 // Game setup: bid cards (R2), bays (R1), deck build (R4), initial fill (R5), RNG streams (R6).
-import { CONFIG, type PlayerCount } from './config';
+import { DEFAULT_LENGTH, type GameLength } from '@dbay/protocol';
+import { CONFIG, presetOf, type PlayerCount } from './config';
 import type { PackIndex } from './pack';
 import { initRng, shuffle, type RngState } from './rng';
 import type { BidCard, EngineState, GameSetup } from './types';
@@ -18,8 +19,13 @@ export function newHand(): BidCard[] {
 }
 
 /** R4: category subset, round-robin items, specials, shuffle. Uses the `deck` stream. */
-export function buildDeck(idx: PackIndex, count: PlayerCount, rng: RngState): string[] {
-  const spec = CONFIG.DECK_BY_PLAYERS[count];
+export function buildDeck(
+  idx: PackIndex,
+  count: PlayerCount,
+  rng: RngState,
+  length?: GameLength,
+): string[] {
+  const spec = presetOf(length).DECK_BY_PLAYERS[count];
   const cats = shuffle(rng, 'deck', idx.categories).slice(0, spec.catsInPlay);
   const lists = cats.map((c) => shuffle(rng, 'deck', idx.itemsByCategory.get(c) ?? []));
   const items: string[] = [];
@@ -45,19 +51,21 @@ export function initState(idx: PackIndex, setup: GameSetup, now: number): Engine
   if (n < 3 || n > 6) throw new RangeError(`dBay needs 3-6 players, got ${n}`);
   const count = n as PlayerCount;
   const rng = initRng(setup.seed);
-  const deck = buildDeck(idx, count, rng);
+  const deck = buildDeck(idx, count, rng, setup.length);
   const deckSize = deck.length;
   const bays = Array.from({ length: CONFIG.BAYS_BY_PLAYERS[count] }, (_, i) => ({
     idx: i,
     card: deck.shift() ?? null,
     stack: [],
   }));
-  const rounds = CONFIG.ROUNDS_BY_PLAYERS[count];
+  const length = setup.length ?? DEFAULT_LENGTH;
+  const rounds = presetOf(length).ROUNDS_BY_PLAYERS[count];
   return {
     seed: setup.seed,
     mode: setup.mode,
     bidWindowMs: setup.bidWindowMs,
     relaxed: setup.relaxed,
+    length,
     stage: 'bidding',
     players: setup.players.map((p, seat) => ({
       id: p.id,
