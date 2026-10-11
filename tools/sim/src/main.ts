@@ -4,6 +4,8 @@
 // Exits 1 when any HARD limit fails (non-terminating game, length >= 40 min, seat < 2 items,
 // collections outside 15-85%) and --assert is set; non-terminating games always exit 1.
 import type { GameLength } from '@dbay/protocol';
+import { readFileSync } from 'node:fs';
+import { LENGTH_PRESETS } from '@dbay/engine';
 import { evaluate, pickPack, runBatch, type Level, type Mode } from './sim';
 
 function arg(name: string, def: string): string {
@@ -23,6 +25,19 @@ const pacings = arg('pacing', 'bot').split(',') as Array<'bot' | 'human'>;
 const seed = arg('seed', 'sim');
 const pack = pickPack(arg('pack', 'auto'));
 const [rMin, rMax] = arg('reaction', '1500,4000').split(',').map(Number) as [number, number];
+
+// --override '{"standard":{"ROUNDS_BY_PLAYERS":{"3":80}}}' deep-merges into LENGTH_PRESETS (tuning aid).
+function merge(dst: Record<string, unknown>, src: Record<string, unknown>) {
+  for (const [k, v] of Object.entries(src)) {
+    const cur = dst[k];
+    if (v && typeof v === 'object' && cur && typeof cur === 'object')
+      merge(cur as Record<string, unknown>, v as Record<string, unknown>);
+    else dst[k] = v;
+  }
+}
+const overrideFile = arg('override-file', '');
+const override = overrideFile ? readFileSync(overrideFile, 'utf8') : arg('override', '');
+if (override) merge(LENGTH_PRESETS as unknown as Record<string, unknown>, JSON.parse(override));
 
 let hardFail = false;
 let nonTerminating = 0;

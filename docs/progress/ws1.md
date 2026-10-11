@@ -58,3 +58,9 @@ Part 2: human-pacing mode in tools/sim; tune LENGTH_PRESETS; update docs 01 s8-9
 ## Gotchas / decisions
 - `stubEngine` kept for tests; `engine` is the real one.
 - `length` is optional everywhere (absent = standard) so apps/web on another branch keeps typechecking.
+
+## Part 2 progress (branch ws1-length-presets; NOTE: `ws1-engine/length-presets` is impossible because branch `ws1-engine` exists)
+- Done: sim `--pacing human`, `--lengths`, `--override-file`; presets hold deck/rounds/close-roll (per player count)/Frenzy timers. Classic tuned at 60-100 games: Quick 9.3-9.9 min, Standard 15-17+ min (human pacing).
+- Collection share (careful bots, Standard, 6 cats): 86-91%, structural (random bots 68-75%); cannot be fixed within 6 categories. Report to user.
+- Standard 3p Classic auto-skip about 5%.
+- Next: tune Frenzy timers (presets), docs 01/02 updates, preset deck tests, final 1000-game runs, PR.

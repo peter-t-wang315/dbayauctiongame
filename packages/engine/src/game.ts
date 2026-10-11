@@ -233,7 +233,7 @@ function finishCall(state: EngineState, ctx: Ctx, t: number, gapMs: number): voi
 /** R17-R18: roll each eligible bay in index order; refill sold bays afterwards. */
 function closeRoll(state: EngineState, ctx: Ctx, callNo: number, players: number): void {
   const total = state.callsTotal;
-  const pre = presetOf(state.length);
+  const pre = presetOf(state.length).CLOSE_BY_PLAYERS[players as PlayerCount];
   const p = pre.pBase + ((pre.pMax - pre.pBase) * callNo) / total;
   const sold: EngineBay[] = [];
   for (const bay of state.bays) {

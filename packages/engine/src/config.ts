@@ -27,35 +27,67 @@ export interface LengthPreset {
   frenzyIdleRecheckMs: number;
   /** F7: elapsed time that triggers the last round. */
   frenzyMaxMs: number;
-  /** R17: close probability ramps from pBase to pMax over the game. */
+  /**
+   * R17: close probability ramps from pBase to pMax over the game; a bay is force-closed after
+   * maxBayAgeCycles x players calls. Per player count because the deck-to-bay ratio differs.
+   */
+  CLOSE_BY_PLAYERS: Record<PlayerCount, CloseSpec>;
+}
+
+export interface CloseSpec {
   pBase: number;
   pMax: number;
-  /** R17: a bay is force-closed after this many cycles (x players calls). */
   maxBayAgeCycles: number;
 }
 
-// ASSUMED. Placeholder: both presets equal the original single table until tuned (docs/02).
-const BASE_PRESET: LengthPreset = {
+// ASSUMED (docs/01 section 8-9, docs/02 section 4). Tuned with `tools/sim` under human pacing.
+const QUICK: LengthPreset = {
+  // ~6 deck cards per player.
   DECK_BY_PLAYERS: {
-    3: { items: 16, displayCase: 1, gift: 1, catsInPlay: 4 },
-    4: { items: 21, displayCase: 2, gift: 1, catsInPlay: 5 },
+    3: { items: 16, displayCase: 1, gift: 1, catsInPlay: 5 },
+    4: { items: 21, displayCase: 2, gift: 1, catsInPlay: 6 },
     5: { items: 26, displayCase: 2, gift: 2, catsInPlay: 6 },
     6: { items: 31, displayCase: 3, gift: 2, catsInPlay: 6 },
   },
-  ROUNDS_BY_PLAYERS: { 3: 30, 4: 25, 5: 20, 6: 18 },
+  ROUNDS_BY_PLAYERS: { 3: 52, 4: 36, 5: 23, 6: 19 },
+  frenzyOpenMinMs: 18000,
+  frenzyOpenMaxMs: 30000,
+  frenzyHardCapMs: 60000,
+  frenzyIdleRecheckMs: 10000,
+  frenzyMaxMs: 720000,
+  CLOSE_BY_PLAYERS: {
+    3: { pBase: 0.02, pMax: 0.07, maxBayAgeCycles: 7 },
+    4: { pBase: 0.04, pMax: 0.12, maxBayAgeCycles: 4 },
+    5: { pBase: 0.05, pMax: 0.15, maxBayAgeCycles: 3 },
+    6: { pBase: 0.05, pMax: 0.15, maxBayAgeCycles: 3 },
+  },
+};
+
+const STANDARD: LengthPreset = {
+  // ~8 deck cards per player.
+  DECK_BY_PLAYERS: {
+    3: { items: 21, displayCase: 2, gift: 1, catsInPlay: 6 },
+    4: { items: 28, displayCase: 2, gift: 2, catsInPlay: 6 },
+    5: { items: 35, displayCase: 3, gift: 2, catsInPlay: 6 },
+    6: { items: 42, displayCase: 3, gift: 3, catsInPlay: 6 },
+  },
+  ROUNDS_BY_PLAYERS: { 3: 110, 4: 58, 5: 42, 6: 33 },
   frenzyOpenMinMs: 18000,
   frenzyOpenMaxMs: 30000,
   frenzyHardCapMs: 60000,
   frenzyIdleRecheckMs: 10000,
   frenzyMaxMs: 1500000,
-  pBase: 0.05,
-  pMax: 0.15,
-  maxBayAgeCycles: 3,
+  CLOSE_BY_PLAYERS: {
+    3: { pBase: 0.008, pMax: 0.036, maxBayAgeCycles: 10 },
+    4: { pBase: 0.025, pMax: 0.08, maxBayAgeCycles: 6 },
+    5: { pBase: 0.03, pMax: 0.085, maxBayAgeCycles: 5 },
+    6: { pBase: 0.04, pMax: 0.1, maxBayAgeCycles: 4 },
+  },
 };
 
 export const LENGTH_PRESETS: Record<GameLength, LengthPreset> = {
-  quick: BASE_PRESET,
-  standard: BASE_PRESET,
+  quick: QUICK,
+  standard: STANDARD,
 };
 
 /** The preset for a state/setup `length` (absent = 'standard'). */

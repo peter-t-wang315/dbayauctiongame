@@ -310,13 +310,13 @@ describe('R17 close roll', () => {
     const g = newGame(3);
     const s = clone(g.state);
     stackOn(s, 0, [['p1', v(50)]], {
-      first: 1 - LENGTH_PRESETS.standard.maxBayAgeCycles * 3,
+      first: 1 - LENGTH_PRESETS.standard.CLOSE_BY_PLAYERS[3].maxBayAgeCycles * 3,
       last: 0,
     });
     expect(kinds(expire(s).events)).toContain('sold');
     const s2 = clone(g.state);
     stackOn(s2, 0, [['p1', v(50)]], {
-      first: 2 - LENGTH_PRESETS.standard.maxBayAgeCycles * 3,
+      first: 2 - LENGTH_PRESETS.standard.CLOSE_BY_PLAYERS[3].maxBayAgeCycles * 3,
       last: 0,
     });
     // one call younger: not forced, so only the random roll can sell it (rng-dependent)
