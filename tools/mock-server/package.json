@@ -1,0 +1,21 @@
+{
+  "name": "@dbay/mock-server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p .",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests",
+    "start": "tsx src/main.ts"
+  },
+  "dependencies": {
+    "@dbay/content": "workspace:*",
+    "@dbay/protocol": "workspace:*",
+    "ws": "8.22.0"
+  },
+  "devDependencies": {
+    "@types/ws": "8.18.2",
+    "tsx": "4.23.15"
+  }
+}

@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+dist/
+.wrangler/
+.dev.vars
+.env*.local
+coverage/
+*.log
+next-env.d.ts

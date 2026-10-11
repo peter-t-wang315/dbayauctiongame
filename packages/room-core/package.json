@@ -1,0 +1,18 @@
+{
+  "name": "@dbay/room-core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p .",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@dbay/engine": "workspace:*",
+    "@dbay/protocol": "workspace:*"
+  }
+}
