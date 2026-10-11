@@ -40,6 +40,9 @@ export const CONFIG = {
   revealBaseMs: 5000,
   revealPerCardMs: 600,
   // R35, R26, R33
+  // R36 / 04 reveal tags: STEAL! at actual >= 1.3x est, Ripped off! at <= 0.6x est
+  stealRatio: 1.3,
+  rippedRatio: 0.6,
   proxyTiebreakValue: 0,
   displayCaseValue: 100,
   collectionMin: 3,
