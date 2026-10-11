@@ -106,7 +106,6 @@ export const CONFIG = {
   relaxedMultiplier: 1.5,
   callGapMs: 1500,
   skipGapMs: 1000,
-  // R17
   // R29-R30
   giftChoiceMs: 15000,
   // R37
