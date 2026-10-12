@@ -64,7 +64,7 @@ test('Classic 3 bays at 390x844: fits without scrolling, two-tap bid works', asy
   await expect(page.locator('[data-fx="bay"][data-state="legal"]').first()).toBeVisible();
   await page.screenshot({ path: 'test-results/ws5-classic3-selected.png' });
   await page.locator('[data-fx="bay"][data-state="legal"]').first().click();
-  await expect(page.locator('[data-card="v50"]')).toHaveAttribute('data-state', /out/, { timeout: 5000 });
+  await expect(page.locator('[data-card="v50"]')).toHaveAttribute('data-state', /out|spent/, { timeout: 5000 });
   // after my bid the turn ends: hand locked
   await expect(page.locator('[data-fx="hand-card"][data-state="locked"]').first()).toBeVisible();
   // the collection sheet opens and closes
@@ -87,3 +87,39 @@ test('Frenzy 4 bays at 390x844: timers show, bid without waiting for a turn', as
     await expect(page.locator('[data-card="v10"]')).toHaveAttribute('data-state', /out|spent|ready/, { timeout: 5000 });
   }
 });
+
+test('Desktop 1280x800: docked sidebar, one row of bays and cards, keyboard bid', async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const page = await ctx.newPage();
+  await startGame(page, 'Classic', 2);
+  await expect(page.locator('.g-side')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Menu: players/ })).toBeHidden();
+  const ys = await page
+    .locator('[data-fx="bay"]')
+    .evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
+  expect(new Set(ys).size).toBe(1);
+  const cardYs = await page
+    .locator('[data-fx="hand-card"]')
+    .evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
+  expect(new Set(cardYs).size).toBe(1);
+  await page.screenshot({ path: 'test-results/ws5-desktop.png' });
+  await expect(page.getByText(/Your turn, Sam/).first()).toBeVisible({ timeout: 40_000 });
+  await page.keyboard.press('3'); // third unspent value card ($50)
+  await expect(page.locator('[data-card="v50"]')).toHaveAttribute('data-state', 'selected');
+  await page.keyboard.press('q');
+  await expect(page.locator('[data-card="v50"]')).toHaveAttribute('data-state', /out|spent/, { timeout: 5000 });
+  await ctx.close();
+});
+
+for (const [mode, bots, bays] of [
+  ['Classic', 4, 4],
+  ['Frenzy', 2, 3],
+] as const) {
+  test(`${mode} with ${bays} bays fits at 390x844 and 360x640 (04 section 14 matrix)`, async ({ page }) => {
+    await startGame(page, mode, bots);
+    await expect(page.locator('[data-fx="bay"]')).toHaveCount(bays);
+    expect(await layout(page)).toMatchObject({ hScroll: false, vScroll: false, inner: false, smallTargets: 0 });
+    await page.setViewportSize({ width: 360, height: 640 });
+    expect(await layout(page)).toMatchObject({ hScroll: false, vScroll: false, inner: false, smallTargets: 0 });
+  });
+}
