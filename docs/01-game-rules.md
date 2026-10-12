@@ -34,6 +34,7 @@ This doc defines shared rules plus Classic mode. Frenzy overrides are in `02-mod
   2. The called player bids or passes.
   3. Close roll (R17-R18).
   4. Refill sold bays (R21).
+  4b. No-bid round check (R18b), at the end of a round.
   5. Next call.
 - **R11 Bid window** (ASSUMED value; "a few seconds" CONFIRMED RP): `bidWindowMs` default 5000; lobby options 3000/5000/8000; Relaxed x1.5. The server owns the deadline (`endsAt`). A bid arriving after it is rejected (`late`). Expiry with no bid = pass (buzzer).
 - **R12 Early end** (ASSUMED): a legal bid ends the window immediately; wait `callGapMs` before the next call.
@@ -54,9 +55,10 @@ This doc defines shared rules plus Classic mode. Frenzy overrides are in `02-mod
   - A player outbid on a bay MAY bid there again with a different card.
 - **R17 Close roll** (ASSUMED; unpredictability CONFIRMED TX L297, L431): after each call resolves, for each bay in index order, if **eligible**, roll the `closes` stream against `p`.
   - Eligible: stack non-empty AND `lastBidCall < currentCall` (a bay can't close on the call that placed its latest bid).
-  - `p = pBase + (pMax - pBase) x callsDone / N`.
-  - **Forced close**: eligible and `currentCall - firstBidCall >= maxBayAgeCycles x players` -> closes with p = 1.
+  - `p = min(1, pBase + (pMax - pBase) x callsDone / N + ageBonusPerCycle x ageCycles)`, where `ageCycles = (currentCall - firstBidCall) / players` (user decision 2026-10-12, ASSUMED: older bays close sooner, so no bay with bids stays stuck for many rounds). The bonus counts from the bay's first bid, so a long-held bay is rolled harder on every call.
+  - **Forced close**: eligible and `currentCall - firstBidCall >= maxBayAgeCycles x players` -> closes with p = 1 (hard cap).
 - **R18 Unbid items** (ASSUMED; carry-over CONFIRMED TX L234): a bay with an empty stack MUST NOT close and is not rolled.
+- **R18b No-bid round clears the bays** (Classic only; user decision 2026-10-12, ASSUMED): if a full round (R7: every player called once) passes with **zero accepted bids on any bay**, then at the end of that round (after the close roll and refill) every bay is cleared, except a bay that was sold and refilled on that same call (its item has not been seen yet). A cleared bay with an empty stack discards its item unsold. A cleared bay that still holds bids from earlier rounds returns every bid card to its owner's hand and discards its item unsold: nobody wins it. Each cleared bay emits `unsold` with `extra: 'noBidRound'`. Then the cleared bays refill from the deck in bay order (R21). Does not trigger in the final round (R22 sweeps instead) or when every bay is already `null` (R23). Frenzy is unchanged (F3 discards idle items). This amends R18: an unbid item can now be discarded before the sweep.
 - **R19 Sale** (CONFIRMED RP; TX L106-112): winner = owner of the top bid. The winning card is discarded permanently; every other card on that bay returns to its owner's hand; the auction card goes to the winner's collection. Announce "Sold to {color} for {face|Proxy}".
 - **R20 Winning Proxy**: discarded like any card; price displayed as "Proxy".
 - **R21 Refill** (CONFIRMED TX L211, L234): each sold bay draws the next deck card immediately, in bay order. Deck empty -> bay stays `null`. Unsold bays keep their cards.
@@ -116,7 +118,7 @@ Rationale: the original single table (now Quick, with more categories at 3-4 pla
 | `BAYS_BY_PLAYERS` | {3:3,4:3,5:4,6:4} | R1 (both modes) |
 | `LENGTH_PRESETS[length].DECK_BY_PLAYERS` | section 8 | R4 |
 | `LENGTH_PRESETS[length].ROUNDS_BY_PLAYERS` | section 8 | R7; targets per mode x preset in 02 section 5 (human pacing) |
-| `LENGTH_PRESETS[length].CLOSE_BY_PLAYERS` (`pBase`, `pMax`, `maxBayAgeCycles`) | Quick {3: .005/.12/6, 4: .005/.12/5, 5: .05/.15/3, 6: .05/.15/3}; Standard {3: .005/.03/8, 4: .005/.05/6, 5: .03/.085/5, 6: .04/.10/4} | R17; the deck is mostly sold by ~85% of calls; per player count because the deck-to-bay ratio differs |
+| `LENGTH_PRESETS[length].CLOSE_BY_PLAYERS` (`pBase`, `pMax`, `maxBayAgeCycles`, `ageBonusPerCycle`) | Quick {3: .005/.02/4/.12, 4: .005/.02/4/.12, 5: .05/.15/3/.04, 6: .05/.15/3/.04}; Standard {3: .005/.02/4/.12, 4: .005/.03/4/.12, 5: .03/.085/4/.04, 6: .04/.10/4/.03} | R17 (user decision 2026-10-12: age term added, caps lowered; before: Quick {3: .005/.12/6, 4: .005/.12/5, 5,6: .05/.15/3}, Standard {3: .005/.03/8, 4: .005/.05/6, 5: .03/.085/5, 6: .04/.10/4}); per player count because the deck-to-bay ratio differs. At 3-4 players the age term dominates (small ramp), because no-bid clears (R18b) discard items when bays sit |
 | `bidWindowMs` | 5000 (3000/8000) | R11 |
 | `relaxedMultiplier` | 1.5 | WCAG 2.2.1 |
 | `callGapMs` | 1500 | R12 readability |

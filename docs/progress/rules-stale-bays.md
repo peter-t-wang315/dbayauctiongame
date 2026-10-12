@@ -6,12 +6,13 @@
 ## Done
 - Slice 1: sim metrics (bay wait first bid to sale, no-bid clears per game).
 - Slice 2: engine R18b (no-bid round clears all Classic bays) and R17 age term (`ageBonusPerCycle`), tests, replay snapshot, mock-server mirror.
+- Slice 3: docs 01 (R17, R18b, section 9) and 02 (sections 5, 7), final constants, before/after tables.
 
 ## In progress
-- Tuning constants with `tools/sim` and writing docs 01 / 02.
+- Nothing; PR open, awaiting review (do not merge).
 
 ## Next
-- Docs 01 (R17, R18b, section 9), 02 (sections 5 and 7), then PR with before/after tables.
+- Decide on Classic length targets (see 02 section 7, stale bays subsection).
 
 ## Gotchas / decisions
 - User decision 2026-10-12: R17 age term and R18b are ASSUMED rules.
