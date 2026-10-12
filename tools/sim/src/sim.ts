@@ -50,6 +50,11 @@ export interface BatchResult {
   proxyWinShare: number;
   giftFizzleShare: number;
   scoreSpread: number;
+  /** Classic: rounds a bay with bids waits from its first bid to its sale (median / p95 / max). */
+  bayWaitRounds: { median: number; p95: number; max: number };
+  /** Classic: no-bid-round clears (R18b) per game, and the share of cleared bays that held bids. */
+  noBidClearsPerGame: number;
+  noBidClearedWithBids: number;
 }
 
 export function pickPack(name: string): ContentPack {
@@ -89,6 +94,10 @@ export function runBatch(o: BatchOptions): BatchResult {
   let gifts = 0;
   let fizzles = 0;
   const spreads: number[] = [];
+  const bayWaits: number[] = [];
+  let noBidClears = 0;
+  let noBidBays = 0;
+  let noBidBaysWithBids = 0;
   const levelOf = (seat: number) => o.levels[seat % o.levels.length] as Level;
 
   for (let g = 0; g < o.games; g++) {
@@ -140,7 +149,31 @@ export function runBatch(o: BatchOptions): BatchResult {
       levelSeats[levelOf(seat)] = (levelSeats[levelOf(seat)] ?? 0) + 1;
     const dryCut = r.startMs + 0.75 * dur;
     for (const p of r.state.players) if ((r.dryAt[p.id] ?? Infinity) < dryCut) dryPlayers++;
+    // Bay age: calls (= 'turn' events) from a bay's first bid to its sale, in rounds.
+    let callNo = 0;
+    const firstBid = new Map<number, number>();
+    let clearedThisCall = false;
     for (const { e } of r.events) {
+      if (e.kind === 'turn') {
+        callNo++;
+        clearedThisCall = false;
+      }
+      if (e.kind === 'bid' && e.bay !== undefined && !firstBid.has(e.bay))
+        firstBid.set(e.bay, callNo);
+      if (e.kind === 'sold' && e.bay !== undefined) {
+        const f = firstBid.get(e.bay);
+        if (f !== undefined && o.mode === 'classic') bayWaits.push((callNo - f) / n);
+        firstBid.delete(e.bay);
+      }
+      if (e.kind === 'unsold' && e.bay !== undefined) {
+        if (e.extra === 'noBidRound') {
+          if (!clearedThisCall) noBidClears++;
+          clearedThisCall = true;
+          noBidBays++;
+          if (firstBid.has(e.bay)) noBidBaysWithBids++;
+        }
+        firstBid.delete(e.bay);
+      }
       if (e.kind === 'autoPass') autoSkips++;
       if (e.kind === 'sold') {
         sold++;
@@ -196,6 +229,13 @@ export function runBatch(o: BatchOptions): BatchResult {
     proxyWinShare: sold ? proxySold / sold : 0,
     giftFizzleShare: gifts ? fizzles / gifts : 0,
     scoreSpread: median(spreads),
+    bayWaitRounds: {
+      median: median(bayWaits),
+      p95: [...bayWaits].sort((a, b) => a - b)[Math.floor(bayWaits.length * 0.95)] ?? 0,
+      max: Math.max(0, ...bayWaits),
+    },
+    noBidClearsPerGame: done ? noBidClears / done : 0,
+    noBidClearedWithBids: noBidBays ? noBidBaysWithBids / noBidBays : 0,
   };
 }
 
@@ -247,6 +287,20 @@ export function evaluate(r: BatchResult): Check[] {
       r.roundsPlayed.max <= 50 ? 'ok' : 'warn',
       '<=~50',
     );
+  if (r.mode === 'classic') {
+    add(
+      'bay wait rounds, first bid to sale (med / p95 / max)',
+      `${r.bayWaitRounds.median.toFixed(2)} / ${r.bayWaitRounds.p95.toFixed(2)} / ${r.bayWaitRounds.max.toFixed(2)}`,
+      'ok',
+      'report (no bay should feel stuck)',
+    );
+    add(
+      'no-bid round clears per game (share w/ bids)',
+      `${r.noBidClearsPerGame.toFixed(2)} (${pct(r.noBidClearedWithBids)})`,
+      'ok',
+      'report',
+    );
+  }
   add(
     'items per player (mean / worst seat)',
     `${r.itemsPerPlayer.mean.toFixed(2)} / ${r.itemsPerPlayer.minSeat.toFixed(2)}`,
