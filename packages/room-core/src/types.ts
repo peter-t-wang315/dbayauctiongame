@@ -1,6 +1,7 @@
 // Room-core contract (docs/05-tech-stack.md section 7). Implemented by WS3a, driven by WS3b.
+// Additions made by WS3a over the WS0 stub are all OPTIONAL fields / optional params (additive).
 import type { EngineState, GameEvent, Mode } from '@dbay/engine';
-import type { ClientAction, PlayerId, ServerMsg } from '@dbay/protocol';
+import type { ClientAction, GameLength, PlayerId, ServerMsg } from '@dbay/protocol';
 
 export type Phase = 'lobby' | 'playing' | 'reveal' | 'ended';
 
@@ -17,6 +18,8 @@ export interface RoomPlayer {
   lastSeen: number;
   /** Highest action seq processed (05 section 6.5). */
   lastSeq: number;
+  /** When this human was last marked disconnected (drives host migration, 05 section 8). */
+  disconnectedAt?: number;
 }
 
 export interface Deadline {
@@ -25,17 +28,40 @@ export interface Deadline {
   data?: string;
 }
 
+export interface RoomOpts {
+  mode: Mode;
+  relaxed: boolean;
+  bidWindowMs: number;
+  /** Game length preset; absent means 'standard'. */
+  length?: GameLength;
+}
+
 export interface RoomState {
   meta: {
     code: string;
     schemaVersion: number;
     createdAt: number;
+    /** Effective expiry (base expiry, shortened to 10 min after the last human drops). */
     expireAt: number;
     hostId: PlayerId | null;
     phase: Phase;
-    opts: { mode: Mode; relaxed: boolean; bidWindowMs: number };
+    opts: RoomOpts;
     /** Hashes of banned secrets plus banned playerIds. */
     banned: string[];
+    /** Seed supplied by the wrapper (`seed` event) for the next `start`. SECRET; never in a view. */
+    seed?: string;
+    /** Phase-based expiry before the all-disconnected shortening. */
+    baseExpireAt?: number;
+    /** Set while every human is disconnected (05 section 8). */
+    allDownAt?: number;
+    /** When `reveal` flips to `ended` (01 R37). */
+    revealAt?: number;
+    /** Time of the last state-changing event (lets `view` judge cooldowns without a clock). */
+    updatedAt?: number;
+    /** Last game-log number issued. */
+    logN?: number;
+    /** True once the room expired. Further events get ROOM_NOT_FOUND. */
+    closed?: boolean;
   };
   players: RoomPlayer[];
   game: EngineState | null;
@@ -71,11 +97,20 @@ export type RoomEvent =
 
 export type Effect =
   | { type: 'send'; to: PlayerId | 'all' | { conn: string }; msg: ServerMsg }
-  /** Send each player their own redacted snapshot (built via `view`). */
+  /** Send each player their own redacted snapshot (built via `view`). Unused by room-core itself (it emits explicit `snap` sends). */
   | { type: 'broadcastSnapshots' }
   | { type: 'setAlarm'; at: number | null }
   | { type: 'persist' }
-  | { type: 'closeSocket'; playerId: PlayerId; why: 'kicked' | 'replaced' | 'expired' | 'banned' }
+  /**
+   * Close the player's sockets. With `exceptConn`, keep that connection open (used for
+   * `replaced`: the new socket that just sent `hello` must survive).
+   */
+  | {
+      type: 'closeSocket';
+      playerId: PlayerId;
+      why: 'kicked' | 'replaced' | 'expired' | 'banned';
+      exceptConn?: string;
+    }
   | { type: 'deleteRoom' }
   | { type: 'log'; entry: { room: string; event: string; rev: number } };
 
