@@ -25,6 +25,8 @@
   padding: var(--s-3);
   background: var(--card);
   color: var(--ink);
+  --text-dim: var(--on-card-dim);
+  --gold: var(--gold-on-card);
   border: var(--border);
   border-radius: var(--r-card);
   box-shadow: var(--shadow);
@@ -86,7 +88,7 @@
   white-space: nowrap;
 }
 .rv-card__est {
-  color: #6b7280;
+  color: var(--text-dim);
 }
 .rv-card__actual--hidden {
   display: inline-block;

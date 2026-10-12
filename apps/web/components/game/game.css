@@ -143,7 +143,7 @@
   min-width: var(--hit);
   padding: 0 var(--s-3);
   font: 800 14px/1 var(--font-body);
-  color: var(--text);
+  color: var(--on-card);
   background: var(--card);
   border: var(--border);
   border-radius: var(--r-pill);
@@ -299,7 +299,7 @@
   color: var(--ok);
 }
 .g-hint--no {
-  color: var(--text);
+  color: var(--on-card);
   background: var(--card);
   border: 1.5px solid var(--ink);
   border-radius: var(--r-chip);
