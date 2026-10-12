@@ -10,10 +10,14 @@
   "scripts": {
     "typecheck": "tsc -p .",
     "lint": "eslint .",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "sprites:preview": "tsx scripts/sprites-preview.ts"
   },
   "dependencies": {
     "@dbay/protocol": "workspace:*",
     "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "tsx": "4.23.15"
   }
 }

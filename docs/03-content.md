@@ -110,7 +110,7 @@ Columns: `id`, name, category, estimatedValue (Est), actualValue (Actual), x = a
 | `collectibles-coin-tin` | Old Metal Tin of Coins | collectibles | 100 | 175 | 1.75 | good | Rattles hopefully. Some coins are even from this century. |
 | `collectibles-amethyst` | Amethyst Stone | collectibles | 120 | 130 | 1.08 | fair | Purple, shiny, and quietly smug about it. |
 | `collectibles-stamp-album` | Stamp Album, Slightly Licked | collectibles | 90 | 95 | 1.06 | fair | Every stamp tells a story. Mostly "postage." |
-| `collectibles-rookie-card` | Rookie Trading Card | collectibles | 200 | 320 | 1.60 | good | Kept in a sleeve since 1987. Worth the paranoia. |
+| `collectibles-holo-monster-card` | Holo Pocket-Critter Card, 1st Edition | collectibles | 200 | 320 | 1.60 | good | Shiny, sleeved, and guarded like a small dragon. |
 | `collectibles-spoon-set` | Souvenir Spoon Collection | collectibles | 40 | 15 | 0.38 | dud | Forty spoons, zero soup. Zero demand. |
 | `collectibles-snow-globe` | Snow Globe of a Small Town | collectibles | 40 | 40 | 1.00 | fair | It snows indoors, perfectly, forever. |
 | `collectibles-meteorite` | Pocket-Sized Meteorite | collectibles | 150 | 270 | 1.80 | good | Fell from space. Landed in a yard sale. |
@@ -144,7 +144,7 @@ Columns: `id`, name, category, estimatedValue (Est), actualValue (Actual), x = a
 | `misc-snowshoes` | Snowshoes, Never Snowed | misc | 40 | 40 | 1.00 | fair | Waiting patiently for a winter that never comes. |
 | `misc-lava-lamp` | Bubbling Lava Lamp | misc | 90 | 150 | 1.67 | good | Hypnotic. Do not stare during auctions. |
 | `misc-tent` | Two-Person Tent for Four | misc | 160 | 160 | 1.00 | fair | Cozy. "Cozy" is doing a lot of work here. |
-| `misc-unicycle` | Unicycle | misc | 250 | 265 | 1.06 | fair | Half a bike, double the confidence. |
+| `misc-e-bike` | Electric Bicycle, Battery Included | misc | 250 | 265 | 1.06 | fair | Pedal-assist for people who want credit anyway. |
 
 ### 3.7 Per-category summary
 | Category | Sum est | Sum actual | dud / fair / good / jackpot |
@@ -272,5 +272,7 @@ type Item = { /* ...existing fields... */ sprite?: Sprite };          // missing
 **Authoring order:**
 1. Draw 6 category fallback sprites (MVP minimum).
 2. Draw per-item sprites (can be AI-drafted, then hand-tweaked in a pixel editor such as Piskel, which is free).
+
+**Status (WS2):** done. 6 category fallbacks (`CATEGORY_SPRITES`) and 60 item sprites (`ITEM_SPRITES`) live in `packages/content/src/sprites/`, exported from both entries and attached to every item as `sprite`. The shared palette is exported as `SHARED_PALETTE` (k, w); each sprite declares only its own colors (max 4) in `palette`. Specials have no sprite. Preview: `pnpm --filter @dbay/content sprites:preview` writes `packages/content/.preview/sprites.html` (gitignored).
 
 The mockup has 7 example sprites in `mockups/project/Game.dc.html` and `Frenzy.dc.html`: snake, bowl, map, bear, mixtape, alien, astronaut.
