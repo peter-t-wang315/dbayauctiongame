@@ -78,7 +78,7 @@ for (const length of lengths)
             `  by skill: ${Object.keys(r.levelWinShare)
               .map(
                 (l) =>
-                  `${l} win ${(r.levelWinShare[l]! * 100).toFixed(1)}% score ${r.levelMeanScore[l]!.toFixed(0)} items ${r.levelMeanItems[l]!.toFixed(2)}`,
+                  `${l} win ${(r.levelWinShare[l]! * 100).toFixed(1)}% (${(r.levelWinPerSeat[l]! * 100).toFixed(1)}%/seat) score ${r.levelMeanScore[l]!.toFixed(0)} items ${r.levelMeanItems[l]!.toFixed(2)}`,
               )
               .join(' | ')}`,
           );
