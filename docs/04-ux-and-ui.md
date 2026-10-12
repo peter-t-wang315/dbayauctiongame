@@ -115,9 +115,9 @@ Wireframes are 390px wide. `[ ]` = button, `( )` = chip.
 | Waiting for Sam to start...  (others)|
 +--------------------------------------+
 ```
-- Elements: code + Copy link (copies `https://host/r/CODE`, button text flips to "Copied!" for 1.5s), player chips (tap own chip to rename), mode selector (default follows player count: 3-4 Classic, 5-6 Frenzy; host may override, 02), bid-window selector (3/5/8 s, Classic only, 01 R11), Relaxed timing, Start, ⋯ (sound, haptics, theme, rules, leave).
+- Elements: code + Copy link (copies `https://host/r/CODE`, button text flips to "Copied!" for 1.5s), player chips (tap own chip to rename), mode selector (default follows player count: 3-4 Classic, 5-6 Frenzy; host may override, 02), game length selector (Quick / Standard, 01 section 8; hint shows target minutes per mode), bid-window selector (3/5/8 s, Classic only, 01 R11), Relaxed timing, Start, ⋯ (sound, haptics, theme, rules, leave).
 - States: loading/connecting (skeleton chips); reconnecting overlay (3.7); under 3 seats (humans + bots): Start disabled with "Need at least 3 players"; kicked (as 3.2); empty seats shown as dashed placeholders.
-- Host only: Start, Kick (kebab on each other chip, confirm; bots get Remove), Add bot, mode, bid window, Relaxed timing (all via `setOpts`). Non-hosts see these read-only. Renaming uses `rename` (lobby only). Host badge "HOST" moves on host migration with toast-free text change.
+- Host only: Start, Kick (kebab on each other chip, confirm; bots get Remove), Add bot, mode, game length, bid window, Relaxed timing (all via `setOpts`). Non-hosts see these read-only. Renaming uses `rename` (lobby only). Host badge "HOST" moves on host migration with toast-free text change.
 
 ### 3.4 Game (detail in section 4)
 
@@ -150,7 +150,7 @@ Shown as a centered card over the dimmed bays, one Gift at a time (owner: WS6, m
 - Fizzle or timeout default shows as a status-strip line ("{name} gave up {item}"). Values stay hidden until `reveal`.
 
 ### 3.6 Rules `/rules` and sheet
-Single scrollable page with sticky short TOC chips (Goal, A turn, Winning a bay, Collections, Scoring, Special cards, Modes). Same content opens as a bottom sheet from ⋯ (in-game; gameplay stays mounted behind). Plain language, each section under 80 words, with tiny illustrated examples. States: static, no loading. Host/non-host: identical.
+Single scrollable page with sticky short TOC chips (Goal, Setup, A turn, Bidding, Winning a bay, Last round, Special cards, Collections, Scoring, Modes; 10 sections so every rule R1-R37 fits under 80 words each, WS6 2026-10-12). Same content shows in-game as the **Rules** tab of the ⋯ menu (gameplay stays mounted behind); `?` opens it on desktop. Copy lives in `apps/web/components/rules/content.ts`. Plain language, each section under 80 words, with tiny illustrated examples. States: static, no loading. Host/non-host: identical.
 
 ### 3.7 Reconnecting overlay (all room screens)
 Semi-opaque scrim over current screen, centered card "Reconnecting..." with spinner and attempt hint after 5s ("Still trying. Check your signal."). It blocks input (bids would be rejected anyway). Backoff 500ms to 5s. On success, snapshot replaces state silently. If the server says session invalid: "You've been removed or the room ended." [Home]. Overlay appears after 1s of disconnect to avoid flicker.
@@ -239,7 +239,7 @@ Left: event text (one line, ellipsis, crossfade 150ms). Middle: round pips (ASSU
 Classic: banner shows "Your turn" in your color (full-width pulsing border) or "{shape} {name}'s turn" in theirs; the timer bar beneath depletes. Frenzy: banner reads "FRENZY" with the round count; per-bay timers carry the urgency instead, and the bar shows the soonest-ending bay.
 
 ### 4.7 ⋯ sheet (bottom sheet 70% height mobile; docked right sidebar 320px on desktop)
-Tabs/sections: **Players** (all players with chips, item counts, card counts; tap to expand their collection: items with est values and category counts, from the view's public `collection`), **Collections** (mine, detailed), **Event log** (last 30), **Settings** (Sound toggle, Haptics toggle, Relaxed timing x1.5 (host-set, shown read-only to others mid-game), Theme), **Rules** (opens the rules sheet), **Leave game** (confirm). Draggable handle, Esc/swipe-down/backdrop closes. Focus is trapped while open on mobile.
+Tabs/sections: **Players** (all players with chips, item counts, card counts; tap to expand their collection: items with est values and category counts, from the view's public `collection`), **Collections** (mine, detailed), **Event log** (last 30), **Settings** (Sound toggle, Haptics toggle, Relaxed timing x1.5 (host-set, shown read-only to others mid-game), Theme), **Rules** (rules content inline as a tab), **Leave game** (confirm). Draggable handle, Esc/swipe-down/backdrop closes. Focus is trapped while open on mobile.
 
 ## 5. Bid interaction spec
 
