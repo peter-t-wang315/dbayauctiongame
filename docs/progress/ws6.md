@@ -10,7 +10,7 @@
 - Nothing.
 
 ## Next
-- Playwright smoke vs mock: play to reveal, check Skip, standings, Rematch; `/rules` renders.
+- (done) Playwright `e2e/reveal.pw.ts`: Frenzy vs 2 bots to reveal, Skip, standings, Rematch -> lobby; `/rules` TOC. Passing locally.
 - Pre-PR review, PR.
 
 ## Gotchas / decisions
