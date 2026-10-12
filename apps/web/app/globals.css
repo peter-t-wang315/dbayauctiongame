@@ -214,7 +214,8 @@ a {
   border-radius: var(--r-pill);
   cursor: pointer;
 }
-.seg__opt[aria-pressed='true'] {
+.seg__opt[aria-pressed='true'],
+.seg__opt[aria-selected='true'] {
   background: var(--navy);
   color: var(--on-navy);
 }

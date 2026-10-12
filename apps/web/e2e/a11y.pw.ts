@@ -34,6 +34,14 @@ async function setTheme(page: Page, theme: 'light' | 'dark') {
 
 /** Scan the current screen in both themes; fail on serious/critical violations. */
 async function scan(page: Page, label: string) {
+  // let finite animations/transitions finish so axe reads final colours, not mid-fade ones
+  await page
+    .waitForFunction(() =>
+      document.getAnimations().every((a) => a.effect?.getComputedTiming().iterations === Infinity || a.playState !== 'running'),
+      undefined,
+      { timeout: 5000 },
+    )
+    .catch(() => {});
   for (const theme of ['light', 'dark'] as const) {
     await setTheme(page, theme);
     const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
@@ -186,6 +194,5 @@ test('gift step and reveal/results', async ({ page }) => {
   await scan(page, 'reveal');
   await page.getByRole('button', { name: 'Skip' }).click();
   await expect(page.locator('[data-fx="reveal"]')).toHaveAttribute('data-state', 'done');
-  await page.waitForTimeout(2000); // let reveal transitions settle so axe reads final colours
   await scan(page, 'results');
 });
