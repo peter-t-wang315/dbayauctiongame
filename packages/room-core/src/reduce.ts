@@ -244,7 +244,13 @@ function rebuildDeadlines(s: RoomState, t: number): void {
   if (s.meta.phase === 'reveal' && s.meta.revealAt !== undefined)
     dl.push({ at: s.meta.revealAt, kind: 'reveal' });
   const host = s.meta.hostId ? find(s, s.meta.hostId) : undefined;
-  if (host && !host.isBot && !host.connected && host.disconnectedAt !== undefined)
+  if (
+    host &&
+    !host.isBot &&
+    !host.connected &&
+    host.disconnectedAt !== undefined &&
+    humans(s).some((p) => p.connected) // nobody to hand over to -> no check, no busy loop
+  )
     dl.push({ at: host.disconnectedAt + HOST_MIGRATION_MS, kind: 'hostCheck', data: host.id });
   dl.sort((a, b) => a.at - b.at || (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0));
   s.deadlines = dl;
