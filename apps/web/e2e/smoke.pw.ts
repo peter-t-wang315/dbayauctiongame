@@ -47,7 +47,8 @@ test('create -> lobby -> second player -> bot -> start; refresh restores seat; m
   expect(await host.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   const small = await host.evaluate(() =>
     Array.from(document.querySelectorAll('button, input, a'))
-      .map((el) => ({ el, r: el.getBoundingClientRect() }))
+      // A checkbox inside a <label> is tapped via the label, so measure the label.
+      .map((el) => ({ el, r: (el.closest('label') ?? el).getBoundingClientRect() }))
       .filter(({ r }) => r.width > 0 && (r.height < 43.5 || r.width < 43.5))
       .map(({ el, r }) => `${el.tagName}.${el.className} "${(el.textContent ?? '').trim().slice(0, 20)}" ${Math.round(r.width)}x${Math.round(r.height)}`),
   );
