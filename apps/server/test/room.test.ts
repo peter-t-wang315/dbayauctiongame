@@ -124,19 +124,33 @@ describe('room server', () => {
         m.t === 'snap' &&
         m.view.phase === 'playing' &&
         m.view.canAct &&
-        m.view.bays[0]?.card !== null,
+        m.view.bays.some((b) => b.card !== null),
       60_000,
     );
-    const card = mine.view.myHand.find((c) => c.kind === 'value')!;
-    h.send({ t: 'bid', seq: 5, card: card.id, bay: 0 });
+    // Pick a pair that is legal now: bots may already have bid, so prefer an
+    // empty bay; otherwise beat a value top with our highest value card.
+    const values = mine.view.myHand
+      .filter((c) => c.kind === 'value')
+      .sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
+    let bay = mine.view.bays.findIndex((b) => b.card !== null && b.stack.length === 0);
+    let card = values[values.length - 1]!;
+    if (bay < 0) {
+      card = values[0]!;
+      bay = mine.view.bays.findIndex((b) => {
+        const top = b.stack[b.stack.length - 1];
+        return b.card !== null && top?.kind === 'value' && (top.value ?? 0) < (card.value ?? 0);
+      });
+    }
+    expect(bay).toBeGreaterThanOrEqual(0);
+    h.send({ t: 'bid', seq: 5, card: card.id, bay });
     const ack = await h.waitFor(
       (m): m is Extract<ServerMsg, { t: 'ack' }> => m.t === 'ack' && m.seq === 5,
     );
-    expect(ack.ok).toBe(true);
+    expect(ack).toMatchObject({ ok: true }); // shows the reject code if it fails
     const next = await h.waitFor(
       (m): m is Extract<ServerMsg, { t: 'snap' }> => m.t === 'snap' && m.rev > mine.rev,
     );
-    expect(next.view.bays[0]!.stack.some((s) => s.card === card.id)).toBe(true);
+    expect(next.view.bays[bay]!.stack.some((s) => s.card === card.id)).toBe(true);
   });
 
   it('alarm after eviction: bots act on the DO alarm and the game proceeds', async () => {
