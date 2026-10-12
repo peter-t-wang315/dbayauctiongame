@@ -62,9 +62,10 @@ describe('F2 bay timer', () => {
   });
   it('F2: hard cap closesAt <= openedAt + frenzyHardCapMs', () => {
     const s = clone(frenzy().state);
-    s.bays[0]!.closesAt = T0 + 59000;
-    const r = act(s, bid('v10', 0, 'p0'), T0 + 58500);
-    expect(r.state.bays[0]!.closesAt).toBe(T0 + CONFIG.frenzyHardCapMs);
+    const cap = LENGTH_PRESETS.standard.frenzyHardCapMs;
+    s.bays[0]!.closesAt = T0 + cap - 1000;
+    const r = act(s, bid('v10', 0, 'p0'), T0 + cap - 1500);
+    expect(r.state.bays[0]!.closesAt).toBe(T0 + LENGTH_PRESETS.standard.frenzyHardCapMs);
   });
 });
 
@@ -84,17 +85,17 @@ describe('F3 expiry', () => {
     );
     expect(r.state.resolved).toBe(1);
   });
-  it('F3: an empty bay re-arms +10000 up to 2 times, then is discarded unsold and refilled', () => {
+  it('F3: an empty bay re-arms +frenzyIdleRecheckMs up to 2 times, then is discarded unsold and refilled', () => {
     let s = clone(frenzy().state);
-    s.bays.forEach((b, i) => i && (b.closesAt = T0 + 55000));
+    s.bays.forEach((b, i) => i && (b.closesAt = T0 + 500_000_000));
     const card = s.bays[0]!.card;
     const t1 = s.bays[0]!.closesAt!;
     s = engine.tick(s, t1).state;
-    expect(s.bays[0]!.closesAt).toBe(t1 + CONFIG.frenzyIdleRecheckMs);
+    expect(s.bays[0]!.closesAt).toBe(t1 + LENGTH_PRESETS.standard.frenzyIdleRecheckMs);
     expect(s.bays[0]!.card).toBe(card);
     const t2 = s.bays[0]!.closesAt!;
     s = engine.tick(s, t2).state;
-    expect(s.bays[0]!.closesAt).toBe(t2 + CONFIG.frenzyIdleRecheckMs);
+    expect(s.bays[0]!.closesAt).toBe(t2 + LENGTH_PRESETS.standard.frenzyIdleRecheckMs);
     expect(s.bays[0]!.idleExpiries).toBe(2);
     const t3 = s.bays[0]!.closesAt!;
     const r = engine.tick(s, t3);
@@ -163,12 +164,14 @@ describe('F6 no auto-skip / no dry turns', () => {
 describe('F7 rounds mapping, halfway and last round', () => {
   it('F7: display round = floor(resolved / D x R) + 1', () => {
     const s = clone(frenzy().state);
-    expect(s.round).toMatchObject({ n: 1, of: 20 });
-    s.resolved = 14; // D = 30, R = 20 -> floor(15/30*20)+1 = 11 after the next resolution
+    const D = s.deckSize;
+    const R = s.round.of;
+    expect(s.round).toMatchObject({ n: 1, of: R });
+    s.resolved = 14; // after the next resolution: floor(15 / D x R) + 1
     stackOn(s, 0, [['p1', v(50)]]);
     const r = engine.tick(s, s.bays[0]!.closesAt!);
     expect(r.state.resolved).toBe(15);
-    expect(r.state.round.n).toBe(11);
+    expect(r.state.round.n).toBe(Math.floor((15 / D) * R) + 1);
   });
   it('F7: Halfway fires once resolved >= ceil(D/2)', () => {
     const s = clone(frenzy().state);
@@ -199,7 +202,7 @@ describe('F7 rounds mapping, halfway and last round', () => {
     const s = clone(frenzy().state);
     s.bays.forEach((b) => (b.closesAt = T0 + 55000));
     expect(engine.nextDeadline(s)).toBe(T0 + 55000);
-    const capAt = T0 + CONFIG.frenzyMaxMs;
+    const capAt = T0 + LENGTH_PRESETS.standard.frenzyMaxMs;
     s.bays.forEach((b) => (b.closesAt = capAt + 40000));
     expect(engine.nextDeadline(s)).toBe(capAt);
     const r = engine.tick(s, capAt);
@@ -224,12 +227,17 @@ describe('F8 Relaxed', () => {
     expect(r.state.bays[0]!.closesAt).toBe(T0 + 19000 + 4500);
     expect(r.state.players[0]!.cooldownUntil).toBe(T0 + 19000 + CONFIG.bidCooldownMs);
     const capped = clone(s);
-    capped.bays[0]!.closesAt = T0 + 89000;
-    expect(act(capped, bid('v10', 0, 'p0'), T0 + 88500).state.bays[0]!.closesAt).toBe(T0 + 90000);
+    const cap = LENGTH_PRESETS.standard.frenzyHardCapMs * 1.5;
+    capped.bays[0]!.closesAt = T0 + cap - 1000;
+    expect(act(capped, bid('v10', 0, 'p0'), T0 + cap - 1500).state.bays[0]!.closesAt).toBe(
+      T0 + cap,
+    );
     const idle = clone(s);
-    idle.bays.forEach((b, i) => i && (b.closesAt = T0 + 100000));
+    idle.bays.forEach((b, i) => i && (b.closesAt = T0 + 500_000_000));
     const t = idle.bays[0]!.closesAt!;
-    expect(engine.tick(idle, t).state.bays[0]!.closesAt).toBe(t + 15000);
+    expect(engine.tick(idle, t).state.bays[0]!.closesAt).toBe(
+      t + LENGTH_PRESETS.standard.frenzyIdleRecheckMs * 1.5,
+    );
     void player;
   });
 });

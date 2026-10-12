@@ -1,5 +1,6 @@
 // Balance simulator core (docs/02 section 5): plays many bot games and aggregates metrics.
 import { activePack, type ContentPack } from '@dbay/content';
+import type { GameLength } from '@dbay/protocol';
 import { createEngine } from '@dbay/engine/real';
 import { playGame, synthPack } from '@dbay/engine/testing';
 
@@ -16,6 +17,10 @@ export interface BatchOptions {
   pack: ContentPack;
   /** Bot reaction time range, ms. Human-like by default. */
   reactionMs: [number, number];
+  /** 'human' = people-like timing (see tools/sim/README.md). Default 'bot'. */
+  pacing?: 'bot' | 'human';
+  /** Game length preset. Default 'standard'. */
+  length?: GameLength;
 }
 
 export interface BatchResult {
@@ -23,9 +28,15 @@ export interface BatchResult {
   players: number;
   games: number;
   levels: Level[];
+  length: GameLength;
+  pacing: 'bot' | 'human';
+  /** Classic: auto-skipped calls (no legal bid) / calls. */
+  autoSkipRate: number;
   nonTerminating: number;
   rejected: number;
-  lengthMin: { mean: number; p95: number; max: number };
+  lengthMin: { mean: number; median: number; p95: number; max: number };
+  /** Classic: rounds actually played (calls done / players, rounded up). */
+  roundsPlayed: { median: number; max: number };
   itemsPerPlayer: { mean: number; minSeat: number };
   dryEarlyShare: number;
   collectionShare: number;
@@ -56,6 +67,7 @@ export function runBatch(o: BatchOptions): BatchResult {
   const engine = createEngine(o.pack);
   const n = o.players;
   const lengths: number[] = [];
+  const roundsList: number[] = [];
   const itemsBySeat: number[][] = Array.from({ length: n }, () => []);
   const wins = new Array<number>(n).fill(0);
   const levelWins: Record<string, number> = {};
@@ -63,6 +75,8 @@ export function runBatch(o: BatchOptions): BatchResult {
   const levelItems: Record<string, number[]> = {};
   const levelSeats: Record<string, number> = {};
   let nonTerminating = 0;
+  let autoSkips = 0;
+  let calls = 0;
   let rejected = 0;
   let dryPlayers = 0;
   let collectors = 0;
@@ -84,6 +98,7 @@ export function runBatch(o: BatchOptions): BatchResult {
         mode: o.mode,
         bidWindowMs: 5000,
         relaxed: false,
+        length: o.length ?? 'standard',
         players: Array.from({ length: n }, (_, i) => ({
           id: `p${i}`,
           isBot: true,
@@ -92,6 +107,7 @@ export function runBatch(o: BatchOptions): BatchResult {
       },
       levels: Array.from({ length: n }, (_, i) => levelOf(i)),
       reactionMs: o.reactionMs,
+      pacing: o.pacing ?? 'bot',
       maxMs: 3 * 3600_000,
     });
     rejected += r.rejected;
@@ -101,6 +117,7 @@ export function runBatch(o: BatchOptions): BatchResult {
     }
     const dur = r.endMs - r.startMs;
     lengths.push(dur / 60000);
+    roundsList.push(Math.ceil(r.state.callsDone / n));
     const score = engine.score(r.state);
     const top = score.players.filter((p) => p.rank === 1);
     const totals = score.players.map((p) => p.total);
@@ -122,12 +139,14 @@ export function runBatch(o: BatchOptions): BatchResult {
     const dryCut = r.startMs + 0.75 * dur;
     for (const p of r.state.players) if ((r.dryAt[p.id] ?? Infinity) < dryCut) dryPlayers++;
     for (const { e } of r.events) {
+      if (e.kind === 'autoPass') autoSkips++;
       if (e.kind === 'sold') {
         sold++;
         if (e.amount === 'proxy') proxySold++;
       } else if (e.kind === 'unsold') unsold++;
     }
     deckCards += r.state.deckSize;
+    calls += r.state.callsTotal;
     for (const gl of r.state.giftLog) {
       gifts++;
       if (gl.card === null) fizzles++;
@@ -149,13 +168,18 @@ export function runBatch(o: BatchOptions): BatchResult {
     players: n,
     games: o.games,
     levels: o.levels,
+    length: o.length ?? 'standard',
+    pacing: o.pacing ?? 'bot',
+    autoSkipRate: calls ? autoSkips / calls : 0,
     nonTerminating,
     rejected,
     lengthMin: {
       mean: mean(lengths),
+      median: median(lengths),
       p95: lengths[Math.floor(lengths.length * 0.95)] ?? 0,
       max: lengths.at(-1) ?? 0,
     },
+    roundsPlayed: { median: median(roundsList), max: Math.max(0, ...roundsList) },
     itemsPerPlayer: { mean: mean(seatMeans), minSeat: Math.min(...seatMeans) },
     dryEarlyShare: done ? dryPlayers / (done * n) : 0,
     collectionShare: done ? collectors / (done * n) : 0,
@@ -181,6 +205,18 @@ export interface Check {
 export function evaluate(r: BatchResult): Check[] {
   const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
   const checks: Check[] = [];
+  const std = r.length === 'standard';
+  // Targets per mode x preset x players (docs/02 section 5).
+  const [lo, hi] =
+    r.mode === 'frenzy'
+      ? r.length === 'quick'
+        ? [3.5, 7]
+        : [5.5, 10]
+      : r.length === 'quick'
+        ? [8, 12]
+        : r.players === 3
+          ? [12, 15]
+          : [15, 25];
   const add = (name: string, value: string, status: Check['status'], target: string) =>
     checks.push({ name, value, status, target });
   add(
@@ -190,15 +226,22 @@ export function evaluate(r: BatchResult): Check[] {
     '0',
   );
   add(
-    'game length min (mean / p95 / max)',
-    `${r.lengthMin.mean.toFixed(1)} / ${r.lengthMin.p95.toFixed(1)} / ${r.lengthMin.max.toFixed(1)}`,
+    'game length min (median / p95 / max)',
+    `${r.lengthMin.median.toFixed(1)} / ${r.lengthMin.p95.toFixed(1)} / ${r.lengthMin.max.toFixed(1)}`,
     r.lengthMin.max >= 40
       ? 'FAIL'
-      : r.lengthMin.mean >= 15 && r.lengthMin.mean <= 25
+      : r.lengthMin.median >= lo && r.lengthMin.median <= hi
         ? 'ok'
         : 'warn',
-    '15-25 (hard <40)',
+    `${lo}-${hi} (hard <40)`,
   );
+  if (r.mode === 'classic')
+    add(
+      'rounds played (median / max)',
+      `${r.roundsPlayed.median} / ${r.roundsPlayed.max}`,
+      r.roundsPlayed.max <= 50 ? 'ok' : 'warn',
+      '<=~50',
+    );
   add(
     'items per player (mean / worst seat)',
     `${r.itemsPerPlayer.mean.toFixed(2)} / ${r.itemsPerPlayer.minSeat.toFixed(2)}`,
@@ -209,13 +252,15 @@ export function evaluate(r: BatchResult): Check[] {
   add(
     'players with a collection',
     pct(r.collectionShare),
-    r.collectionShare < 0.15 || r.collectionShare > 0.85
+    r.collectionShare < 0.15 || r.collectionShare > (std ? 0.98 : 0.85)
       ? 'FAIL'
-      : r.collectionShare >= 0.3 && r.collectionShare <= 0.7
+      : r.collectionShare >= 0.3 && r.collectionShare <= (std ? 0.95 : 0.7)
         ? 'ok'
         : 'warn',
-    '30-70% (hard 15-85)',
+    std ? '30-95% (ASSUMED, pending playtest)' : '30-70% (hard 15-85)',
   );
+  // User decision 2026-10-11 (ASSUMED): Classic Standard 3p accepts up to 8% so it can reach 12-15 min.
+  const skipLimit = std && r.players === 3 ? 0.08 : 0.05;
   const fair = 1 / r.players;
   const dev = Math.max(...r.seatWinShare.map((w) => Math.abs(w - fair))) * 100;
   const same = new Set(r.levels).size === 1;
@@ -224,6 +269,12 @@ export function evaluate(r: BatchResult): Check[] {
     dev.toFixed(1),
     !same ? 'ok' : dev <= 8 ? 'ok' : 'warn',
     same ? '<=8 (same skill)' : 'n/a (mixed skill)',
+  );
+  add(
+    'auto-skip rate (classic calls)',
+    pct(r.autoSkipRate),
+    r.autoSkipRate < skipLimit ? 'ok' : 'warn',
+    `<${skipLimit * 100}% (rare; limit is for careful bots)`,
   );
   add('unsold share', pct(r.unsoldShare), r.unsoldShare < 0.1 ? 'ok' : 'warn', '<10%');
   add(

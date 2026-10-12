@@ -26,7 +26,7 @@ This doc defines shared rules plus Classic mode. Frenzy overrides are in `02-mod
 - **R6 RNG** (ASSUMED): one seed per game; independent named streams (`deck`, `calls`, `closes`, `misc`) so adding a roll in one stream doesn't change another. The engine MUST NOT call `Math.random` or `Date.now`; time is passed in.
 
 ## 3. Rounds and calls (Classic)
-- **R7 Round** (ASSUMED; sources say "~30 rounds" but not the unit): a round = one drain of the color bag, in which every player is called exactly once. Total calls `N = rounds x players`. Rounds by player count: section 8.
+- **R7 Round** (ASSUMED; sources say "~30 rounds" but not the unit; our counts depend on game length): a round = one drain of the color bag, in which every player is called exactly once. Total calls `N = rounds x players`. Rounds by player count: section 8.
 - **R8 Color order** (ASSUMED; sources: random, "bounce around" TX L120-128): a shuffled bag of all player colors, one drawn per call; refill and reshuffle when empty. If the new bag's first color equals the previous bag's last, swap it with the second. Nobody is starved.
 - **R9 Announcements** (CONFIRMED RP; TX L116, L486, L694): "Halfway" at the start of round `floor(rounds/2)+1`; "Last round" at the start of the final round; "Game over" after the sweep (R22).
 - **R10 Call procedure** (ASSUMED sequencing). Per call, in order:
@@ -88,29 +88,39 @@ This doc defines shared rules plus Classic mode. Frenzy overrides are in `02-mod
 - **R36 Reveal data**: each scorable card exposes `estValue`, `actualValue`, delta, for STEAL!/Ripped off! tags (UX in 04).
 
 ## 8. Per-player-count table (ASSUMED)
+The host picks a **game length** in the lobby (`length`: `quick` or `standard`, default `standard`; independent of mode). Each length is a preset of constants (`LENGTH_PRESETS` in `packages/engine/src/config.ts`). Bays (R1) are one table for both modes: 3 bays for 3-4 players, 4 for 5-6 (ASSUMED).
+
+**Standard** (~8 deck cards per player; Classic target 15-25 min, 12-15 min at 3 players; Classic rounds capped near 50):
 | Players | Bays | Deck | Items | Display Case | Gift | Cats in play | Classic rounds | Calls N |
 |---|---|---|---|---|---|---|---|---|
-| 3 | 3 | 18 | 16 | 1 | 1 | 4 | 30 | 90 |
-| 4 | 3 | 24 | 21 | 2 | 1 | 5 | 25 | 100 |
-| 5 | 4 | 30 | 26 | 2 | 2 | 6 | 20 | 100 |
-| 6 | 4 | 36 | 31 | 3 | 2 | 6 | 18 | 108 |
+| 3 | 3 | 24 | 21 | 2 | 1 | 6 | 50 | 150 |
+| 4 | 3 | 32 | 28 | 2 | 2 | 6 | 50 | 200 |
+| 5 | 4 | 40 | 35 | 3 | 2 | 6 | 42 | 210 |
+| 6 | 4 | 48 | 42 | 3 | 3 | 6 | 33 | 198 |
 
-Rationale: 6 cards per player on average; fewer categories at low counts keep collections reachable. Frenzy uses the same decks (02).
+**Quick** (~6 deck cards per player; target 8-12 min):
+| Players | Bays | Deck | Items | Display Case | Gift | Cats in play | Classic rounds | Calls N |
+|---|---|---|---|---|---|---|---|---|
+| 3 | 3 | 18 | 16 | 1 | 1 | 5 | 50 | 150 |
+| 4 | 3 | 24 | 21 | 2 | 1 | 6 | 36 | 144 |
+| 5 | 4 | 30 | 26 | 2 | 2 | 6 | 23 | 115 |
+| 6 | 4 | 36 | 31 | 3 | 2 | 6 | 19 | 114 |
+
+Rationale: the original single table (now Quick, with more categories at 3-4 players) gave 6 cards per player; Standard adds about a third more cards and keeps specials at about the same share. Classic rounds are capped at 50 (a 3-player Standard game targets 12-15 min instead of 15-25, ASSUMED; it reaches 12.0 min at 50 rounds with auto-skip 6.1% in the sim, real pack, careful bots; Standard 3p Classic accepts up to 8% auto-skip, user decision 2026-10-11, ASSUMED, revisit after playtest); the close roll (R17) is tuned so the deck is sold within those rounds. Frenzy uses the same decks (02). The pack has 6 categories x 10 items, 5 Display Cases, 4 Gifts, so the largest deck (6 players, Standard: 42 items = 7 per category, 3 + 3 specials) fits. Bid cards stay at 12 per player (R2) at both lengths; Auto-skips (R13) are most common at 3-4 players (about 4-6% of calls in the sim with careful bots, real pack; random/greedy bots skip more, see 02 section 7); the close roll is tuned to keep them under 5% (8% for Standard 3p Classic, 2026-10-11, ASSUMED): hands run dry when cards stay locked on bays, so longer games skip more.
 
 ## 9. Tunable constants (`packages/engine/config.ts`)
 | Name | Default | Rationale |
 |---|---|---|
 | `BID_VALUES` | [10,25,50,75,100,125,150,200,250,300] | R2 |
 | `PROXIES_PER_PLAYER` | 2 | R2 |
-| `BAYS_BY_PLAYERS` | {3:3,4:3,5:4,6:4} | R1 |
-| `DECK_BY_PLAYERS` | section 8 | R4 |
-| `ROUNDS_BY_PLAYERS` | {3:30,4:25,5:20,6:18} | R7; targets ~15-20 min |
+| `BAYS_BY_PLAYERS` | {3:3,4:3,5:4,6:4} | R1 (both modes) |
+| `LENGTH_PRESETS[length].DECK_BY_PLAYERS` | section 8 | R4 |
+| `LENGTH_PRESETS[length].ROUNDS_BY_PLAYERS` | section 8 | R7; targets per mode x preset in 02 section 5 (human pacing) |
+| `LENGTH_PRESETS[length].CLOSE_BY_PLAYERS` (`pBase`, `pMax`, `maxBayAgeCycles`) | Quick {3: .005/.12/6, 4: .005/.12/5, 5: .05/.15/3, 6: .05/.15/3}; Standard {3: .005/.03/8, 4: .005/.05/6, 5: .03/.085/5, 6: .04/.10/4} | R17; the deck is mostly sold by ~85% of calls; per player count because the deck-to-bay ratio differs |
 | `bidWindowMs` | 5000 (3000/8000) | R11 |
 | `relaxedMultiplier` | 1.5 | WCAG 2.2.1 |
 | `callGapMs` | 1500 | R12 readability |
 | `skipGapMs` | 1000 | R13 |
-| `pBase` / `pMax` | 0.05 / 0.15 | R17; deck mostly sold by ~85% of calls |
-| `maxBayAgeCycles` | 3 | R17 prevents stale bays |
 | `giftChoiceMs` | 15000 | R29-30 |
 | `revealBaseMs` / `revealPerCardMs` | 5000 / 600 | R37 |
 | `proxyTiebreakValue` | 0 | R35 |

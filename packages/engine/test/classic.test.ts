@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CONFIG } from '../src/config';
+import { CONFIG, LENGTH_PRESETS } from '../src/config';
 import { topOf } from '../src/game';
 import type { BidCard, EngineState, GameEvent, StackEntry } from '../src/types';
 import {
@@ -44,22 +44,26 @@ function expire(s: EngineState) {
 }
 
 describe('R7 rounds', () => {
-  it.each([
-    [3, 30],
-    [4, 25],
-    [5, 20],
-    [6, 18],
-  ])('R7: %i players -> %i rounds, every player called once per round', (n, rounds) => {
-    const g = newGame(n);
-    expect(g.state.callsTotal).toBe(rounds * n);
-    expect(g.state.round.of).toBe(rounds);
-    const events: GameEvent[] = [...g.events];
-    const end = runAllPass(g.state, events);
-    expect(end.callsDone).toBe(rounds * n);
-    const turns = events.filter((e) => e.kind === 'turn').map((e) => e.by);
-    expect(turns).toHaveLength(rounds * n);
-    for (let r = 0; r < rounds; r++) expect(new Set(turns.slice(r * n, (r + 1) * n)).size).toBe(n);
-  });
+  const cases = (['quick', 'standard'] as const).flatMap((length) =>
+    ([3, 4, 5, 6] as const).map(
+      (n) => [length, n, LENGTH_PRESETS[length].ROUNDS_BY_PLAYERS[n]] as const,
+    ),
+  );
+  it.each(cases)(
+    'R7: %s, %i players -> %i rounds, every player called once per round',
+    (length, n, rounds) => {
+      const g = engine.setup({ ...mkSetup(n, 'seed-1', 'classic'), length }, T0);
+      expect(g.state.callsTotal).toBe(rounds * n);
+      expect(g.state.round.of).toBe(rounds);
+      const events: GameEvent[] = [...g.events];
+      const end = runAllPass(g.state, events);
+      expect(end.callsDone).toBe(rounds * n);
+      const turns = events.filter((e) => e.kind === 'turn').map((e) => e.by);
+      expect(turns).toHaveLength(rounds * n);
+      for (let r = 0; r < rounds; r++)
+        expect(new Set(turns.slice(r * n, (r + 1) * n)).size).toBe(n);
+    },
+  );
 });
 
 describe('R8 color order', () => {
@@ -92,9 +96,11 @@ describe('R9 announcements', () => {
     };
     expect(ks.filter((k) => k === 'halfway')).toHaveLength(1);
     expect(ks.filter((k) => k === 'lastRound')).toHaveLength(1);
-    // round 16 starts at call index 45 (0-based); round 30 at index 87
-    expect(ks.indexOf('halfway')).toBe(turnIdx(15 * 3) - 1);
-    expect(ks.indexOf('lastRound')).toBe(turnIdx(29 * 3) - 1);
+    const rounds = g.state.round.of;
+    expect(rounds).toBe(LENGTH_PRESETS.standard.ROUNDS_BY_PLAYERS[3]);
+    // round floor(rounds/2)+1 starts at call index floor(rounds/2)*3 (0-based); the last at (rounds-1)*3
+    expect(ks.indexOf('halfway')).toBe(turnIdx(Math.floor(rounds / 2) * 3) - 1);
+    expect(ks.indexOf('lastRound')).toBe(turnIdx((rounds - 1) * 3) - 1);
     expect(ks.at(-1)).toBe('gameOver');
   });
 });
@@ -309,10 +315,16 @@ describe('R17 close roll', () => {
   it('R17: forced close once the bay is maxBayAgeCycles x players calls old', () => {
     const g = newGame(3);
     const s = clone(g.state);
-    stackOn(s, 0, [['p1', v(50)]], { first: 1 - CONFIG.maxBayAgeCycles * 3, last: 0 });
+    stackOn(s, 0, [['p1', v(50)]], {
+      first: 1 - LENGTH_PRESETS.standard.CLOSE_BY_PLAYERS[3].maxBayAgeCycles * 3,
+      last: 0,
+    });
     expect(kinds(expire(s).events)).toContain('sold');
     const s2 = clone(g.state);
-    stackOn(s2, 0, [['p1', v(50)]], { first: 2 - CONFIG.maxBayAgeCycles * 3, last: 0 });
+    stackOn(s2, 0, [['p1', v(50)]], {
+      first: 2 - LENGTH_PRESETS.standard.CLOSE_BY_PLAYERS[3].maxBayAgeCycles * 3,
+      last: 0,
+    });
     // one call younger: not forced, so only the random roll can sell it (rng-dependent)
     s2.rng.closes = 123;
     const roll = expire(s2);
@@ -334,12 +346,13 @@ describe('R17 close roll', () => {
       }
       return sold / N;
     };
-    const early = rate(0);
-    const late = rate(80);
-    expect(early).toBeGreaterThan(0.03);
-    expect(early).toBeLessThan(0.08);
-    expect(late).toBeGreaterThan(0.1);
-    expect(late).toBeLessThan(0.18);
+    const { pBase, pMax } = LENGTH_PRESETS.standard.CLOSE_BY_PLAYERS[3];
+    const total = base.callsTotal;
+    const expected = (callsDone: number) => pBase + ((pMax - pBase) * (callsDone + 1)) / total;
+    const late = total - 3;
+    expect(Math.abs(rate(0) - expected(0))).toBeLessThan(0.012);
+    expect(Math.abs(rate(late) - expected(late))).toBeLessThan(0.012);
+    expect(rate(late)).toBeGreaterThan(rate(0));
   });
   it('R17: the roll is deterministic for a given seed', () => {
     const a = runAllPass(newGame(3, 'classic', 'same').state);

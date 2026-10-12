@@ -2,29 +2,29 @@
 
 exports[`golden > golden classic 4p 1`] = `
 {
-  "endMs": 183308,
-  "events": 252,
-  "sold": 24,
-  "state": "e0127310",
+  "endMs": 408402,
+  "events": 533,
+  "sold": 32,
+  "state": "694dea17",
   "totals": [
     [
       "p1",
-      1185,
+      1505,
       1,
     ],
     [
-      "p2",
-      820,
+      "p3",
+      1370,
       2,
     ],
     [
-      "p3",
-      510,
+      "p2",
+      1265,
       3,
     ],
     [
       "p0",
-      260,
+      640,
       4,
     ],
   ],
@@ -33,34 +33,34 @@ exports[`golden > golden classic 4p 1`] = `
 
 exports[`golden > golden frenzy 5p 1`] = `
 {
-  "endMs": 181502,
-  "events": 244,
-  "sold": 30,
-  "state": "1fa843cb",
+  "endMs": 449277,
+  "events": 350,
+  "sold": 40,
+  "state": "ffb6d00c",
   "totals": [
     [
-      "p1",
-      1980,
+      "p2",
+      1370,
       1,
     ],
     [
-      "p2",
-      1540,
+      "p1",
+      1245,
       2,
     ],
     [
       "p3",
-      730,
+      1165,
       3,
     ],
     [
-      "p4",
-      465,
+      "p0",
+      1110,
       4,
     ],
     [
-      "p0",
-      260,
+      "p4",
+      790,
       5,
     ],
   ],

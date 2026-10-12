@@ -206,7 +206,7 @@ Both are under the 780px ceiling; the leftover (84px / 140px) is slack for the i
 Horizontal row of mini item tokens (24px category glyph chips, grouped by category with a count badge), then special tokens: Display Case "$100 wild" and Gift (pending until resolved). Shows my items only here; overflow scrolls horizontally inside the strip, not the page. Tap opens ⋯ -> "Collections" tab. A collection reaching 3 gets a gold underline ("x2").
 
 ### 4.5 Status strip (44px, `aria-live="polite"`)
-Left: event text (one line, ellipsis, crossfade 150ms). Middle: round pips ("Round {n}/{of}" plus a mini progress bar; `of` from the view, 01 section 8 / 02 F7). The server sends structured log entries; this table is the only text source. Right: ⋯ button (44x44). Tap the text area to open the event log (last 30 events). Exact strings (use `{name}`/`{amount}`/`{item}`; names include shape glyph in UI):
+Left: event text (one line, ellipsis, crossfade 150ms). Middle: round pips (ASSUMED: Classic shows a progress bar rather than "Round X of Y", since rounds reach about 50; the R9 "Halfway" and "Last round" announcements stay unchanged; "Round {n}/{of}" plus a mini progress bar; `of` from the view, 01 section 8 / 02 F7). The server sends structured log entries; this table is the only text source. Right: ⋯ button (44x44). Tap the text area to open the event log (last 30 events). Exact strings (use `{name}`/`{amount}`/`{item}`; names include shape glyph in UI):
 
 | Event | Text |
 |---|---|
