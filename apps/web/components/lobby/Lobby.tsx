@@ -105,6 +105,29 @@ export function Lobby() {
           </div>
         </div>
         <div className="field">
+          <span className="label" id="len-l">
+            Game length
+          </span>
+          <div className="seg" role="group" aria-labelledby="len-l">
+            {(['quick', 'standard'] as const).map((l) => (
+              <button
+                key={l}
+                type="button"
+                className="seg__opt"
+                aria-pressed={(view.opts.length ?? 'standard') === l}
+                disabled={!isHost}
+                onClick={() => run(room.send({ t: 'setOpts', length: l }))}
+              >
+                {l === 'quick' ? 'Quick' : 'Standard'}
+              </button>
+            ))}
+          </div>
+          {/* Targets from docs/02 section 5 (median, human pacing). */}
+          <span className="hint">
+            {classic ? 'Classic: Quick about 10 min, Standard 15-25 min.' : 'Frenzy: Quick about 5 min, Standard about 8 min.'}
+          </span>
+        </div>
+        <div className="field">
           <span className="label" id="win-l">
             Bid window {classic ? '' : '(Classic only)'}
           </span>
