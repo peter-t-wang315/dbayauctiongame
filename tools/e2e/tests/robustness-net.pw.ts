@@ -94,11 +94,12 @@ test('5. page backgrounded during the reveal returns to rendered results without
     await page.waitForTimeout(500);
   }
   const setVis = (state: 'hidden' | 'visible') =>
-    page.evaluate((s) => {
+    page.evaluate(`(() => {
+      const s = ${JSON.stringify(state)};
       Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => s });
       Object.defineProperty(document, 'hidden', { configurable: true, get: () => s === 'hidden' });
       document.dispatchEvent(new Event('visibilitychange'));
-    }, state);
+    })()`);
   await setVis('hidden');
   await page.waitForTimeout(4000); // the reveal animation runs on while hidden
   await setVis('visible');

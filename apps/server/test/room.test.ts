@@ -1,5 +1,5 @@
 import { PROTOCOL_VERSION, type ServerMsg } from '@dbay/protocol';
-import { env, evictDurableObject, runDurableObjectAlarm } from 'cloudflare:test';
+import { env, evictDurableObject, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { exports } from 'cloudflare:workers';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Client, ORIGIN, createRoomCode, isErr, isSnap, isWelcome } from './helpers';
@@ -151,6 +151,38 @@ describe('room server', () => {
       (m): m is Extract<ServerMsg, { t: 'snap' }> => m.t === 'snap' && m.rev > mine.rev,
     );
     expect(next.view.bays[bay]!.stack.some((s) => s.card === card.id)).toBe(true);
+  });
+
+  it('cold start marks humans with no live socket disconnected (stale connected flag)', async () => {
+    const code = await createRoomCode();
+    const a = await client(code);
+    await a.join('Ann');
+    const b = await client(code);
+    await b.join('Bob');
+    b.close();
+    // Wait for Bob's disconnect to reach Ann.
+    for (let i = 0; i < 40; i++) {
+      const v = a.lastSnap()!.view;
+      if (v.players.find((p) => p.id === b.playerId)?.connected === false) break;
+      await new Promise((r) => setTimeout(r, 50));
+    }
+    // Simulate a crash that skipped Bob's close handling: storage says Bob is still connected.
+    await runInDurableObject(stubFor(code), async (_inst, state) => {
+      const key = [...(await state.storage.list({ prefix: 'state:v' })).keys()][0]!;
+      const s = (await state.storage.get(key)) as { players: Array<{ id: string; connected: boolean }> };
+      s.players.find((p) => p.id === b.playerId)!.connected = true;
+      await state.storage.put(key, s);
+    });
+    await evictDurableObject(stubFor(code));
+    // Ask for a fresh snapshot (it wakes the DO) and read the newest one after the request.
+    const before = a.msgs.length;
+    a.send({ t: 'snap' });
+    await new Promise((r) => setTimeout(r, 1000));
+    const fresh = a.msgs.slice(before).filter(isSnap);
+    expect(fresh.length).toBeGreaterThan(0);
+    const view = fresh[fresh.length - 1]!.view;
+    expect(view.players.find((p) => p.id === b.playerId)?.connected).toBe(false);
+    expect(view.players.find((p) => p.id === a.playerId)?.connected).toBe(true);
   });
 
   it('alarm after eviction: bots act on the DO alarm and the game proceeds', async () => {
