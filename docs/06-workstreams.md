@@ -39,8 +39,8 @@ Max concurrency: 3 coding agents (plus 1 reviewer) at a time on the Pro plan, ea
 ## 3. Conventions
 
 - **Branches:** one branch per WS: `ws0-contracts`, `ws1-engine`, `ws2-content`, `ws3a-room-core`, `ws3b-server`, `ws4-web-shell`, `ws5-game-ui`, `ws6-reveal-rules`, `ws8-juice`, `ws7-integration`. Sub-branches `ws1-engine/scoring` allowed. Contract changes: `contract/<short-name>`.
-- **PRs:** one PR per WS (or per milestone slice), title `WS1: <summary>`; body lists acceptance criteria with checkboxes, tests run, and any contract/doc changes. Squash-merge. Rebase on main before opening.
-- **Commits:** conventional style `ws1: add scoring`. Never commit secrets. Agents commit and push after every slice, per the README checkpoint protocol; they merge only when told.
+- **PRs:** one PR per WS (or per milestone slice), title `WS1: <summary>`; body lists acceptance criteria with checkboxes, tests run, and any contract/doc changes. Merge commit (not squash); merge `main` into the branch if it's behind.
+- **Commits:** conventional style `ws1: add scoring`. Never commit secrets. Agents commit and push after every slice, per the README checkpoint protocol; the main session merges after CI and pre-PR review pass (README "Operating mode").
 - **Ownership:** touch only owned paths. Need something elsewhere? Open a note in the PR / ask the owner; do not edit.
 - **Docs:** if behaviour differs from docs, fix the doc in the same PR (docs 01-04 changes need the rule ID kept stable).
 

@@ -99,7 +99,7 @@ An agent cannot tell when the usage limit is about to hit. Requests just start f
 **Resuming after a cutoff:** the new session reads this README, then `docs/progress/*.md`, then `git log` and `git status` on each WS branch and worktree. Commit or discard any leftover uncommitted changes, then relaunch each agent with its kickoff prompt from 06 plus "Continue from `docs/progress/<ws>.md`; do not redo finished slices."
 - **Size sessions to fit.** One workstream, or one clear slice of one, per session. Stop at a clean checkpoint rather than starting something big near the end of a window.
 - **Batch questions to the user.** Ask in one message instead of many back-and-forth turns.
-- **Before kicking off a multi-agent batch,** tell the user how many agents and which models, and get a go-ahead. The user can check remaining usage with `/usage` first.
+- **Before kicking off a multi-agent batch,** say how many agents and which models in a short line. No go-ahead is needed (see "Operating mode").
 
 **Recommended pacing for the build:**
 1. WS0 alone.
@@ -151,9 +151,14 @@ Use your judgement here. Don't wait to be asked for routine git hygiene. The det
 - **Stacked branches (while a PR awaits review).** Coding may continue before an earlier PR is merged. Branch the new work off the unmerged branch, for example `ws1-engine` off `ws0-contracts`, and open its PR as a draft with that branch as the base. Rules:
   - Record the base in `docs/progress/<ws>.md`.
   - When the base PR changes, rebase the stacked branch onto it.
-  - After the base is squash-merged, rebase onto `main` with `git rebase --onto main <old-base> <branch>`, then retarget the PR to `main`.
-  - Do not merge anything without the user's go-ahead.
-- **Merging to `main`** happens via squash-merge after CI passes. Merge your own PR only when the user has allowed it for that work. Otherwise, leave it open and say so.
+  - After the base is merged (merge commit), GitHub retargets the stacked PR to `main` once the base branch is deleted; just merge `main` into the stacked branch if it's behind.
+- **Merging to `main`** uses a **merge commit** (not squash), so stacked branches keep working without rebases. Delete the branch after merging.
+- **Operating mode: autonomous (user decision, 2026-10-11).** The user is hands-off. They test the app and report problems; the main session runs the project:
+  - Pick the next workstreams per the pacing order below, launch agents (within the concurrency limit), and keep going between sessions.
+  - Merge a PR yourself once CI is green and the pre-PR review has passed (or its blockers are fixed and re-checked). Merge in dependency order.
+  - Make routine engineering and tuning decisions yourself, and record them in the docs and the PR.
+  - Still ask the user (batched, condensed) before: changing a CONFIRMED rule or a decision listed in "Key decisions", anything that costs money or deploys publicly for the first time, adding real brands, or deleting anything not recoverable from git.
+  - After each milestone or testable step, tell the user briefly what they can try and how.
 - **Always say what you did.** At the end of a session, report which branch you're on, what was committed and pushed, and any open PRs.
 
 ## Conventions
