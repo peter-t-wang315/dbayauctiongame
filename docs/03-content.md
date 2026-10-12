@@ -62,7 +62,7 @@ Suggested reveal tags (for 04): dud gets "Ripped off!"; good and jackpot get "ST
 
 Columns: `id`, name, category, estimatedValue (Est), actualValue (Actual), x = actual/est (verification only, not stored), tier, flavor line (<=12 words).
 
-### 3.1 toys - Toys & Plush
+### 3.1 toys - Toys
 | id | Name | Cat | Est | Actual | x | Tier | Flavor line |
 |---|---|---|---|---|---|---|---|
 | `toys-pink-snake` | Fuzzy Pink Snake | toys | 40 | 40 | 1.00 | fair | Soft, long, and weirdly hard to explain at parties. |
@@ -76,7 +76,7 @@ Columns: `id`, name, category, estimatedValue (Est), actualValue (Actual), x = a
 | `toys-rocket-playset` | Toy Rocket Playset | toys | 250 | 250 | 1.00 | fair | Launches imaginations. Parents sold separately. |
 | `toys-talking-doll` | Talking Doll, Mostly Working | toys | 130 | 210 | 1.62 | good | Says three phrases. One is a compliment. |
 
-### 3.2 media - Books, Movies & Music
+### 3.2 media - Media
 | id | Name | Cat | Est | Actual | x | Tier | Flavor line |
 |---|---|---|---|---|---|---|---|
 | `media-eight-track-player` | Eight-Track Player | media | 80 | 120 | 1.50 | good | Plays one song, twice, at the wrong speed. |
@@ -90,7 +90,7 @@ Columns: `id`, name, category, estimatedValue (Est), actualValue (Actual), x = a
 | `media-brass-tuba` | Brass Tuba, Dented | media | 150 | 160 | 1.07 | fair | The dent adds character. And about four extra notes. |
 | `media-first-comic` | First-Issue Comic Book | media | 100 | 170 | 1.70 | good | Slightly crinkled. Hugely super. |
 
-### 3.3 glass - Pottery & Glass
+### 3.3 glass - Glass
 | id | Name | Cat | Est | Actual | x | Tier | Flavor line |
 |---|---|---|---|---|---|---|---|
 | `glass-porcelain-vase` | Porcelain Vase | glass | 200 | 210 | 1.05 | fair | Looks expensive. Happens to be. |
@@ -118,7 +118,7 @@ Columns: `id`, name, category, estimatedValue (Est), actualValue (Actual), x = a
 | `collectibles-thimble-set` | Thimble Collection (48) | collectibles | 65 | 70 | 1.08 | fair | Forty-eight tiny hats for tiny fingers. |
 | `collectibles-band-medal` | Marching Band Medal | collectibles | 250 | 275 | 1.10 | fair | Awarded for Outstanding Enthusiasm. Very rare. |
 
-### 3.5 antiques - Antiques & Art
+### 3.5 antiques - Antiques
 | id | Name | Cat | Est | Actual | x | Tier | Flavor line |
 |---|---|---|---|---|---|---|---|
 | `antiques-xray` | Vintage X-Ray of a Mystery Foot | antiques | 100 | 100 | 1.00 | fair | Somebody's foot. Possibly yours. |
@@ -132,7 +132,7 @@ Columns: `id`, name, category, estimatedValue (Est), actualValue (Actual), x = a
 | `antiques-bronze-horse` | Bronze Horse Statue | antiques | 150 | 255 | 1.70 | good | Gallops nowhere, gloriously. |
 | `antiques-umbrella-stand` | Fancy Umbrella Stand | antiques | 60 | 65 | 1.08 | fair | Elegant. Holds umbrellas, canes, and the occasional sword. |
 
-### 3.6 misc - Everything Else
+### 3.6 misc - Misc
 | id | Name | Cat | Est | Actual | x | Tier | Flavor line |
 |---|---|---|---|---|---|---|---|
 | `misc-lawn-flamingos` | Lawn Flamingo Pair | misc | 50 | 50 | 1.00 | fair | Pink, plastic, and fiercely loyal. |

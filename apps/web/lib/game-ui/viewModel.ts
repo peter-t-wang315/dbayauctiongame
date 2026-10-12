@@ -235,7 +235,8 @@ export function eventText(view: PlayerView, e: LogEntry): string | null {
     case 'sold':
       return e.by === me ? `Yours! ${item} for ${amt}` : `SOLD! ${item} to ${nm} for ${amt}`;
     case 'unsold':
-      // 01 no-bid round: a whole Classic round without bids clears every bay.
+      // No-bid round clear (user decision 2026-10-12; engine change in PR "Engine: no-bid round clears
+      // bays"): the engine emits `unsold` with extra 'noBidRound' for each cleared bay.
       if (e.extra === 'noBidRound') return `No bids all round: ${item} cleared.`;
       return `${item}: no bids. Carried over.`;
     case 'refill':
