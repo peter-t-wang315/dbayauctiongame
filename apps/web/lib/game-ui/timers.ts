@@ -35,8 +35,9 @@ export function nextBarTotal(
   prev: { key: string; total: number } | undefined,
   key: string,
   remaining: number | null,
+  floor = MIN_BAR_TOTAL_MS,
 ): { key: string; total: number } {
-  const base = prev && prev.key === key ? prev.total : MIN_BAR_TOTAL_MS;
+  const base = prev && prev.key === key ? prev.total : floor;
   return { key, total: Math.max(base, remaining ?? 0) };
 }
 

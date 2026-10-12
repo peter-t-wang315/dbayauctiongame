@@ -1,6 +1,6 @@
 'use client';
 // /r/CODE: join form -> lobby -> game slot, chosen by the room state.
-import { GameSlot } from '../../../components/shell/GameSlot';
+import { GameScreen } from '../../../components/game/GameScreen';
 import { JoinForm } from '../../../components/shell/JoinForm';
 import { Lobby } from '../../../components/lobby/Lobby';
 import { useRoom } from '../../../lib/net/useRoom';
@@ -20,5 +20,5 @@ export default function RoomPage() {
     );
   }
   if (room.view.phase === 'lobby') return <Lobby />;
-  return <GameSlot />;
+  return <GameScreen />;
 }

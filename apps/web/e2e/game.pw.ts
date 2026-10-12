@@ -1,0 +1,89 @@
+import { spawn, type ChildProcess } from 'node:child_process';
+import path from 'node:path';
+import { expect, test, type Page } from '@playwright/test';
+
+// WS5 smoke vs the mock server: Classic two-tap bid, Frenzy timers, 390px layout budget.
+const MOCK_DIR = path.resolve(process.cwd(), '../../tools/mock-server');
+let mock: ChildProcess | null = null;
+
+test.beforeAll(async () => {
+  mock = spawn(process.execPath, ['--import', 'tsx', 'src/main.ts'], {
+    cwd: MOCK_DIR,
+    env: { ...process.env, PORT: '8787' },
+    stdio: 'pipe',
+  });
+  await new Promise<void>((resolve, reject) => {
+    mock!.stdout!.on('data', (d: Buffer) => d.toString().includes('mock server on') && resolve());
+    mock!.on('error', reject);
+    setTimeout(() => reject(new Error('mock did not start')), 20_000);
+  });
+});
+test.afterAll(() => {
+  mock?.kill();
+});
+
+async function startGame(page: Page, mode: 'Classic' | 'Frenzy', bots: number) {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'CREATE A ROOM' }).click();
+  await page.waitForURL(/\/r\/[A-Z0-9]{5}$/);
+  await page.getByLabel('Your name').fill('Sam');
+  await page.getByRole('button', { name: 'JOIN THE ROOM' }).click();
+  for (let i = 0; i < bots; i++) await page.getByRole('button', { name: '+ Add bot' }).click();
+  await page.getByRole('button', { name: mode, exact: true }).click();
+  await page.getByRole('button', { name: 'START GAME' }).click();
+  await expect(page.locator('[data-fx="status-strip"]')).toBeVisible();
+}
+
+async function layout(page: Page) {
+  return page.evaluate(() => {
+    const small = Array.from(document.querySelectorAll('.g-screen button'))
+      .map((el) => el.getBoundingClientRect())
+      .filter((r) => r.width > 0 && (r.height < 43.5 || r.width < 43.5) && r.height > 0);
+    const screen = document.querySelector('.g-screen')!;
+    return {
+      hScroll: document.documentElement.scrollWidth > innerWidth,
+      vScroll: document.documentElement.scrollHeight > innerHeight,
+      inner: screen.scrollHeight > screen.clientHeight,
+      smallTargets: small.length,
+      smallInfo: small.length ? Array.from(document.querySelectorAll('.g-screen button')).filter((el) => { const r = el.getBoundingClientRect(); return r.height > 0 && (r.height < 43.5 || r.width < 43.5); }).map((el) => el.className + ' ' + Math.round(el.getBoundingClientRect().width) + 'x' + Math.round(el.getBoundingClientRect().height)) : [],
+    };
+  });
+}
+
+test('Classic 3 bays at 390x844: fits without scrolling, two-tap bid works', async ({ page }) => {
+  await startGame(page, 'Classic', 2);
+  await expect(page.locator('[data-fx="bay"]')).toHaveCount(3);
+  await expect(page.locator('[data-fx="hand-card"]')).toHaveCount(12);
+  await page.screenshot({ path: 'test-results/ws5-classic3.png' });
+  expect(await layout(page)).toMatchObject({ hScroll: false, vScroll: false, inner: false, smallTargets: 0 });
+
+  // wait for my turn (bots take turns first or later)
+  await expect(page.getByText(/Your turn/).first()).toBeVisible({ timeout: 40_000 });
+  await page.locator('[data-card="v50"]').click();
+  await expect(page.locator('[data-card="v50"]')).toHaveAttribute('data-state', 'selected');
+  await expect(page.locator('[data-fx="bay"][data-state="legal"]').first()).toBeVisible();
+  await page.screenshot({ path: 'test-results/ws5-classic3-selected.png' });
+  await page.locator('[data-fx="bay"][data-state="legal"]').first().click();
+  await expect(page.locator('[data-card="v50"]')).toHaveAttribute('data-state', /out/, { timeout: 5000 });
+  // after my bid the turn ends: hand locked
+  await expect(page.locator('[data-fx="hand-card"][data-state="locked"]').first()).toBeVisible();
+  // the collection sheet opens and closes
+  await page.getByRole('button', { name: /Your collections/ }).click();
+  await expect(page.getByRole('dialog', { name: 'Your collections' })).toBeVisible();
+  await page.getByRole('button', { name: 'Back to bidding' }).click();
+});
+
+test('Frenzy 4 bays at 390x844: timers show, bid without waiting for a turn', async ({ page }) => {
+  await startGame(page, 'Frenzy', 4);
+  await expect(page.locator('[data-fx="bay"]')).toHaveCount(4);
+  await expect(page.locator('[data-fx="bay-timer"]').first()).toContainText(/\d:\d\d/);
+  await page.screenshot({ path: 'test-results/ws5-frenzy4.png' });
+  expect(await layout(page)).toMatchObject({ hScroll: false, vScroll: false, inner: false, smallTargets: 0 });
+  await page.locator('[data-card="v10"]').click();
+  await expect(page.locator('[data-card="v10"]')).toHaveAttribute('data-state', 'selected');
+  const legal = page.locator('[data-fx="bay"][data-state="legal"]').first();
+  if (await legal.count()) {
+    await legal.click();
+    await expect(page.locator('[data-card="v10"]')).toHaveAttribute('data-state', /out|spent|ready/, { timeout: 5000 });
+  }
+});
