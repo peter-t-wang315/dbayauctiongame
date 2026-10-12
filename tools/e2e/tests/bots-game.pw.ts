@@ -2,6 +2,20 @@ import { expect, test } from '@playwright/test';
 
 // One browser + 2 bots play a full Frenzy game on the REAL local Worker to the reveal.
 test('bots game runs to the reveal on the real server', async ({ page }) => {
+  // The lobby has no game-length control (finding in docs/progress/ws7.md): a standard game takes
+  // ~11 min. Merge length:'quick' into the UI's own setOpts frames to keep this test to ~4 min.
+  await page.routeWebSocket(/\/parties\/room\//, (ws) => {
+    const server = ws.connectToServer();
+    ws.onMessage((raw) => {
+      try {
+        const m = JSON.parse(String(raw)) as { t?: string };
+        if (m.t === 'setOpts') return server.send(JSON.stringify({ ...m, length: 'quick' }));
+      } catch {
+        /* forward as-is */
+      }
+      server.send(raw);
+    });
+  });
   await page.goto('/');
   await page.getByRole('button', { name: 'CREATE A ROOM' }).click();
   await page.waitForURL(/\/r\/[A-Z0-9]{5}$/);
