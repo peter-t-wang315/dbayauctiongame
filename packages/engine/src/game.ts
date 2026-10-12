@@ -2,7 +2,7 @@
 // refill (R21), Gift resolution (R28-R31), and mode flows (R7-R14, R17-R18, R22-R24, F1-F8).
 // Every function here mutates the (already cloned) state it is given; engine.ts owns cloning.
 import type { CardId, ErrorCode, PlayerId } from '@dbay/protocol';
-import { CONFIG, presetOf, type PlayerCount } from './config';
+import { CONFIG, closeProbability, presetOf, type PlayerCount } from './config';
 import type { PackIndex } from './pack';
 import { nextFloat, shuffle } from './rng';
 import type {
@@ -143,8 +143,8 @@ function sell(state: EngineState, ctx: Ctx, bay: EngineBay): void {
   delete bay.idleExpiries;
 }
 
-function discardUnsold(ctx: Ctx, bay: EngineBay): void {
-  emit(ctx, { kind: 'unsold', card: bay.card ?? undefined, bay: bay.idx });
+function discardUnsold(ctx: Ctx, bay: EngineBay, extra?: string): void {
+  emit(ctx, { kind: 'unsold', card: bay.card ?? undefined, bay: bay.idx, ...(extra ? { extra } : {}) });
   bay.card = null;
   delete bay.firstBidCall;
   delete bay.lastBidCall;
@@ -214,7 +214,8 @@ function startCall(state: EngineState, ctx: Ctx, t: number): void {
 function finishCall(state: EngineState, ctx: Ctx, t: number, gapMs: number): void {
   const callNo = state.callsDone + 1;
   const n = state.players.length as PlayerCount;
-  closeRoll(state, ctx, callNo, n);
+  const refilled = closeRoll(state, ctx, callNo, n);
+  noBidRoundClear(state, ctx, callNo, n, refilled);
   state.callsDone = callNo;
   // R23: nothing left to sell.
   if (state.deck.length === 0 && allEmpty(state)) {
@@ -230,22 +231,52 @@ function finishCall(state: EngineState, ctx: Ctx, t: number, gapMs: number): voi
   state.call = { player: call.player, phase: 'gap', endsAt: t + gapMs };
 }
 
-/** R17-R18: roll each eligible bay in index order; refill sold bays afterwards. */
-function closeRoll(state: EngineState, ctx: Ctx, callNo: number, players: number): void {
-  const total = state.callsTotal;
+/** R17-R18: roll each eligible bay in index order; refill sold bays afterwards. Returns the refilled bays. */
+function closeRoll(state: EngineState, ctx: Ctx, callNo: number, players: number): EngineBay[] {
   const pre = presetOf(state.length).CLOSE_BY_PLAYERS[players as PlayerCount];
-  const p = pre.pBase + ((pre.pMax - pre.pBase) * callNo) / total;
   const sold: EngineBay[] = [];
   for (const bay of state.bays) {
     if (bay.card === null || bay.stack.length === 0) continue; // R18
     if ((bay.lastBidCall ?? 0) >= callNo) continue; // not on the call that placed the latest bid
-    const forced = callNo - (bay.firstBidCall ?? callNo) >= pre.maxBayAgeCycles * players;
+    const age = callNo - (bay.firstBidCall ?? callNo);
+    const forced = age >= pre.maxBayAgeCycles * players;
+    const p = closeProbability(pre, callNo, state.callsTotal, age / players);
     if (forced || nextFloat(state.rng, 'closes') < p) {
       sell(state, ctx, bay);
       sold.push(bay);
     }
   }
   for (const bay of sold) refill(state, ctx, bay, 0);
+  return sold;
+}
+
+/**
+ * R18b: when a whole round (every player called once) passes with no accepted bid, clear every bay
+ * except those just refilled this call: bid cards go back to their owners, the item is discarded
+ * unsold, then the cleared bays refill in bay order (R21). Not in the final round (R22 sweeps).
+ */
+function noBidRoundClear(
+  state: EngineState,
+  ctx: Ctx,
+  callNo: number,
+  players: number,
+  fresh: readonly EngineBay[],
+): void {
+  if (callNo % players !== 0 || callNo >= state.callsTotal) return;
+  if (callNo - (state.lastBidCallNo ?? 0) < players) return; // a bid landed in this round
+  const cleared: EngineBay[] = [];
+  for (const bay of state.bays) {
+    if (bay.card === null || fresh.includes(bay)) continue;
+    for (const e of bay.stack) {
+      const owner = getPlayer(state, e.by) as EnginePlayer;
+      owner.hand.push(e.card);
+      sortHand(owner);
+    }
+    bay.stack = [];
+    discardUnsold(ctx, bay, 'noBidRound');
+    cleared.push(bay);
+  }
+  for (const bay of cleared) refill(state, ctx, bay, 0);
 }
 
 /** R22: after the last call, sell every bay with bids, discard the rest, then go to gifts. */
@@ -527,6 +558,7 @@ export function runAction(
         const callNo = state.callsDone + 1;
         placeCard(ctx, p, action.card, bay);
         bay.lastBidCall = callNo;
+        state.lastBidCallNo = callNo;
         bay.firstBidCall ??= callNo;
         finishCall(state, ctx, now, CONFIG.callGapMs);
         return null;
