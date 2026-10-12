@@ -14,7 +14,7 @@ Fixed facts: 3-6 players. Colors/shapes: Red ●, Blue ▲, Yellow ■, Green �
 
 ## 2. Visual direction
 
-**Style: "auction house meets arcade."** Warm dark felt background (default), cream paper cards with a thick 2px ink border and a hard offset shadow (sticker/arcade feel), brass-gold accents for money, rubber-stamp SOLD. Light theme = cream table, same cards. Theme follows `prefers-color-scheme`, with a toggle in ⋯. No eBay branding or logos anywhere.
+**Style: "auction house meets arcade."** Warm dark felt background (default), cream paper cards with a thick 2px ink border and a hard offset shadow (sticker/arcade feel), brass-gold accents for money, rubber-stamp SOLD. Light theme = cream table, same cards. Theme: light by default, dark via a toggle in ⋯ (OS setting ignored; see §13). No eBay branding or logos anywhere.
 
 **Typography (Google Fonts via `next/font`, no layout shift):**
 - Display/numerals: **Lilita One** (chunky, game-like). Used for bids, titles, SOLD, timers. Enable `font-variant-numeric: tabular-nums` where available; otherwise fixed-width number boxes so bids don't jitter.
@@ -44,7 +44,7 @@ Fixed facts: 3-6 players. Colors/shapes: Red ●, Blue ▲, Yellow ■, Green �
 | Player | Shape | Hex | Text on chip | Contrast |
 |---|---|---|---|---|
 | Red | ● | #F04B3E (coral-red, eBay-inspired) | ink #1E1A14 | 4.5:1 |
-| Blue | ▲ | #2F7CF6 (azure, eBay-inspired) | ink | 5.2:1 |
+| Blue | ▲ | #3A85F8 (azure, eBay-inspired; was #2F7CF6, 4.39:1 with ink) | ink | 4.86:1 |
 | Yellow | ■ | #FFB81C (marigold, eBay-inspired) | ink | 15:1 |
 | Green | ◆ | #8BC53F (lime, eBay-inspired) | ink | 5.7:1 |
 | Purple | ★ | #A97CF8 (violet) | ink | 7:1 |
@@ -397,7 +397,7 @@ It is never a bid target. If you get outbid, it returns to full strength with th
 | Player | Shape | Color |
 |---|---|---|
 | Red | ● | #F04B3E |
-| Blue | ▲ | #2F7CF6 |
+| Blue | ▲ | #3A85F8 |
 | Yellow | ■ | #FFB81C |
 | Green | ◆ | #8BC53F |
 | Purple | ★ | #A97CF8 |
@@ -443,14 +443,15 @@ The only overlay is the terminal **SOLD** state, which covers the whole tile wit
 | `--card` | #FFFFFF | bid cards (2px ink border + hard shadow) |
 | `--ink` | #0E1511 | borders, shadows |
 | `--text` | #191919 | primary text |
-| `--text-dim` | #6B7280 | secondary text |
+| `--text-dim` | #5B6370 | secondary text (was #6B7280; 4.39:1 failed AA, a11y audit 2026-10-12) |
 | `--navy` (secondary brand color) | #1E2A44 | status strip, primary buttons, Proxy cards, selected segments, focus ring |
-| `--gold` | #B07400 | money and top bids; marigold #FFB81C on navy surfaces |
+| `--gold` | #8F5E00 | money and top bids; marigold #FFB81C on navy surfaces (was #B07400; 3.92:1 failed AA) |
 | `--ok` | #22A35A | legal-bid glow |
 | `--danger` | #FF6B5E | always paired with text or shake |
+| `--on-card` / `--on-card-dim` / `--gold-on-card` | = `--text` / `--text-dim` / `--gold` | text on `--card` surfaces (buttons, inputs, segments, reveal cards) |
 
 - **Player colors** are unchanged (§12), with ink text on every chip.
-- **Dark theme** keeps the original §2 felt tokens, with gold #F2B93B.
+- **Dark theme** keeps the original §2 felt tokens, with gold #F2B93B. Cards stay cream in dark, so `--on-card` #191919, `--on-card-dim` #5B6370 and `--gold-on-card` #8F5E00 keep text on cards readable (before the a11y audit, cream text on cream cards was 1.06:1).
 - **Reference mockups:** every screen is white. Board 3b ("GameDark") shows the dark toggle.
 
 ## 14. Layout matrix: bay count is set by player count, not by mode

@@ -59,7 +59,7 @@ a {
   min-width: var(--hit);
   padding: 0 var(--s-4);
   font: 800 16px/1 var(--font-body);
-  color: var(--text);
+  color: var(--on-card);
   background: var(--card);
   border: var(--border);
   border-radius: var(--r-card);
@@ -113,7 +113,7 @@ a {
   width: 100%;
   padding: 0 var(--s-3);
   font: 700 18px/1 var(--font-body);
-  color: var(--text);
+  color: var(--on-card);
   background: var(--card);
   border: var(--border);
   border-radius: var(--r-card);
@@ -208,13 +208,14 @@ a {
   min-width: var(--hit);
   padding: 0 var(--s-4);
   font: 800 15px/1 var(--font-body);
-  color: var(--text);
+  color: var(--on-card);
   background: var(--card);
   border: var(--border);
   border-radius: var(--r-pill);
   cursor: pointer;
 }
-.seg__opt[aria-pressed='true'] {
+.seg__opt[aria-pressed='true'],
+.seg__opt[aria-selected='true'] {
   background: var(--navy);
   color: var(--on-navy);
 }
