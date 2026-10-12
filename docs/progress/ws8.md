@@ -20,3 +20,4 @@
 - Skipped: SOLD card flying into the collection strip (needs layoutId across components); stamp rotate -8deg (the stamp is a full-bay overlay, rotating it would poke outside the bay); bidder chip flash; "+3s" and outbid pill visuals already existed from WS5.
 - Confetti only for the winner (rank 1 and me) and only when the reveal sequence finished in this session after a playing->reveal transition; never under reduced motion (the crown badge stays).
 - If `pnpm install` has not been run in a fresh worktree, Next fails to resolve zod from packages/protocol.
+- Review fix (main session): `run()` clears the inline styles an animation commits (box-shadow, scale/transform, opacity) so state rings (outbid/legal) are never overridden; sounds capped at 2 per snapshot (reconnect burst). Hardened the flaky WS5 Frenzy e2e (bid $300 instead of $10).

@@ -79,12 +79,13 @@ test('Frenzy 4 bays at 390x844: timers show, bid without waiting for a turn', as
   await expect(page.locator('[data-fx="bay-timer"]').first()).toContainText(/\d:\d\d/);
   await page.screenshot({ path: 'test-results/ws5-frenzy4.png' });
   expect(await layout(page)).toMatchObject({ hScroll: false, vScroll: false, inner: false, smallTargets: 0 });
-  await page.locator('[data-card="v10"]').click();
-  await expect(page.locator('[data-card="v10"]')).toHaveAttribute('data-state', 'selected');
+  // $300: bots can't make it illegal between the legality check and the click (only a Proxy can).
+  await page.locator('[data-card="v300"]').click();
+  await expect(page.locator('[data-card="v300"]')).toHaveAttribute('data-state', 'selected');
   const legal = page.locator('[data-fx="bay"][data-state="legal"]').first();
   if (await legal.count()) {
     await legal.click();
-    await expect(page.locator('[data-card="v10"]')).toHaveAttribute('data-state', /out|spent|ready/, { timeout: 5000 });
+    await expect(page.locator('[data-card="v300"]')).toHaveAttribute('data-state', /out|spent|ready/, { timeout: 5000 });
   }
 });
 

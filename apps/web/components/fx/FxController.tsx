@@ -34,6 +34,12 @@ function run(el: Element | null, keyframes: Record<string, unknown>, duration: n
       /* decoration only */
     } finally {
       active--;
+      // Drop whatever inline style the animation committed, so class/state styles (e.g. the bay's
+      // outbid/legal rings via box-shadow) always win again afterwards.
+      if (el instanceof HTMLElement || el instanceof SVGElement) {
+        for (const k of Object.keys(keyframes)) el.style.removeProperty(k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`));
+        if ('scale' in keyframes) el.style.removeProperty('transform');
+      }
     }
   });
 }
@@ -61,12 +67,16 @@ function visual(e: FxEvent): void {
   }
 }
 
-function handle(e: FxEvent): void {
-  const s = sfxFor(e);
+/** Sounds per snapshot are capped so a reconnect after a backgrounded tab doesn't burst. */
+const MAX_SFX_PER_SNAPSHOT = 2;
+
+function handle(e: FxEvent, sound: boolean): boolean {
+  const s = sound ? sfxFor(e) : null;
   if (s) playSfx(s);
   const p = patternFor(e);
   if (p) vibrate(p);
   visual(e);
+  return !!s;
 }
 
 /** Soonest running clock in ms, or null. */
@@ -93,9 +103,10 @@ export function FxController({ view }: { view: PlayerView | null }) {
     }
     const events = deriveFx(prev.current, view);
     prev.current = view;
+    let sounds = 0;
     for (const e of events) {
       if (e.t === 'reveal') confettiArmed.current = true;
-      handle(e);
+      if (handle(e, sounds < MAX_SFX_PER_SNAPSHOT)) sounds++;
     }
   }, [view]);
 
