@@ -44,8 +44,14 @@ async function scan(page: Page, label: string) {
     .catch(() => {});
   for (const theme of ['light', 'dark'] as const) {
     await setTheme(page, theme);
-    const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
-    const bad = violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    // JS-driven (Motion) fades are invisible to getAnimations(); re-scan a couple of times before failing
+    let bad: Awaited<ReturnType<AxeBuilder['analyze']>>['violations'] = [];
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
+      bad = violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+      if (bad.length === 0) break;
+      await page.waitForTimeout(1000);
+    }
     const summary = bad.map(
       (v) =>
         `${v.id} (${v.impact}): ${v.nodes
