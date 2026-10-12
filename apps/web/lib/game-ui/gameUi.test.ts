@@ -203,6 +203,8 @@ describe('view-model', () => {
   it('progress: fraction, labels; never a "Round X of Y" string', () => {
     expect(progressOf(makeView())).toMatchObject({ fraction: 2 / 8, label: null });
     expect(progressOf(makeView({ round: { n: 5, of: 8, halfway: true, last: false } })).label).toBe('halfway');
+    // Past the halfway round the tag goes away (the bar keeps going).
+    expect(progressOf(makeView({ round: { n: 6, of: 8, halfway: true, last: false } })).label).toBeNull();
     expect(progressOf(makeView({ round: { n: 8, of: 8, halfway: true, last: true } }))).toMatchObject({
       fraction: 1,
       label: 'last',
@@ -227,6 +229,7 @@ describe('view-model', () => {
     );
     expect(e({ kind: 'halfway' })).toBe('Halfway there!');
     expect(e({ kind: 'lastRound' })).toBe('Last round! Everything sells.');
+    expect(e({ kind: 'unsold', bay: 0, card: 'toys-tin-robot', extra: 'noBidRound' })).toMatch(/^No bids all round: .+ cleared\.$/);
     expect(e({ kind: 'autoPass', by: 'pat' })).toBe('▲ Pat has no legal bid: skipped');
     v.players.find((p) => p.id === 'pat')!.connected = false;
     expect(e({ kind: 'autoPass', by: 'pat' })).toBe('▲ Pat is away: auto-pass');
