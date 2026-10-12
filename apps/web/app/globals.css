@@ -1,0 +1,304 @@
+@import '../styles/tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.4;
+  min-height: 100dvh;
+}
+
+a {
+  color: var(--gold);
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.page {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: var(--s-5) var(--s-4) var(--s-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  min-height: 100dvh;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: var(--hit);
+  min-width: var(--hit);
+  padding: 0 var(--s-4);
+  font: 800 16px/1 var(--font-body);
+  color: var(--text);
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 80ms;
+}
+.btn:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: var(--shadow-pressed);
+}
+.btn:disabled {
+  opacity: var(--dim-opacity);
+  cursor: not-allowed;
+}
+.btn--primary {
+  background: var(--navy);
+  color: var(--on-navy);
+  min-height: 56px;
+  border-radius: 16px;
+  font-size: 18px;
+}
+.btn--danger {
+  color: var(--danger-text);
+}
+.btn--small {
+  font-size: 14px;
+  padding: 0 var(--s-3);
+}
+.btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--text);
+}
+
+/* ---------- inputs ---------- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+.field label,
+.label {
+  font-weight: 800;
+  font-size: 14px;
+}
+.input {
+  min-height: var(--hit);
+  width: 100%;
+  padding: 0 var(--s-3);
+  font: 700 18px/1 var(--font-body);
+  color: var(--text);
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--r-card);
+}
+.input--code {
+  text-transform: uppercase;
+  letter-spacing: 6px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 24px;
+}
+.hint {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-dim);
+}
+.error-text {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--danger-text);
+}
+
+/* ---------- cards, chips ---------- */
+.panel {
+  background: var(--bg-raised);
+  border-radius: var(--r-bay);
+  padding: var(--s-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.panel h2 {
+  margin: 0;
+  font: 400 20px/1.2 var(--font-display);
+}
+
+.chip {
+  --chip-bg: var(--bg-raised);
+  --chip-fg: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--hit);
+  padding: 0 var(--s-3);
+  background: var(--chip-bg);
+  color: var(--chip-fg);
+  border: var(--border);
+  border-radius: var(--r-chip);
+  font: 800 14px/1.1 var(--font-body);
+  max-width: 100%;
+}
+.chip--p-red { --chip-bg: var(--p-red); --chip-fg: var(--on-p-red); }
+.chip--p-blue { --chip-bg: var(--p-blue); --chip-fg: var(--on-p-blue); }
+.chip--p-yellow { --chip-bg: var(--p-yellow); --chip-fg: var(--on-p-yellow); }
+.chip--p-green { --chip-bg: var(--p-green); --chip-fg: var(--on-p-green); }
+.chip--p-purple { --chip-bg: var(--p-purple); --chip-fg: var(--on-p-purple); }
+.chip--p-teal { --chip-bg: var(--p-teal); --chip-fg: var(--on-p-teal); }
+.chip--empty {
+  background: transparent;
+  border-style: dashed;
+  color: var(--text-dim);
+  justify-content: center;
+}
+.chip__shape {
+  font-size: 16px;
+}
+.chip__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tag {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border: 2px solid var(--ink);
+  border-radius: var(--r-chip);
+  background: var(--card);
+  color: var(--ink);
+}
+
+/* segmented controls */
+.seg {
+  display: inline-flex;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+.seg__opt {
+  min-height: var(--hit);
+  min-width: var(--hit);
+  padding: 0 var(--s-4);
+  font: 800 15px/1 var(--font-body);
+  color: var(--text);
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--r-pill);
+  cursor: pointer;
+}
+.seg__opt[aria-pressed='true'] {
+  background: var(--navy);
+  color: var(--on-navy);
+}
+.seg__opt:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+/* ---------- overlay / sheet ---------- */
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 21, 17, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-4);
+  z-index: 50;
+}
+.scrim--bottom {
+  align-items: flex-end;
+  padding: 0;
+}
+.sheet {
+  width: 100%;
+  max-width: 480px;
+  max-height: 80dvh;
+  overflow: auto;
+  background: var(--bg);
+  border: var(--border);
+  border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+  padding: var(--s-4) var(--s-4) var(--s-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.sheet h2 {
+  margin: 0;
+  font: 400 22px/1.2 var(--font-display);
+}
+.modal {
+  width: 100%;
+  max-width: 360px;
+  background: var(--bg);
+  border: var(--border);
+  border-radius: var(--r-bay);
+  box-shadow: var(--shadow);
+  padding: var(--s-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  text-align: center;
+}
+.modal h1,
+.modal h2 {
+  margin: 0;
+  font: 400 24px/1.2 var(--font-display);
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 4px solid var(--line);
+  border-top-color: var(--navy);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.skeleton {
+  background: var(--bg-raised);
+  border-radius: var(--r-chip);
+  min-height: var(--hit);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 3s;
+  }
+  .btn {
+    transition: none;
+  }
+}
