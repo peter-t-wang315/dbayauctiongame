@@ -34,3 +34,4 @@
 | 1 | 4 | After a server process restart, stored `connected: true` flags outlived the sockets (no close event), blocking auto-pass, host migration and the all-disconnected expiry | apps/server/src/room.ts | Fixed (`reconcileConnections` in onStart) + test |
 | 2 | 1-3 | Status text for a bot's auto-pass reads "Bot Billy is away: auto-pass" (bots are never "away") | apps/web/lib/game-ui (copy) | Open, not touched (owned by another agent) |
 | 3 | 2 | Playing a Classic game with a human that only passes never advances; not a bug, noted for test authors | n/a | n/a |
+- CI (main session, review fix): robustness scenarios run in their own `e2e-robustness` job (35 min timeout); `e2e-real` runs only bots-game. Restart scenario is Windows-only, so it never runs in CI (ubuntu).
