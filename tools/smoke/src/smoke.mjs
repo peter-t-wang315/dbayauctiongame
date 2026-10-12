@@ -18,10 +18,12 @@ function fail(msg) {
   process.exit(1);
 }
 
-const res = await fetch(`${httpBase}/api/rooms`, { method: 'POST', headers: { Origin: origin } }).catch(
-  (e) => fail(`create request failed: ${e.message}`),
-);
-if (res.status !== 201) fail(`POST /api/rooms -> ${res.status} (check ALLOWED_ORIGINS vs SMOKE_ORIGIN)`);
+const res = await fetch(`${httpBase}/api/rooms`, {
+  method: 'POST',
+  headers: { Origin: origin },
+}).catch((e) => fail(`create request failed: ${e.message}`));
+if (res.status !== 201)
+  fail(`POST /api/rooms -> ${res.status} (check ALLOWED_ORIGINS vs SMOKE_ORIGIN)`);
 const { code } = await res.json();
 if (!/^[A-Z0-9]{4,8}$/.test(code ?? '')) fail(`bad room code ${JSON.stringify(code)}`);
 console.log(`room ${code} created on ${host}`);
@@ -35,7 +37,8 @@ ws.on('message', (data) => {
   if (m.t === 'err') fail(`server error ${m.code}`);
   if (m.t !== 'snap') return;
   if (m.view?.phase !== 'lobby') fail(`expected lobby, got ${m.view?.phase}`);
-  if (!Array.isArray(m.view.players) || m.view.players.length !== 1) fail('expected exactly 1 player');
+  if (!Array.isArray(m.view.players) || m.view.players.length !== 1)
+    fail('expected exactly 1 player');
   clearTimeout(timer);
   console.log('SMOKE OK: joined, lobby snapshot with 1 player');
   ws.close();

@@ -62,6 +62,18 @@ Added by later workstreams and pinned when introduced: `partysocket` 1.3.0 (WS4)
 `@cloudflare/vitest-plugin` 1.4.0 (WS3b), `motion` 14.1.0 and `canvas-confetti` (WS8),
 `fast-check` (WS1), `playwright` (WS7).
 
+## Deploy
+
+Not deployed yet. Web goes to Vercel (root `apps/web`, env `NEXT_PUBLIC_GAME_HOST` per environment), the
+Worker to Cloudflare via `.github/workflows/deploy.yml` (manual or push to `main`; skips cleanly without
+the `CLOUDFLARE_API_TOKEN` secret). Account setup, env vars and the iPhone-over-LAN checklist are in
+[`docs/07-deploy-checklist.md`](docs/07-deploy-checklist.md).
+
+```sh
+pnpm --filter @dbay/smoke start localhost:8787   # create room + join + snapshot against a running server
+pnpm --filter @dbay/e2e e2e                       # real Worker + web, 1 browser + 2 bots to the reveal (:8788/:3200)
+```
+
 ## License
 
 MIT, see [LICENSE](LICENSE).
