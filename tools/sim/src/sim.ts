@@ -259,6 +259,8 @@ export function evaluate(r: BatchResult): Check[] {
         : 'warn',
     std ? '30-95% (ASSUMED, pending playtest)' : '30-70% (hard 15-85)',
   );
+  // User decision 2026-10-11 (ASSUMED): Classic Standard 3p accepts up to 8% so it can reach 12-15 min.
+  const skipLimit = std && r.players === 3 ? 0.08 : 0.05;
   const fair = 1 / r.players;
   const dev = Math.max(...r.seatWinShare.map((w) => Math.abs(w - fair))) * 100;
   const same = new Set(r.levels).size === 1;
@@ -271,8 +273,8 @@ export function evaluate(r: BatchResult): Check[] {
   add(
     'auto-skip rate (classic calls)',
     pct(r.autoSkipRate),
-    r.autoSkipRate < 0.05 ? 'ok' : 'warn',
-    '<5% (rare)',
+    r.autoSkipRate < skipLimit ? 'ok' : 'warn',
+    `<${skipLimit * 100}% (rare; limit is for careful bots)`,
   );
   add('unsold share', pct(r.unsoldShare), r.unsoldShare < 0.1 ? 'ok' : 'warn', '<10%');
   add(

@@ -72,7 +72,7 @@ Run with bots over many seeds (at least 1000 per mode and player count). Bot ski
 | First-seat (Classic) or fastest-seat (Frenzy) advantage | < 5 points win rate | - |
 Tune order if failing: `pBase/pMax` and `maxBayAgeCycles` (length, sales), rounds, Frenzy open timers, cats in play, deck size, then Proxy count.
 
-Additional metric: Classic auto-skip rate (R13, calls with no legal bid / calls) should be rare (< 5%).
+Additional metric: Classic auto-skip rate (R13, calls with no legal bid / calls) should be rare (< 5%; Standard 3p Classic accepts up to 8% so it can reach 12-15 min, user decision 2026-10-11, ASSUMED, revisit after playtest). The limit is measured with all-careful bots (the sim default); random and greedy bots burn their hands and skip far more (see section 7 for the mixed-bot figures), so treat the mixed-bot rate as a playtest risk.
 
 ## 6. Simulator pacing (ASSUMED)
 `tools/sim` has two bot pacings. **Bot pacing** (default): every seat polls on a 1.5-4 s timer and acts at once. **Human pacing** (`--pacing human`): the Classic caller acts uniformly 40-90% into the bid window (2-4.5 s of 5 s) and lets the window expire 10% of the time; Frenzy seats look at the board every 1.5-5 s and bid with probability 0.8 when the policy has a bid; gift choices take 2-6 s. Length targets apply to human pacing. See `tools/sim/README.md`.
@@ -88,7 +88,7 @@ Additional metric: Classic auto-skip rate (R13, calls with no legal bid / calls)
 | quick | frenzy | 4 | 5.5 / 5.7 / 6.1 | - | 71.9% | - | 2.55x | 0 |
 | quick | frenzy | 5 | 5.3 / 5.6 / 5.8 | - | 73.3% | - | 3.16x | 0 |
 | quick | frenzy | 6 | 6.3 / 6.6 / 6.8 | - | 75.8% | - | 3.64x | 0 |
-| standard | classic | 3 | 9.0 / 9.9 / 12.6 | 37 / 50 | 86.4% | 4.4% | 1.83x | 0 |
+| standard | classic | 3 | 12.0 / 12.6 / 12.9 | 50 / 50 | 77.8% | 6.1% | 2.01x | 0 |
 | standard | classic | 4 | 16.5 / 17.1 / 17.5 | 50 / 50 | 84.5% | 4.0% | 2.23x | 0 |
 | standard | classic | 5 | 16.0 / 17.5 / 18.0 | 39 / 42 | 88.8% | 3.4% | 2.38x | 0 |
 | standard | classic | 6 | 17.0 / 17.5 / 17.8 | 33 / 33 | 84.3% | 1.2% | 3.12x | 0 |
@@ -97,6 +97,8 @@ Additional metric: Classic auto-skip rate (R13, calls with no legal bid / calls)
 | standard | frenzy | 5 | 7.8 / 8.1 / 8.3 | - | 92.5% | - | 2.15x | 0 |
 | standard | frenzy | 6 | 9.5 / 9.8 / 10.1 | - | 90.4% | - | 2.39x | 0 |
 
-Classic was retuned on the real pack (2026-10-11, ws1-classic-retune): the previous Classic constants gave auto-skip above 5% at several cells in the pre-PR review. Slow closes and long `maxBayAgeCycles` keep bid cards locked on bays, so hands run dry late in the game. Faster closes (a long, flat start and a steeper ramp, shorter bay ages) free the cards. Auto-skip is now below 5% in every Classic cell; skip rate rises with game length at a fixed deck, so length and skips conflict at 3 players.
+Classic was retuned on the real pack (2026-10-11, ws1-classic-retune): the previous Classic constants gave auto-skip above 5% at several cells in the pre-PR review. Slow closes and long `maxBayAgeCycles` keep bid cards locked on bays, so hands run dry late in the game. Faster closes (a long, flat start and a steeper ramp, shorter bay ages) free the cards. Auto-skip (careful bots) is now below 5% in every Classic cell except Standard 3p, which accepts up to 8% (6.1% measured) to reach its length target; skip rate rises with game length at a fixed deck, so length and skips conflict at 3 players. Standard 3p close values: rounds 50, pBase .005, pMax .03, maxBayAgeCycles 8 (was .005/.15/5).
 
-Misses (ASSUMED, accepted for now): Classic Standard 3 players median 9.0 min (target 12-15; at 12 min the auto-skip rate is 7%, and skip < 5% was preferred); Quick collection share 47-76% (Frenzy 71-76%, slightly above 70%); Standard collection share 84-93% (accepted up to ~95% pending playtest); score spread above 4x at Quick Classic 6 players (6.9x). Classic auto-skip is close to the limit at Quick 3p (4.6%), Standard 3-4p (4.4%, 4.0%). Bot-pacing results are in the PR description.
+Known risk, mixed bots (random/greedy/careful seats, 1000 games, real pack, human pacing), auto-skip: Quick 3p 9.2%, 4p 11.5%, 5p 3.1%, 6p 0.7%; Standard 3p 18.9%, 4p 19.4%, 5p 8.7%, 6p 5.6%. Weak or reckless players empty their hands early and may be skipped often, worst at Standard 4p and 3p. Check in the playtest.
+
+Misses (ASSUMED, accepted for now): Quick collection share 47-76% (Frenzy 71-76%, slightly above 70%); Standard collection share 84-93% (accepted up to ~95% pending playtest); score spread above 4x at Quick Classic 6 players (6.9x). Classic auto-skip (careful bots) is close to the limit at Quick 3p (4.6%), Standard 4p (4.0%); Standard 3p is 6.1% against its 8% limit. Bot-pacing results are in the PR description.

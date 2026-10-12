@@ -90,3 +90,11 @@ Part 2: human-pacing mode in tools/sim; tune LENGTH_PRESETS; update docs 01 s8-9
 - 1000 games/cell, real pack, human pacing: auto-skip all Classic cells < 5% (Quick 4.6/3.8/1.0/0.0, Standard 4.4/4.0/3.4/1.2); lengths all in target except Standard 3p median 9.0 min (target 12-15).
 - Gotchas: auto-skip grows with game length at fixed deck (hands run dry as cards stay locked), so 3p Standard cannot reach 12 min with skip < 5% without new rules; chose skip < 5%. Cap-bound Standard 4p (median 50 rounds) at 16.5 min. In my runs the pre-retune baseline at 200 games was Quick 3p 5.8%, 4p 2.7%, Standard 3p 7.0%, 4p 5.4%, 5p 3.5% (lower than the review figures).
 - Next: pre-PR re-check by caller; playtest to retune.
+
+## Part 6: Standard 3p Classic accepts 8% auto-skip (branch ws1-3p-standard, pushes to ws1-length-presets; PR #6)
+- Decision (user, 2026-10-11, ASSUMED, revisit after playtest): Standard 3p Classic accepts up to 8% auto-skip so it reaches 12-15 min. Limits (5% elsewhere) are measured with all-careful bots (coordinator decision).
+- Done: Standard 3p close .005/.15/5 -> .005/.03/8 (rounds stay 50). Sim limit 8% for Standard 3p only, 5% elsewhere (sim.ts), sim README, docs 01 s8-9, 02 s5/s7. Golden snapshots: not regenerated (no snapshot uses Standard 3p Classic; tests green).
+- Result (1000 games, real pack, human pacing): Standard 3p median 12.0 min (p95 12.6), rounds 50/50, auto-skip 6.1% careful. Median is bound by the 50-round cap (~14.4 s/round); 12.0 is the ceiling.
+- Mixed bots (random/greedy/careful) cannot reach both: at 50 rounds Standard 3p skips 18.9% (10.8 min); only shorter games (<= ~30 rounds, ~7 min) get under 8%. Recorded as playtest risk.
+- Mixed-bot auto-skip, all Classic cells (1000 games): Quick 3p 9.2, 4p 11.5, 5p 3.1, 6p 0.7; Standard 3p 18.9, 4p 19.4, 5p 8.7, 6p 5.6. Careful: Quick 4.6/3.8/1.0/0.0; Standard 6.1/4.0/3.4/1.2.
+- Next: playtest to see how often weak/reckless players get skipped (worst Standard 4p, 3p).

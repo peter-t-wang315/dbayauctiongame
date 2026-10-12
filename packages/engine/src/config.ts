@@ -78,7 +78,7 @@ const STANDARD: LengthPreset = {
   frenzyIdleRecheckMs: 15000,
   frenzyMaxMs: 1080000,
   CLOSE_BY_PLAYERS: {
-    3: { pBase: 0.005, pMax: 0.15, maxBayAgeCycles: 5 },
+    3: { pBase: 0.005, pMax: 0.03, maxBayAgeCycles: 8 },
     4: { pBase: 0.005, pMax: 0.05, maxBayAgeCycles: 6 },
     5: { pBase: 0.03, pMax: 0.085, maxBayAgeCycles: 5 },
     6: { pBase: 0.04, pMax: 0.1, maxBayAgeCycles: 4 },
