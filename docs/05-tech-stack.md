@@ -211,7 +211,7 @@ Hidden-info rule of thumb: a field may appear in a view only if it is derivable 
 
 `BAD_MESSAGE` (schema/size), `VERSION_MISMATCH`, `ROOM_NOT_FOUND`, `ROOM_FULL`, `ROOM_EXPIRED`, `GAME_IN_PROGRESS` (join after start), `BAD_SECRET`, `BANNED`, `NAME_INVALID`, `NOT_HOST`, `NOT_YOUR_TURN`, `NOT_ENOUGH_PLAYERS`, `WRONG_PHASE`, `ILLEGAL_BID` (01 R16 failures: does not beat top bid, own top, card not in hand, invalid bay), `TOO_LATE` (server time at/after deadline; 02 F4), `COOLDOWN` (Frenzy bid cooldown; 02 F5), `BAD_OPTS` (invalid setOpts), `RATE_LIMITED`, `INTERNAL`.
 
-HTTP: `POST /api/rooms` -> `201 {code}` | `403` bad origin | `429` rate limited. Unknown room WS upgrade -> `404`.
+HTTP: `POST /api/rooms` -> `201 {code}` | `403` bad origin | `429` rate limited. Unknown (well-formed) room code: the WS upgrade succeeds and `hello`/`join` get `err ROOM_NOT_FOUND`, then close code 4004; malformed codes -> `404`.
 
 ### 6.5 Ack semantics, rev, ordering
 

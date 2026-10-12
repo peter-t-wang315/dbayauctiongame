@@ -45,6 +45,7 @@ export class Room extends Server<Env> {
   private incompatible = false;
   /** Per-connection rate counters (memory only; reset on wake, which is fine). */
   private rates = new Map<string, RateState>();
+  private joining = new Set<string>();
 
   override async onStart(): Promise<void> {
     // Answer the transport-level keepalive without waking the DO (05 section 6.6).
@@ -116,7 +117,27 @@ export class Room extends Server<Env> {
         conn.close(CLOSE.notFound, 'not found');
         return;
       }
-      if (conn.state?.playerId) return this.sendTo(conn, { t: 'err', code: 'BAD_MESSAGE' });
+      if (conn.state?.playerId || this.joining.has(conn.id))
+        return this.sendTo(conn, { t: 'err', code: 'BAD_MESSAGE' });
+      // Mark before any await so two rapid join/hello frames cannot both pass the guard.
+      this.joining.add(conn.id);
+      try {
+        await this.handleJoinOrHello(conn, msg, now);
+      } finally {
+        this.joining.delete(conn.id);
+      }
+      return;
+    }
+    this.handleRest(conn, msg, now);
+  }
+
+  private async handleJoinOrHello(
+    conn: Connection<ConnState>,
+    msg: Extract<ClientMsg, { t: 'join' | 'hello' }>,
+    now: number,
+  ): Promise<void> {
+    if (!this.state) return;
+    {
       if (msg.t === 'join') {
         const playerId = randomHex(8);
         const secret = randomHex(24);
@@ -138,10 +159,11 @@ export class Room extends Server<Env> {
         const secretHash = await sha256Hex(msg.secret);
         this.apply([{ type: 'hello', conn: conn.id, playerId: msg.playerId, secretHash }], now);
       }
-      if (this.state.meta.closed) conn.close(CLOSE.notFound, 'not found');
-      return;
+      if (this.state?.meta.closed) conn.close(CLOSE.notFound, 'not found');
     }
+  }
 
+  private handleRest(conn: Connection<ConnState>, msg: ClientMsg, now: number): void {
     const playerId = conn.state?.playerId;
     if (!playerId || !this.state) {
       return this.sendTo(conn, { t: 'err', code: this.state ? 'BAD_MESSAGE' : 'ROOM_NOT_FOUND' });
@@ -251,7 +273,7 @@ export class Room extends Server<Env> {
   }
 
   private persist(ev: RoomEvent | undefined, now: number): void {
-    if (!this.state) return;
+    if (!this.state || this.state.meta.closed) return; // never re-persist after expiry/wipe
     // Synchronous write coalescing: DO storage writes are applied before outgoing messages are released.
     void this.ctx.storage.put(STATE_KEY, this.state);
     if (ev && ev.type !== 'seed' && ev.type !== 'hello' && ev.type !== 'join') {

@@ -4,7 +4,7 @@ Branch: `ws3b-server` (base origin/main after WS3a merge).
 
 ## Done
 - apps/server: Worker entry (`POST /api/rooms`, WS upgrade routing, Origin check + CORS, rate limits via `Limiter` DO), `Room` DO wrapper around room-core (frame parse, rate limit, ping/pong, seed + crypto, effects execution, alarms, storage load in `blockConcurrencyWhile`, kick 4000, ROOM_NOT_FOUND), wrangler config (local top level, `preview`, `production` envs), `.dev.vars.example`, README with local run steps.
-- 6 DO integration tests (join, reconnect after eviction, bad secret, unknown room / origin / code, oversized frame, kick 4000, alarm after eviction drives bots) all pass.
+- 8 DO integration tests incl. bid and double-join (join, reconnect after eviction, bad secret, unknown room / origin / code, oversized frame, kick 4000, alarm after eviction drives bots) all pass.
 - Root scripts: `dev`, `dev:server`, `dev:web`.
 
 ## Verified manually

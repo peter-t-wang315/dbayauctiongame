@@ -46,4 +46,10 @@ Decision: Next.js on Vercel + Cloudflare Durable Objects via PartyServer; Wrangl
 - Auto-response keepalive to avoid billing/waking the DO per ping.
 
 ## WS3b pre-verification results
-(Empty. WS3b appends results of the Open Verifications from `../05-tech-stack.md` section 17 here, with date and doc URLs.)
+Verified 2026-10-11 against partyserver 0.5.10 typings and a working implementation (`apps/server`) on Windows 11 / Node 22.
+
+- Item 3 (`blockConcurrencyWhile`): wraps the state load in `onStart`; reconnect after `evictDurableObject` restores state.
+- Item 4: @cloudflare/vitest-plugin 1.4.0 + vitest 4.1 run against a real partyserver `Server` (WebSocket via `exports.default.fetch` with Upgrade, `evictDurableObject`, `runDurableObjectAlarm`). Gotchas: eviction drops open sockets (reconnect with `hello`); `runDurableObjectAlarm` runs the alarm early, so the wrapper must re-arm the alarm after every tick; close sockets in `afterEach`.
+- Item 6 (rate limits): a small `Limiter` Durable Object (sliding window, RPC `hit(limit, windowMs)`), free-plan safe; tunable via vars `CREATE_LIMIT_PER_HOUR`, `JOIN_LIMIT_PER_MIN`.
+- Item 7 (`deleteAll` and alarms): call `deleteAlarm()` then `deleteAll()` (see `wipe`); nothing is re-persisted after expiry.
+- Item 8 (preview origins): `ALLOWED_ORIGINS` entries may use a single-label suffix wildcard such as `https://*.vercel.app` (`src/origin.ts`).

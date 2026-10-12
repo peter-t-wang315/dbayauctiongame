@@ -99,6 +99,46 @@ describe('room server', () => {
     expect(await vic.waitClosed()).toBe(4000);
   });
 
+  it('two rapid join frames on one socket create one seat', async () => {
+    const code = await createRoomCode();
+    const c = await client(code);
+    c.send({ t: 'join', v: PROTOCOL_VERSION, name: 'A' });
+    c.send({ t: 'join', v: PROTOCOL_VERSION, name: 'B' });
+    await c.waitFor(isSnap);
+    await new Promise((r) => setTimeout(r, 300));
+    expect(c.msgs.filter((m) => m.t === 'welcome')).toHaveLength(1);
+    expect(c.msgs.some((m) => m.t === 'err' && m.code === 'BAD_MESSAGE')).toBe(true);
+    expect(c.lastSnap()!.view.players).toHaveLength(1);
+  });
+
+  it('bid: human with 2 bots bids on their call; ack ok then a newer snapshot', async () => {
+    const code = await createRoomCode();
+    const h = await client(code);
+    await h.join('Host');
+    h.send({ t: 'setOpts', seq: 1, mode: 'classic' });
+    h.send({ t: 'addBot', seq: 2 });
+    h.send({ t: 'addBot', seq: 3 });
+    h.send({ t: 'start', seq: 4 });
+    const mine = await h.waitFor(
+      (m): m is Extract<ServerMsg, { t: 'snap' }> =>
+        m.t === 'snap' &&
+        m.view.phase === 'playing' &&
+        m.view.canAct &&
+        m.view.bays[0]?.card !== null,
+      60_000,
+    );
+    const card = mine.view.myHand.find((c) => c.kind === 'value')!;
+    h.send({ t: 'bid', seq: 5, card: card.id, bay: 0 });
+    const ack = await h.waitFor(
+      (m): m is Extract<ServerMsg, { t: 'ack' }> => m.t === 'ack' && m.seq === 5,
+    );
+    expect(ack.ok).toBe(true);
+    const next = await h.waitFor(
+      (m): m is Extract<ServerMsg, { t: 'snap' }> => m.t === 'snap' && m.rev > mine.rev,
+    );
+    expect(next.view.bays[0]!.stack.some((s) => s.card === card.id)).toBe(true);
+  });
+
   it('alarm after eviction: bots act on the DO alarm and the game proceeds', async () => {
     const code = await createRoomCode();
     const h = await client(code);
