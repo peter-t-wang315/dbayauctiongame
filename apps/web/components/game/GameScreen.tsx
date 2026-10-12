@@ -6,6 +6,8 @@ import { useRoom } from '../../lib/net/useRoom';
 import { BottomSheet } from '../shell/BottomSheet';
 import { Bay, type Hint } from './Bay';
 import { CollectionStrip } from './Collections';
+import { FxController } from '../fx/FxController';
+import { toggleSound } from '../fx/SoundHapticsToggles';
 import { GiftStep } from '../gift/GiftStep';
 import { Hand } from './Hand';
 import { MenuPanel, MySets, type MenuTab } from './MenuPanel';
@@ -32,6 +34,16 @@ const FLASH_MS = 2600;
 const KEY_CARDS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='];
 
 export function GameScreen() {
+  const room = useRoom();
+  return (
+    <>
+      <FxController view={room.view} />
+      <GameScreenInner />
+    </>
+  );
+}
+
+function GameScreenInner() {
   const room = useRoom();
   const view = room.view;
   const [sel, setSel] = useState<Selection>(IDLE);
@@ -118,7 +130,10 @@ export function GameScreen() {
         setSel(IDLE);
         return;
       }
-      if (e.key === 'm' || e.key === 'M') return; // sound toggle: WS8
+      if (e.key === 'm' || e.key === 'M') {
+        showFlash(toggleSound() ? 'Sound on' : 'Sound off');
+        return;
+      }
       if (e.key === '?') {
         setTab('rules');
         setMenuOpen(true);
@@ -134,7 +149,7 @@ export function GameScreen() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [view, onCard, onBay]);
+  }, [view, onCard, onBay, showFlash]);
 
   const frenzy = view?.opts.mode === 'frenzy';
   // Banner timer (hooks must be unconditional).

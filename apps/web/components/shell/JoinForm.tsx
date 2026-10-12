@@ -4,6 +4,7 @@ import { NameSchema } from '@dbay/protocol';
 import { loadName } from '../../lib/identity';
 import { useRoom } from '../../lib/net/useRoom';
 import { runAudioUnlock } from './audioUnlock';
+import '../../lib/fx/register';
 
 export function JoinForm() {
   const room = useRoom();
