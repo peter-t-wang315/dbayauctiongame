@@ -65,17 +65,18 @@ export function Bay(p: BayProps) {
     : `${label}: empty`;
 
   // Long-press opens details; the click that follows a fired long-press is swallowed (never bids).
-  const swallow = useRef(false);
+  // Time-boxed so a stray flag can never eat a later keyboard/screen-reader click.
+  const swallowUntil = useRef(0);
   const detailsRef = useRef(p.onDetails);
   detailsRef.current = p.onDetails;
   const press = useMemo(() => createLongPress(() => detailsRef.current()), []);
   useEffect(() => () => press.cancel(), [press]);
   const down = (e: RPointerEvent) => {
-    swallow.current = false;
+    swallowUntil.current = 0;
     if (e.button === 0 && card) press.down(e.clientX, e.clientY);
   };
   const up = () => {
-    if (press.up()) swallow.current = true;
+    if (press.up()) swallowUntil.current = performance.now() + 700;
   };
 
   return (
@@ -100,8 +101,8 @@ export function Bay(p: BayProps) {
           if (card) p.onDetails();
         }}
         onClick={(e) => {
-          if (swallow.current) {
-            swallow.current = false;
+          if (performance.now() < swallowUntil.current) {
+            swallowUntil.current = 0;
             e.preventDefault();
             return;
           }
