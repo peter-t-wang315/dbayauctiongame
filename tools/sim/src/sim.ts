@@ -42,6 +42,8 @@ export interface BatchResult {
   collectionShare: number;
   seatWinShare: number[];
   levelWinShare: Record<string, number>;
+  /** Win share of one seat of that skill (levelWinShare / seats of that skill); fair = 1/players. */
+  levelWinPerSeat: Record<string, number>;
   levelMeanScore: Record<string, number>;
   levelMeanItems: Record<string, number>;
   unsoldShare: number;
@@ -156,10 +158,12 @@ export function runBatch(o: BatchOptions): BatchResult {
   lengths.sort((a, b) => a - b);
   const seatMeans = itemsBySeat.map(mean);
   const levelWinShare: Record<string, number> = {};
+  const levelWinPerSeat: Record<string, number> = {};
   const levelMeanScore: Record<string, number> = {};
   const levelMeanItems: Record<string, number> = {};
   for (const l of Object.keys(levelSeats)) {
     levelWinShare[l] = done ? (levelWins[l] ?? 0) / done : 0;
+    levelWinPerSeat[l] = levelSeats[l] ? (levelWins[l] ?? 0) / levelSeats[l]! : 0;
     levelMeanScore[l] = mean(levelScores[l] ?? []);
     levelMeanItems[l] = mean(levelItems[l] ?? []);
   }
@@ -185,6 +189,7 @@ export function runBatch(o: BatchOptions): BatchResult {
     collectionShare: done ? collectors / (done * n) : 0,
     seatWinShare: wins.map((w) => (done ? w / done : 0)),
     levelWinShare,
+    levelWinPerSeat,
     levelMeanScore,
     levelMeanItems,
     unsoldShare: deckCards ? unsold / deckCards : 0,

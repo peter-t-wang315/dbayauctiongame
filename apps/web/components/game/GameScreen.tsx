@@ -10,13 +10,29 @@ import { FxController } from '../fx/FxController';
 import { toggleSound } from '../fx/SoundHapticsToggles';
 import { GiftStep } from '../gift/GiftStep';
 import { Hand } from './Hand';
+import { ItemDetailsBody } from './ItemDetails';
 import { MenuPanel, MySets, type MenuTab } from './MenuPanel';
 import { RevealScreen } from '../reveal/RevealScreen';
 import { StatusStrip } from './StatusStrip';
 import { TurnBanner } from './TurnBanner';
-import { useBarTotal, useOutbid, useServerNow, useSoldStamps } from '../../lib/game-ui/hooks';
+import {
+  useAnnouncer,
+  useBarTotal,
+  useOutbid,
+  useServerNow,
+  useSoldStamps,
+} from '../../lib/game-ui/hooks';
 import { bayLegality, lockedReason, rejectionText } from '../../lib/game-ui/legal';
-import { IDLE, bayForKey, cardForKey, reconcile, tapCard, type Selection } from '../../lib/game-ui/selection';
+import {
+  IDLE,
+  bayForKey,
+  cardForKey,
+  reconcile,
+  tapCard,
+  type Selection,
+} from '../../lib/game-ui/selection';
+import { isUrgentEntry } from '../../lib/game-ui/announce';
+import { itemDetails } from '../../lib/game-ui/itemDetails';
 import { cooldownLeft, nextBarTotal, remainingMs } from '../../lib/game-ui/timers';
 import {
   bannerFor,
@@ -54,6 +70,7 @@ function GameScreenInner() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [setsOpen, setSetsOpen] = useState(false);
   const [tab, setTab] = useState<MenuTab>('players');
+  const [detailBay, setDetailBay] = useState<number | null>(null);
   const flashTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const barTotals = useRef(new Map<number, { key: string; total: number }>());
 
@@ -61,6 +78,7 @@ function GameScreenInner() {
   const now = useServerNow(room.serverNow, timersActive);
   const stamps = useSoldStamps(view);
   const outbid = useOutbid(view);
+  const announcement = useAnnouncer(view);
 
   // A new snapshot may invalidate the selection (turn ended, card spent, phase change).
   useEffect(() => {
@@ -114,7 +132,11 @@ function GameScreenInner() {
         setSel(IDLE);
         setShake(card.id);
         setTimeout(() => setShake(null), 320);
-        showFlash(r.code === 'OFFLINE' || r.code === 'TIMEOUT' ? 'Connection hiccup. Try again.' : rejectionText(bay));
+        showFlash(
+          r.code === 'OFFLINE' || r.code === 'TIMEOUT'
+            ? 'Connection hiccup. Try again.'
+            : rejectionText(bay),
+        );
       }
     },
     [view, sel.card, pending, room, showFlash],
@@ -132,6 +154,12 @@ function GameScreenInner() {
       }
       if (e.key === 'm' || e.key === 'M') {
         showFlash(toggleSound() ? 'Sound on' : 'Sound off');
+        return;
+      }
+      if (e.key === 'i' || e.key === 'I') {
+        const el = (document.activeElement as HTMLElement | null)?.closest('[data-bay]');
+        const idx = el ? Number(el.getAttribute('data-bay')) : NaN;
+        if (view.bays[idx]?.card) setDetailBay(idx);
         return;
       }
       if (e.key === '?') {
@@ -154,7 +182,8 @@ function GameScreenInner() {
   const frenzy = view?.opts.mode === 'frenzy';
   // Banner timer (hooks must be unconditional).
   const turn = view?.turn;
-  const classicRemaining = !frenzy && turn?.phase === 'window' ? remainingMs(turn.endsAt, now) : null;
+  const classicRemaining =
+    !frenzy && turn?.phase === 'window' ? remainingMs(turn.endsAt, now) : null;
   const soonest = useMemo(() => {
     if (!view || !frenzy) return null;
     const ends = view.bays.filter((b) => b.card && b.endsAt !== undefined).map((b) => b.endsAt!);
@@ -184,23 +213,40 @@ function GameScreenInner() {
   const progress = progressOf(view);
   const status = latestStatus(view);
   const going =
-    frenzy && view.bays.some((b) => b.card && b.topBid && (remainingMs(b.endsAt, now) ?? 99999) <= 3000 && (remainingMs(b.endsAt, now) ?? 0) > 0);
+    frenzy &&
+    view.bays.some(
+      (b) =>
+        b.card &&
+        b.topBid &&
+        (remainingMs(b.endsAt, now) ?? 99999) <= 3000 &&
+        (remainingMs(b.endsAt, now) ?? 0) > 0,
+    );
   const stripText =
-    flash ?? (going ? 'Going once... going twice...' : (status?.text ?? (frenzy ? 'Frenzy! Bid any time.' : 'Doors open! First bays are up.')));
+    flash ??
+    (going
+      ? 'Going once... going twice...'
+      : (status?.text ?? (frenzy ? 'Frenzy! Bid any time.' : 'Doors open! First bays are up.')));
   const summary = summarizeCollection(me?.collection ?? [], me?.gifts ?? 0);
   const keyHints: Record<string, string> = {};
   for (const k of KEY_CARDS) {
     const id = cardForKey(k, view.myHand);
     if (id) keyHints[id] = k;
   }
+  const detail = detailBay !== null ? itemDetails(view, detailBay) : null;
   const gifting = view.stage === 'gifts' && !!view.gift;
   const subtext = frenzy && cooldown > 0 ? 'Cooling down...' : undefined;
 
   return (
-    <div className="g-shell" data-phase={view.phase} data-mode={view.opts.mode} data-stage={view.stage}>
+    <div
+      className="g-shell"
+      data-phase={view.phase}
+      data-mode={view.opts.mode}
+      data-stage={view.stage}
+    >
       <div className="g-screen" data-bays={bays.length} data-layout={layout}>
         <StatusStrip
           text={stripText}
+          silent={flash === null && !!status && isUrgentEntry(view, status.n)}
           progress={progress}
           showMenu
           onOpenLog={() => {
@@ -222,6 +268,14 @@ function GameScreenInner() {
           canPass={!frenzy && banner.mine && view.canAct && view.stage === 'bidding'}
           onPass={() => void room.send({ t: 'pass' })}
         />
+        <Hand
+          slots={slots}
+          selected={sel.card}
+          locked={locked}
+          shake={shake}
+          keyHints={keyHints}
+          onTap={onCard}
+        />
         <div className="g-bays" data-fx="bays" data-gifting={gifting ? 'true' : undefined}>
           {bays.map((vm) => {
             const raw = view.bays[vm.idx]!;
@@ -232,7 +286,9 @@ function GameScreenInner() {
             let hint: Hint = { kind: 'none' };
             if (selectedCard) {
               const l = bayLegality(selectedCard, raw, view.me);
-              hint = l.legal ? { kind: 'legal' } : { kind: 'illegal', reason: l.reason ?? 'Not allowed' };
+              hint = l.legal
+                ? { kind: 'legal' }
+                : { kind: 'illegal', reason: l.reason ?? 'Not allowed' };
             }
             const stamp = stamps.find((s) => s.bay === vm.idx);
             return (
@@ -248,16 +304,25 @@ function GameScreenInner() {
                 barTotal={tot.total}
                 outbid={outbid.has(vm.idx)}
                 sold={stamp ? { by: playerById(view, stamp.by), amount: stamp.amount } : null}
-                sending={pending?.bay === vm.idx ? (selectedCard?.kind === 'proxy' ? 'Proxy' : `$${selectedCard?.value ?? ''}`) : null}
+                sending={
+                  pending?.bay === vm.idx
+                    ? selectedCard?.kind === 'proxy'
+                      ? 'Proxy'
+                      : `$${selectedCard?.value ?? ''}`
+                    : null
+                }
                 nudge={nudge === vm.idx}
                 keyHint={['Q', 'W', 'E', 'R'][vm.idx]}
                 onTap={() => void onBay(vm.idx)}
+                onDetails={() => setDetailBay(vm.idx)}
               />
             );
           })}
         </div>
         <CollectionStrip summary={summary} onOpen={() => setSetsOpen(true)} />
-        <Hand slots={slots} selected={sel.card} locked={locked} shake={shake} keyHints={keyHints} onTap={onCard} />
+        <div className="sr-only" aria-live="assertive" aria-atomic="true" data-fx="assertive-live">
+          {announcement && <span key={announcement.n}>{announcement.text}</span>}
+        </div>
         {gifting && <GiftStep view={view} now={now} send={room.send} />}
       </div>
 
@@ -267,6 +332,9 @@ function GameScreenInner() {
 
       <BottomSheet open={menuOpen} onClose={() => setMenuOpen(false)} title="Menu">
         <MenuPanel view={view} tab={tab} onTab={setTab} onLeave={leave} />
+      </BottomSheet>
+      <BottomSheet open={detail !== null} onClose={() => setDetailBay(null)} title="Item details">
+        {detail && <ItemDetailsBody d={detail} onClose={() => setDetailBay(null)} />}
       </BottomSheet>
       <BottomSheet open={setsOpen} onClose={() => setSetsOpen(false)} title="Your collections">
         <MySets view={view} />

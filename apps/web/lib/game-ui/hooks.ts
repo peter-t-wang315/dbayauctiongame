@@ -2,6 +2,7 @@
 // Small React hooks for the game screen. Time always comes from the room's server-clock estimate.
 import { useEffect, useRef, useState } from 'react';
 import type { PlayerView } from '@dbay/protocol';
+import { newAnnouncements } from './announce';
 import { nextBarTotal } from './timers';
 
 /** Re-render every `everyMs` while `active`; returns the current server time estimate. */
@@ -30,7 +31,12 @@ export function useExtended(windowKey: string, endsAt: number | undefined, holdM
   useEffect(() => {
     const p = prev.current;
     prev.current = { key: windowKey, endsAt };
-    if (p.key === windowKey && p.endsAt !== undefined && endsAt !== undefined && endsAt > p.endsAt + 500) {
+    if (
+      p.key === windowKey &&
+      p.endsAt !== undefined &&
+      endsAt !== undefined &&
+      endsAt > p.endsAt + 500
+    ) {
       setOn(true);
       const id = setTimeout(() => setOn(false), holdMs);
       return () => clearTimeout(id);
@@ -59,13 +65,18 @@ export function useSoldStamps(view: PlayerView | null, holdMs = 1300): SoldStamp
       lastN.current = maxN;
       return;
     }
-    const fresh = view.log.filter((e) => e.n > lastN.current! && e.kind === 'sold' && e.by && e.bay !== undefined);
+    const fresh = view.log.filter(
+      (e) => e.n > lastN.current! && e.kind === 'sold' && e.by && e.bay !== undefined,
+    );
     lastN.current = Math.max(lastN.current, maxN);
     if (fresh.length === 0) return;
     const added = fresh.map((e) => ({ key: e.n, bay: e.bay!, by: e.by!, amount: e.amount }));
     setStamps((s) => [...s, ...added]);
     // Not cancelled on the next snapshot: the stamp must still expire.
-    setTimeout(() => setStamps((s) => s.filter((x) => !added.some((a) => a.key === x.key))), holdMs);
+    setTimeout(
+      () => setStamps((s) => s.filter((x) => !added.some((a) => a.key === x.key))),
+      holdMs,
+    );
   }, [view, holdMs]);
   return stamps;
 }
@@ -106,4 +117,24 @@ export function useOutbid(view: PlayerView | null, holdMs = 4000): Set<number> {
     );
   }, [view, holdMs]);
   return out;
+}
+
+/** Latest assertive announcement ({n} changes for each new one so a repeat is re-read); clears after a while. */
+export function useAnnouncer(
+  view: PlayerView | null,
+  holdMs = 5000,
+): { n: number; text: string } | null {
+  const lastN = useRef<number | null>(null);
+  const [cur, setCur] = useState<{ n: number; text: string } | null>(null);
+  useEffect(() => {
+    if (!view) return;
+    const r = newAnnouncements(view, lastN.current);
+    lastN.current = r.lastN;
+    const last = r.items[r.items.length - 1];
+    if (!last) return;
+    setCur(last);
+    const id = setTimeout(() => setCur((c) => (c?.n === last.n ? null : c)), holdMs);
+    return () => clearTimeout(id);
+  }, [view, holdMs]);
+  return cur;
 }

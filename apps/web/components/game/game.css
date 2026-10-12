@@ -143,7 +143,7 @@
   min-width: var(--hit);
   padding: 0 var(--s-3);
   font: 800 14px/1 var(--font-body);
-  color: var(--text);
+  color: var(--on-card);
   background: var(--card);
   border: var(--border);
   border-radius: var(--r-pill);
@@ -299,7 +299,7 @@
   color: var(--ok);
 }
 .g-hint--no {
-  color: var(--text);
+  color: var(--on-card);
   background: var(--card);
   border: 1.5px solid var(--ink);
   border-radius: var(--r-chip);
@@ -860,5 +860,177 @@
     bottom: auto;
     top: 32px;
     right: 8px;
+  }
+}
+
+/* ---------- DOM order = tab order (strip, hand, bays); visual order restored with `order` ---------- */
+.g-screen > .g-strip {
+  order: 0;
+}
+.g-screen > .g-banner {
+  order: 1;
+}
+.g-screen > .g-bays {
+  order: 2;
+}
+.g-screen > .g-sets {
+  order: 3;
+}
+.g-screen > .g-hand {
+  order: 4;
+}
+
+/* ---------- bay wrapper + item details ---------- */
+.g-bayw {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+.g-bayw > .g-bay {
+  flex: 1;
+  min-width: 0;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+/* Details button: a real 44px target for screen readers and keyboard, invisible and click-through
+   until it takes focus (a tap on the bay still bids; long-press / right-click opens details). */
+.g-info {
+  position: absolute;
+  top: var(--s-1);
+  right: var(--s-1);
+  width: var(--hit);
+  height: var(--hit);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font: 800 18px/1 var(--font-body);
+  color: var(--on-card);
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--r-chip);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.g-info:focus,
+.g-info:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.g-item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+.g-item__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+}
+.g-item__name {
+  margin: 0;
+  font: 400 20px/1.2 var(--font-display);
+}
+.g-item__meta,
+.g-item__bids {
+  margin: 0;
+  font: 700 14px/1.3 var(--font-body);
+  color: var(--text);
+}
+.g-item__flavor {
+  margin: 0;
+  font: 400 15px/1.4 var(--font-body);
+  color: var(--text-dim);
+}
+.g-item__label {
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* very narrow phones (320px): keep the tile bid row on one line so it never overlaps the sprite */
+@media (max-width: 359px) {
+  .g-bay--tile .g-bay__bid {
+    flex-wrap: nowrap;
+    gap: var(--s-1);
+  }
+  .g-bay--tile .g-bay__amount {
+    font-size: 20px;
+  }
+  .g-bay--tile .g-bay__bid .chip {
+    padding: 0 var(--s-1);
+    gap: 2px;
+  }
+}
+
+/* very short phones (568px tall, 4 bays): compress tile content so the bid row stays visible */
+@media (max-height: 599px) {
+  .g-bay--tile {
+    padding: var(--s-1) var(--s-2);
+    gap: 2px;
+  }
+  .g-bay--tile .g-sprite {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  .g-bay--tile .g-bay__bid {
+    min-height: 24px;
+  }
+  .g-bay--tile .g-bay__bid .chip {
+    min-height: 24px;
+  }
+  .g-bay--tile .g-bay__timer {
+    height: 12px;
+  }
+}
+
+/* very short phones, 3 stacked bays: body and bid side by side (head on top, timer below) */
+@media (max-height: 599px) {
+  .g-bay--row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'head head' 'body bid' 'timer timer';
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    column-gap: var(--s-2);
+    row-gap: 2px;
+    padding: var(--s-1) var(--s-2);
+  }
+  .g-bay--row > .g-bay__head {
+    grid-area: head;
+  }
+  .g-bay--row > .g-bay__body {
+    grid-area: body;
+    gap: var(--s-2);
+  }
+  .g-bay--row > .g-bay__bid {
+    grid-area: bid;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: var(--s-1);
+    min-height: 0;
+  }
+  .g-bay--row .g-bay__amount {
+    font-size: 20px;
+  }
+  .g-bay--row > .g-bay__timer {
+    grid-area: timer;
+    height: 12px;
+  }
+  .g-bay--row > .g-bay__empty {
+    grid-column: 1 / -1;
+  }
+  .g-bay--row .g-sprite {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  .g-bay--row .g-bay__bid .chip {
+    min-height: 24px;
   }
 }

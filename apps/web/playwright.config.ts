@@ -7,6 +7,7 @@ export default defineConfig({
   testMatch: '**/*.pw.ts',
   timeout: 60_000,
   workers: 1,
+  retries: process.env.CI ? 1 : 0,
   use: { baseURL: 'http://localhost:3100', viewport: { width: 390, height: 844 } },
   webServer: {
     command: 'pnpm exec next dev -p 3100',

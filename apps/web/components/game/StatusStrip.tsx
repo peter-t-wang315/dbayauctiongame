@@ -5,12 +5,15 @@ import type { Progress } from '../../lib/game-ui/viewModel';
 
 export function StatusStrip({
   text,
+  silent,
   progress,
   showMenu,
   onOpenLog,
   onOpenMenu,
 }: {
   text: string;
+  /** The text is announced assertively elsewhere: keep it visible but out of the polite region's updates. */
+  silent?: boolean;
   progress: Progress;
   showMenu: boolean;
   onOpenLog: () => void;
@@ -18,9 +21,14 @@ export function StatusStrip({
 }) {
   return (
     <div className="g-strip" data-fx="status-strip">
-      <button type="button" className="g-strip__text" onClick={onOpenLog} aria-label="Open event log">
+      <button
+        type="button"
+        className="g-strip__text"
+        onClick={onOpenLog}
+        aria-label="Open event log"
+      >
         <span role="status" aria-live="polite" data-fx="status-text">
-          {text}
+          {silent ? <span aria-hidden="true">{text}</span> : text}
         </span>
       </button>
       {progress.max > 0 && (
@@ -36,12 +44,19 @@ export function StatusStrip({
             <span className="g-progress__fill" style={{ width: `${progress.fraction * 100}%` }} />
           </span>
           {progress.label && (
-            <span className="g-progress__tag">{progress.label === 'last' ? 'Last round' : 'Halfway'}</span>
+            <span className="g-progress__tag">
+              {progress.label === 'last' ? 'Last round' : 'Halfway'}
+            </span>
           )}
         </span>
       )}
       {showMenu && (
-        <button type="button" className="g-strip__menu" aria-label="Menu: players, log, settings" onClick={onOpenMenu}>
+        <button
+          type="button"
+          className="g-strip__menu"
+          aria-label="Menu: players, log, settings"
+          onClick={onOpenMenu}
+        >
           <span aria-hidden="true">⋯</span>
         </button>
       )}

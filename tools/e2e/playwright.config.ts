@@ -14,7 +14,9 @@ export default defineConfig({
   testMatch: '**/*.pw.ts',
   timeout: 360_000,
   workers: 1,
-  use: { baseURL: webOrigin, viewport: { width: 390, height: 844 } },
+  retries: process.env.CI ? 1 : 0,
+  reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
+  use: { baseURL: webOrigin, viewport: { width: 390, height: 844 }, trace: 'on-first-retry' },
   webServer: [
     {
       command:
