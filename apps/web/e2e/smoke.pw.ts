@@ -110,6 +110,6 @@ test('demo room: reconnect after mock restart restores the seat; host starts', a
   await join(page, 'Sam');
   while (await start.isDisabled()) await page.getByRole('button', { name: '+ Add bot' }).click();
   await start.click();
-  await expect(page.getByText(/Game in progress/)).toBeVisible();
+  await expect(page.locator('[data-fx="status-strip"]')).toBeVisible();
   await ctx.close();
 });
