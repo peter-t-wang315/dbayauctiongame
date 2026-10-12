@@ -462,3 +462,10 @@ The only overlay is the terminal **SOLD** state, which covers the whole tile wit
 
 - **One component.** `Bay` takes `layout: 'row' | 'tile'` and `showTimer: boolean`. Tile rows are always: status label + category, sprite + name and estimate, top bid + bidder, then the timer row (Frenzy only).
 - **Fit check.** All four combinations must fit within the ~780px budget with nothing scrolling.
+
+## 15. Polish decisions 2026-10-12 (WS5)
+
+- Item details: long-press (450ms, cancelled by moving more than 10px or pointer-cancel) or right-click on a bay opens a bottom sheet with sprite, name, category, **estimated** value, flavor and the top bid (the true value is never sent). A fired long-press swallows the following click, so it never bids. Keyboard: `i` while a bay is focused; screen readers and keyboard users also get a per-bay "Item details: NAME, bay X" button (a 44px target that is invisible and click-through until focused).
+- Assertive live region (visually hidden, separate from the polite status strip) announces only: "Your turn" (Classic), "You were outbid on bay X", "Sold to you". The strip text for those events is `aria-hidden` inside the polite region so nothing is read twice.
+- Tab order is strip, banner (Pass), hand, bays, sets. DOM order is that; the visual order (bays above hand) is restored with CSS `order`.
+- Small screens: 4-bay tiles on 320 wide keep amount + bidder on one line; at heights under 600px (320x568) tile sprites shrink to 28px and 3-bay rows go to a two-column grid (body | bid, timer underneath). 44px targets are enforced at 360x640; at 320x568 only "no page scroll" is enforced.
