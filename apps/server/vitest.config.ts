@@ -1,0 +1,12 @@
+import { cloudflareTest } from '@cloudflare/vitest-plugin';
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  plugins: [
+    cloudflareTest({
+      wrangler: { configPath: './wrangler.jsonc' },
+      miniflare: { bindings: { ALLOWED_ORIGINS: 'http://localhost:3000' } },
+    }),
+  ],
+  test: { include: ['test/**/*.test.ts'], testTimeout: 30_000 },
+});
