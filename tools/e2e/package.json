@@ -1,0 +1,15 @@
+{
+  "name": "@dbay/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p .",
+    "lint": "eslint .",
+    "test": "echo \"e2e is run explicitly: pnpm --filter @dbay/e2e e2e\"",
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.60.0"
+  }
+}

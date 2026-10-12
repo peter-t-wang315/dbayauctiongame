@@ -292,6 +292,12 @@ importers:
         specifier: 4.10.2
         version: 4.10.2
 
+  tools/e2e:
+    devDependencies:
+      '@playwright/test':
+        specifier: 1.60.0
+        version: 1.60.0
+
   tools/lint-check: {}
 
   tools/mock-server:
@@ -328,6 +334,12 @@ importers:
       tsx:
         specifier: 4.23.15
         version: 4.23.15
+
+  tools/smoke:
+    dependencies:
+      ws:
+        specifier: 8.22.0
+        version: 8.22.0
 
 packages:
 
