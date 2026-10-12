@@ -1,0 +1,15 @@
+/* WS8 juice. Effects run on existing data-fx elements only (transform/opacity/box-shadow; no layout). */
+
+/* Motion (see components/fx/FxController) animates the SOLD stamp and reveal flip: drop the CSS
+   versions so they do not double up. Reduced-motion stays information-identical (they are decoration). */
+.g-bay [data-fx='sold-stamp'] {
+  animation: none;
+}
+.rv-card[data-state='shown'] .rv-card__actual,
+.rv-tag {
+  animation: none;
+}
+
+[data-fx='reveal-flip'] {
+  backface-visibility: hidden;
+}

@@ -5,6 +5,7 @@ import { useEffect, useId, useState } from 'react';
 import type { PlayerView } from '@dbay/protocol';
 import { PlayerChip } from '../shell/PlayerChip';
 import { RulesContent } from '../rules/RulesContent';
+import { SoundHapticsToggles } from '../fx/SoundHapticsToggles';
 import { CollectionsView } from './Collections';
 import { logLines, summarizeCollection } from '../../lib/game-ui/viewModel';
 
@@ -145,6 +146,7 @@ function Settings({ view, onLeave }: { view: PlayerView; onLeave: () => void }) 
           </button>
         </div>
       </div>
+      <SoundHapticsToggles />
       <p className="hint">
         Mode: {view.opts.mode === 'frenzy' ? 'Frenzy' : 'Classic'}
         {view.opts.relaxed ? ', relaxed timing x1.5' : ''}
