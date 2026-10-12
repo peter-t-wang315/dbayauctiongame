@@ -72,7 +72,7 @@ Part 2: human-pacing mode in tools/sim; tune LENGTH_PRESETS; update docs 01 s8-9
 
 ## Part 3: length-presets retune (branch ws1-length-presets-retune, pushes to ws1-length-presets; PR #6)
 - Branch / base: `ws1-length-presets-retune` from `origin/ws1-length-presets`.
-- Done (slice 1): sim reports median length + Classic rounds played (median/max), per mode x preset x players length targets, Standard collection ok up to 95%. New preset field `FRENZY_BAYS_BY_PLAYERS` (Quick {3:2,4:2,5:3,6:4}, Standard {3:2,4:2,5:3,6:3}); Frenzy timers Quick 35-50 s (cap 100 s), Standard 40-55 s (cap 110 s); Classic Standard 3p/4p rounds 50, 3p close .014/.055/8. Replay snapshots regenerated.
+- Done (slice 1): sim reports median length + Classic rounds played (median/max), per mode x preset x players length targets, Standard collection ok up to 95%. New preset field `FRENZY_BAYS_BY_PLAYERS` (SUPERSEDED by Part 4: removed, Frenzy uses `BAYS_BY_PLAYERS`) (Quick {3:2,4:2,5:3,6:4}, Standard {3:2,4:2,5:3,6:3}); Frenzy timers Quick 35-50 s (cap 100 s), Standard 40-55 s (cap 110 s); Classic Standard 3p/4p rounds 50, 3p close .014/.055/8. Replay snapshots regenerated.
 - 100-150 game human-pacing results so far: Frenzy Quick 6.2/8.2/7.0/6.3 min (3-6p), Standard 9.2/12.4/10.5/12.6; Classic Standard 3p 12.2 min (50 rounds), 4p 16.1 (max 50).
 - Next: docs 01 s8-9, 02 (targets, s2/s4/s7), 04 progress-bar note, sim README, 1000-game runs, PR body.
 - Done (slice 2): docs 01 s8-9, 02 (s2, s4, s5 targets, s7 results), one-line 04 note, sim README, 1000-game human + bot runs. Final presets: see config.ts. Misses: Frenzy Quick 4p 8.2 min, Frenzy Standard 3p 9.2 min, collection share (Quick Frenzy 71-76%, Standard 86-93% accepted), spread >4x at Quick Classic 5-6p and Frenzy Quick 6p.
@@ -83,3 +83,10 @@ Part 2: human-pacing mode in tools/sim; tune LENGTH_PRESETS; update docs 01 s8-9
 - Done: user rejected fewer Frenzy bays (2026-10-11). Removed `FRENZY_BAYS_BY_PLAYERS` (config, setup); Frenzy uses `BAYS_BY_PLAYERS` (3 bays 3-4p, 4 bays 5-6p). Timers/decks unchanged. New sim Frenzy targets Quick 3.5-7 min, Standard 5.5-10 min (measured: Quick 4.0/5.5/5.3/6.3, Standard 6.0/8.3/7.8/9.5 for 3-6p). Classic unchanged (re-run 1000 games). Docs 01 s8-9, 02 updated, Frenzy replay snapshot regenerated, sim README.
 - Next: update PR #6 body; pre-PR review by caller; real pack rerun after WS2.
 - Gotchas: Frenzy 3p Quick median is 4.0 min, at the low edge of the range.
+
+## Part 5: Classic retune on the real pack (branch ws1-classic-retune, pushes to ws1-length-presets; PR #6)
+- Branch / base: `ws1-classic-retune` from `origin/ws1-length-presets` + merge of `origin/main` (clean).
+- Done: Classic close constants retuned (config.ts) with `--pack active --pacing human`. Quick 3p rounds 52 -> 50 (max rounds <= 50). Old -> new (pBase/pMax/maxBayAgeCycles): Quick 3p .02/.07/7 -> .005/.12/6; Quick 4p .04/.12/4 -> .005/.12/5; Standard 3p .014/.055/8 -> .005/.15/5; Standard 4p .025/.08/6 -> .005/.05/6. 5p/6p unchanged. Frenzy untouched. Golden `classic 4p` replay snapshot regenerated (it uses Standard 4p close values). Docs 01 s8-9, 02 s7, sim README updated.
+- 1000 games/cell, real pack, human pacing: auto-skip all Classic cells < 5% (Quick 4.6/3.8/1.0/0.0, Standard 4.4/4.0/3.4/1.2); lengths all in target except Standard 3p median 9.0 min (target 12-15).
+- Gotchas: auto-skip grows with game length at fixed deck (hands run dry as cards stay locked), so 3p Standard cannot reach 12 min with skip < 5% without new rules; chose skip < 5%. Cap-bound Standard 4p (median 50 rounds) at 16.5 min. In my runs the pre-retune baseline at 200 games was Quick 3p 5.8%, 4p 2.7%, Standard 3p 7.0%, 4p 5.4%, 5p 3.5% (lower than the review figures).
+- Next: pre-PR re-check by caller; playtest to retune.

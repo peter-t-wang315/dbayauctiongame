@@ -77,24 +77,26 @@ Additional metric: Classic auto-skip rate (R13, calls with no legal bid / calls)
 ## 6. Simulator pacing (ASSUMED)
 `tools/sim` has two bot pacings. **Bot pacing** (default): every seat polls on a 1.5-4 s timer and acts at once. **Human pacing** (`--pacing human`): the Classic caller acts uniformly 40-90% into the bid window (2-4.5 s of 5 s) and lets the window expire 10% of the time; Frenzy seats look at the board every 1.5-5 s and bid with probability 0.8 when the policy has a bid; gift choices take 2-6 s. Length targets apply to human pacing. See `tools/sim/README.md`.
 
-## 7. Latest sim results (1000 games per cell, all-careful bots, synthetic 60-item pack, human pacing)
-| preset | mode | n | length min median / p95 / max | Classic rounds median / max | items | collect | autoskip | spread | nonterm |
-|---|---|---|---|---|---|---|---|---|---|
-| quick | classic | 3 | 9.2 / 10.4 / 11.6 | 39 / 48 | 5.67 / 5.64 | 67.4% | 4.4% | 2.34x | 0 |
-| quick | classic | 4 | 9.4 / 10.6 / 11.7 | 29 / 35 | 5.75 / 5.71 | 64.2% | 2.0% | 3.17x | 0 |
-| quick | classic | 5 | 9.7 / 10.3 / 10.5 | 23 / 23 | 5.59 / 5.56 | 62.7% | 0.8% | 4.26x | 0 |
-| quick | classic | 6 | 9.9 / 10.2 / 10.5 | 19 / 19 | 4.89 / 4.83 | 54.7% | 0.0% | 6.65x | 0 |
-| quick | frenzy | 3 | 4.0 / 4.2 / 4.5 | - | 5.67 / 5.64 | 70.5% | 0.0% | 2.12x | 0 |
-| quick | frenzy | 4 | 5.5 / 5.7 / 6.0 | - | 5.75 / 5.70 | 69.5% | 0.0% | 2.80x | 0 |
-| quick | frenzy | 5 | 5.3 / 5.6 / 5.8 | - | 5.60 / 5.52 | 73.0% | 0.0% | 3.33x | 0 |
-| quick | frenzy | 6 | 6.3 / 6.6 / 6.8 | - | 5.67 / 5.62 | 76.1% | 0.0% | 4.03x | 0 |
-| standard | classic | 3 | 12.2 / 12.7 / 13.0 | 50 / 50 | 7.52 / 7.51 | 86.0% | 4.3% | 1.89x | 0 |
-| standard | classic | 4 | 16.0 / 17.0 / 17.4 | 48 / 50 | 7.49 / 7.47 | 87.6% | 3.0% | 2.25x | 0 |
-| standard | classic | 5 | 16.1 / 17.7 / 18.3 | 39 / 42 | 7.60 / 7.55 | 90.3% | 1.9% | 2.51x | 0 |
-| standard | classic | 6 | 17.1 / 17.5 / 18.2 | 33 / 33 | 7.33 / 7.29 | 86.2% | 0.6% | 3.25x | 0 |
-| standard | frenzy | 3 | 6.0 / 6.3 / 6.5 | - | 7.66 / 7.63 | 89.2% | 0.0% | 1.82x | 0 |
-| standard | frenzy | 4 | 8.3 / 8.6 / 9.0 | - | 7.50 / 7.49 | 92.1% | 0.0% | 2.04x | 0 |
-| standard | frenzy | 5 | 7.8 / 8.1 / 8.3 | - | 7.60 / 7.56 | 92.6% | 0.0% | 2.23x | 0 |
-| standard | frenzy | 6 | 9.5 / 9.7 / 10.0 | - | 7.50 / 7.46 | 92.8% | 0.0% | 2.35x | 0 |
+## 7. Latest sim results (1000 games per cell, all-careful bots, REAL 60-item base pack (`--pack active`), human pacing)
+| preset | mode | n | length min median / p95 / max | Classic rounds median / max | collect | autoskip | spread | nonterm |
+|---|---|---|---|---|---|---|---|---|
+| quick | classic | 3 | 8.2 / 9.2 / 10.4 | 34 / 42 | 65.7% | 4.6% | 2.21x | 0 |
+| quick | classic | 4 | 10.9 / 11.9 / 12.3 | 34 / 36 | 65.1% | 3.8% | 2.87x | 0 |
+| quick | classic | 5 | 9.9 / 10.3 / 10.6 | 23 / 23 | 61.0% | 1.0% | 3.90x | 0 |
+| quick | classic | 6 | 9.9 / 10.2 / 10.5 | 19 / 19 | 46.7% | 0.0% | 6.90x | 0 |
+| quick | frenzy | 3 | 4.0 / 4.2 / 4.4 | - | 70.7% | - | 2.19x | 0 |
+| quick | frenzy | 4 | 5.5 / 5.7 / 6.1 | - | 71.9% | - | 2.55x | 0 |
+| quick | frenzy | 5 | 5.3 / 5.6 / 5.8 | - | 73.3% | - | 3.16x | 0 |
+| quick | frenzy | 6 | 6.3 / 6.6 / 6.8 | - | 75.8% | - | 3.64x | 0 |
+| standard | classic | 3 | 9.0 / 9.9 / 12.6 | 37 / 50 | 86.4% | 4.4% | 1.83x | 0 |
+| standard | classic | 4 | 16.5 / 17.1 / 17.5 | 50 / 50 | 84.5% | 4.0% | 2.23x | 0 |
+| standard | classic | 5 | 16.0 / 17.5 / 18.0 | 39 / 42 | 88.8% | 3.4% | 2.38x | 0 |
+| standard | classic | 6 | 17.0 / 17.5 / 17.8 | 33 / 33 | 84.3% | 1.2% | 3.12x | 0 |
+| standard | frenzy | 3 | 6.0 / 6.3 / 6.5 | - | 90.5% | - | 1.71x | 0 |
+| standard | frenzy | 4 | 8.3 / 8.6 / 8.9 | - | 90.2% | - | 1.96x | 0 |
+| standard | frenzy | 5 | 7.8 / 8.1 / 8.3 | - | 92.5% | - | 2.15x | 0 |
+| standard | frenzy | 6 | 9.5 / 9.8 / 10.1 | - | 90.4% | - | 2.39x | 0 |
 
-Misses (ASSUMED, accepted for now): Quick collection share 64-76% (Frenzy 70-76%, slightly above 70%); Standard collection share 86-93% (accepted up to ~95% pending playtest); score spread above 4x at Quick Classic 5-6 players (4.3x, 6.7x) and Frenzy Quick 6 players (4.03x). Classic Standard 3 players sits at the 50-round cap (median 50, so the cap ends the game and 12.2 min is near the lower target edge); auto-skip is 4.3% (Standard) and 4.4% (Quick) at 3 players. Bot-pacing results are in the PR description.
+Classic was retuned on the real pack (2026-10-11, ws1-classic-retune): the previous Classic constants gave auto-skip above 5% at several cells in the pre-PR review. Slow closes and long `maxBayAgeCycles` keep bid cards locked on bays, so hands run dry late in the game. Faster closes (a long, flat start and a steeper ramp, shorter bay ages) free the cards. Auto-skip is now below 5% in every Classic cell; skip rate rises with game length at a fixed deck, so length and skips conflict at 3 players.
+
+Misses (ASSUMED, accepted for now): Classic Standard 3 players median 9.0 min (target 12-15; at 12 min the auto-skip rate is 7%, and skip < 5% was preferred); Quick collection share 47-76% (Frenzy 71-76%, slightly above 70%); Standard collection share 84-93% (accepted up to ~95% pending playtest); score spread above 4x at Quick Classic 6 players (6.9x). Classic auto-skip is close to the limit at Quick 3p (4.6%), Standard 3-4p (4.4%, 4.0%). Bot-pacing results are in the PR description.

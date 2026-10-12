@@ -101,12 +101,12 @@ The host picks a **game length** in the lobby (`length`: `quick` or `standard`, 
 **Quick** (~6 deck cards per player; target 8-12 min):
 | Players | Bays | Deck | Items | Display Case | Gift | Cats in play | Classic rounds | Calls N |
 |---|---|---|---|---|---|---|---|---|
-| 3 | 3 | 18 | 16 | 1 | 1 | 5 | 52 | 156 |
+| 3 | 3 | 18 | 16 | 1 | 1 | 5 | 50 | 150 |
 | 4 | 3 | 24 | 21 | 2 | 1 | 6 | 36 | 144 |
 | 5 | 4 | 30 | 26 | 2 | 2 | 6 | 23 | 115 |
 | 6 | 4 | 36 | 31 | 3 | 2 | 6 | 19 | 114 |
 
-Rationale: the original single table (now Quick, with more categories at 3-4 players) gave 6 cards per player; Standard adds about a third more cards and keeps specials at about the same share. Classic rounds are capped near 50 (a 3-player Standard game is accepted at 12-15 min instead of 15-25, ASSUMED); the close roll (R17) is tuned so the deck is sold within those rounds. Frenzy uses the same decks (02). The pack has 6 categories x 10 items, 5 Display Cases, 4 Gifts, so the largest deck (6 players, Standard: 42 items = 7 per category, 3 + 3 specials) fits. Bid cards stay at 12 per player (R2) at both lengths; Standard at 3-4 players with the longest bay ages is where auto-skips (R13) are most common (about 3-5% of calls in the sim).
+Rationale: the original single table (now Quick, with more categories at 3-4 players) gave 6 cards per player; Standard adds about a third more cards and keeps specials at about the same share. Classic rounds are capped at 50 (a 3-player Standard game targets 12-15 min instead of 15-25, ASSUMED; with the real pack and auto-skip < 5% the sim reaches about 9 min there); the close roll (R17) is tuned so the deck is sold within those rounds. Frenzy uses the same decks (02). The pack has 6 categories x 10 items, 5 Display Cases, 4 Gifts, so the largest deck (6 players, Standard: 42 items = 7 per category, 3 + 3 specials) fits. Bid cards stay at 12 per player (R2) at both lengths; Auto-skips (R13) are most common at 3-4 players (about 4-5% of calls in the sim, real pack); the close roll is tuned to keep them under 5%: hands run dry when cards stay locked on bays, so longer games skip more.
 
 ## 9. Tunable constants (`packages/engine/config.ts`)
 | Name | Default | Rationale |
@@ -116,7 +116,7 @@ Rationale: the original single table (now Quick, with more categories at 3-4 pla
 | `BAYS_BY_PLAYERS` | {3:3,4:3,5:4,6:4} | R1 (both modes) |
 | `LENGTH_PRESETS[length].DECK_BY_PLAYERS` | section 8 | R4 |
 | `LENGTH_PRESETS[length].ROUNDS_BY_PLAYERS` | section 8 | R7; targets per mode x preset in 02 section 5 (human pacing) |
-| `LENGTH_PRESETS[length].CLOSE_BY_PLAYERS` (`pBase`, `pMax`, `maxBayAgeCycles`) | Quick {3: .02/.07/7, 4: .04/.12/4, 5: .05/.15/3, 6: .05/.15/3}; Standard {3: .014/.055/8, 4: .025/.08/6, 5: .03/.085/5, 6: .04/.10/4} | R17; the deck is mostly sold by ~85% of calls; per player count because the deck-to-bay ratio differs |
+| `LENGTH_PRESETS[length].CLOSE_BY_PLAYERS` (`pBase`, `pMax`, `maxBayAgeCycles`) | Quick {3: .005/.12/6, 4: .005/.12/5, 5: .05/.15/3, 6: .05/.15/3}; Standard {3: .005/.15/5, 4: .005/.05/6, 5: .03/.085/5, 6: .04/.10/4} | R17; the deck is mostly sold by ~85% of calls; per player count because the deck-to-bay ratio differs |
 | `bidWindowMs` | 5000 (3000/8000) | R11 |
 | `relaxedMultiplier` | 1.5 | WCAG 2.2.1 |
 | `callGapMs` | 1500 | R12 readability |

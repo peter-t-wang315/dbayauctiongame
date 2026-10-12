@@ -10,6 +10,8 @@ pnpm --filter @dbay/sim start -- --games 1000 [--players 3,4,5,6] [--modes class
 ```
 
 - `--lengths`: game length presets (`LENGTH_PRESETS`). Median-length targets per mode x preset: Classic Quick 8-12 min, Classic Standard 15-25 (3 players 12-15), Frenzy Quick 3.5-7 (intentionally shorter than Classic), Frenzy Standard 5.5-10. Classic also reports rounds played (median / max; target <= ~50). Standard collection share is accepted up to 95% (ASSUMED, pending playtest).
+- `--pack auto` (default) picks the active (real) content pack when it has 60 or more items, else the synthetic pack. `--pack active` forces the real pack. Published numbers (docs/02 section 7) use the real pack.
+- Classic auto-skip target is < 5% per cell; it rises with game length at a fixed deck (cards stay locked on bays), so at 3 players Standard the length target (12-15 min) loses to it (about 9 min, see docs/02 section 7).
 - `--override` / `--override-file`: deep-merge JSON into `LENGTH_PRESETS` for tuning experiments without editing `config.ts`, e.g. `{"standard":{"ROUNDS_BY_PLAYERS":{"3":120}}}`.
 - Exit code 1 on any non-terminating game, or with `--assert` on a hard-limit FAIL.
 
