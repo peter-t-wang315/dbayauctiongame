@@ -69,7 +69,7 @@ const PERSONALITY: Record<BotLevel, Personality> = {
     rebid: 0.9,
   },
   random: {
-    maxMult: 1.3,
+    maxMult: 1.15,
     proxyQ: 0.72,
     reserveEarly: 1,
     reserveMid: 1,
@@ -142,7 +142,7 @@ export function worth(idx: PackIndex, me: EnginePlayer, cardId: string): number 
   // The third item of a category doubles the whole set (R33).
   if (n >= 3) return info.est * CONFIG.collectionMultiplier;
   if (n === 2) return info.est * CONFIG.collectionMultiplier + sum * 0.4;
-  return info.est * (n === 1 ? 1.2 : 1);
+  return info.est * (n === 1 ? 1.1 : 1);
 }
 
 /** Fraction of the game played (0-1). */
@@ -215,7 +215,7 @@ export function bestBid(
       .filter((c) => c.kind === 'value')
       .sort((a, c) => (a.value ?? 0) - (c.value ?? 0));
     // Face cards: smallest that reaches the target rung, else the largest below it.
-    const maxVal = w * prm.maxMult;
+    const maxVal = w * prm.maxMult * (state.mode === 'frenzy' && !prm.minimal ? 1.05 : 1);
     const wantVal = w * 0.9;
     const held = isTop || late ? new Set<string>() : heldBack;
     const okVals = values.filter((c) => (c.value ?? 0) <= maxVal && !held.has(c.id));
