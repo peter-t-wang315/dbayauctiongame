@@ -1,0 +1,48 @@
+/* Gift step (WS6, 04 section 3.5b). */
+.g-gift-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: var(--s-4);
+  background: rgba(14, 21, 17, 0.4);
+}
+.g-gift {
+  width: 100%;
+  max-height: 100%;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-4);
+  background: var(--bg);
+  border: var(--border);
+  border-radius: var(--r-bay);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.g-gift h2 {
+  margin: 0;
+  font: 400 22px/1.2 var(--font-display);
+}
+.g-gift p {
+  margin: 0;
+}
+.g-gift__clock {
+  font: 800 18px/1 var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+.g-gift__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.g-gift__pick {
+  width: 100%;
+  justify-content: space-between;
+}
+

@@ -1,0 +1,183 @@
+/* Reveal / results (WS6, 04 section 3.5). This screen may scroll. */
+.rv {
+  gap: var(--s-4);
+  padding-bottom: var(--s-6, 32px);
+}
+.rv-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+.rv-title {
+  margin: 0;
+  font: 400 28px/1.2 var(--font-display);
+}
+.rv-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+.rv-player {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  background: var(--card);
+  color: var(--ink);
+  border: var(--border);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow);
+}
+.rv-player__head {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  font: 400 18px/1.2 var(--font-display);
+}
+.rv-player__total {
+  font: 800 20px/1 var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+.rv-group__head {
+  margin: var(--s-1) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font: 800 13px/1.2 var(--font-body);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.rv-group[data-category='toys'] .rv-group__head { border-left: 4px solid var(--cat-toys); padding-left: var(--s-2); }
+.rv-group[data-category='media'] .rv-group__head { border-left: 4px solid var(--cat-media); padding-left: var(--s-2); }
+.rv-group[data-category='glass'] .rv-group__head { border-left: 4px solid var(--cat-glass); padding-left: var(--s-2); }
+.rv-group[data-category='collectibles'] .rv-group__head { border-left: 4px solid var(--cat-collectibles); padding-left: var(--s-2); }
+.rv-group[data-category='antiques'] .rv-group__head { border-left: 4px solid var(--cat-antiques); padding-left: var(--s-2); }
+.rv-group[data-category='misc'] .rv-group__head { border-left: 4px solid var(--cat-misc); padding-left: var(--s-2); }
+.rv-x2 {
+  padding: 2px var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--gold);
+  color: #fff;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.rv-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+.rv-card {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  column-gap: var(--s-2);
+  row-gap: 2px;
+  min-height: 36px;
+  font: 700 14px/1.2 var(--font-body);
+}
+.rv-card__vals {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.rv-card__est {
+  color: #6b7280;
+}
+.rv-card__actual--hidden {
+  display: inline-block;
+  min-width: 3ch;
+  text-align: center;
+  border-radius: var(--r-chip);
+  background: #eceef2;
+}
+.rv-card__x2 {
+  color: var(--gold);
+}
+.rv-tag {
+  grid-column: 2 / -1;
+  justify-self: start;
+  padding: 2px var(--s-2);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-chip);
+  font: 400 14px/1.2 var(--font-display);
+}
+.rv-tag--steal {
+  background: var(--ok);
+}
+.rv-tag--ripped {
+  background: var(--danger);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rv-card[data-state='shown'] .rv-card__actual {
+    animation: rv-in 200ms ease-out;
+  }
+  .rv-tag {
+    animation: rv-in 200ms ease-out;
+  }
+}
+@keyframes rv-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rv-gifts h2,
+.rv-board h2 {
+  margin: 0 0 var(--s-2);
+  font: 400 20px/1.2 var(--font-display);
+}
+.rv-gifts ul {
+  margin: 0;
+  padding-left: var(--s-4);
+}
+.rv-board__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.rv-board__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+  min-height: var(--hit);
+}
+.rv-board__row[data-me='true'] {
+  font-weight: 800;
+}
+.rv-board__rank {
+  width: 2ch;
+  font: 400 22px/1 var(--font-display);
+  text-align: center;
+}
+.rv-board__total {
+  margin-left: auto;
+  font: 800 18px/1 var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+.rv-board__note {
+  flex-basis: 100%;
+  padding-left: calc(2ch + var(--s-3));
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.rv-crown {
+  font-size: 20px;
+}
+.rv-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
