@@ -8,3 +8,6 @@ dist/
 coverage/
 *.log
 next-env.d.ts
+
+# Claude Code agent worktrees (local only)
+.claude/worktrees/

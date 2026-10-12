@@ -6,7 +6,7 @@ This is a browser version of the 2001 *eBay Electronic Talking Auction Game*, re
 2. Friends join with a room code and a username.
 3. Everyone plays live.
 
-> **Status:** WS0 done, in PR #1 (`ws0-contracts`), awaiting user review. Coding continues on branches stacked on it (see Git workflow, "Stacked branches"). Next step: **WS1 Rules engine**. Per-workstream progress lives in `docs/progress/`.
+> **Status (2026-10-11):** M1 done. Merged to `main`: WS0 contracts, WS1 rules engine and bots, WS2 content (60 items + sprites), WS4 frontend shell, and the contract change for the real engine export and the `length` (Quick/Standard) option. Open: PR #6, the Quick/Standard length presets. Next: WS3a room-core, WS5 game UI and WS6 reveal/rules screens, toward M2. Per-workstream progress lives in `docs/progress/`.
 
 ## Start here (new session or new agent)
 1. Read this file.
@@ -63,8 +63,8 @@ This is a browser version of the 2001 *eBay Electronic Talking Auction Game*, re
 - [x] Tech stack chosen and fact-checked
 - [x] Planning docs written (01–06, research)
 - [x] Mockups: white theme default, eBay-inspired player colors, pixel sprites (04 §11–13)
-- [ ] **M1 (WS0):** contracts, monorepo, CI, mock server
-- [ ] **M2:** playable local game against bots (WS1, WS2, WS3a, WS4, WS5)
+- [x] **M1 (WS0):** contracts, monorepo, CI, mock server
+- [ ] **M2:** playable local game against bots (WS1 ✅, WS2 ✅, WS3a, WS4 ✅ shell, WS5, WS6)
 - [ ] **M3:** online multiplayer deployed (WS3b, WS6, WS7)
 - [ ] **M4:** juice and polish (WS8)
 - [ ] **M5:** playtest with friends, then tune constants with the simulator
