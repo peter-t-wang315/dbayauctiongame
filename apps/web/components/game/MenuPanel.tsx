@@ -1,18 +1,19 @@
 'use client';
-// The menu content (04 section 4.7): Players, Sets, Log, Settings. Rendered in a bottom sheet on
+// The menu content (04 section 4.7): Players, Sets, Log, Rules (WS6 RulesContent), Settings. Rendered in a bottom sheet on
 // mobile and docked as a 320px sidebar on desktop. Sound/haptics toggles belong to WS8.
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import type { PlayerView } from '@dbay/protocol';
 import { PlayerChip } from '../shell/PlayerChip';
+import { RulesContent } from '../rules/RulesContent';
 import { CollectionsView } from './Collections';
 import { logLines, summarizeCollection } from '../../lib/game-ui/viewModel';
 
-export type MenuTab = 'players' | 'sets' | 'log' | 'settings';
+export type MenuTab = 'players' | 'sets' | 'log' | 'rules' | 'settings';
 const TABS: { id: MenuTab; label: string }[] = [
   { id: 'players', label: 'Players' },
   { id: 'sets', label: 'Sets' },
   { id: 'log', label: 'Log' },
+  { id: 'rules', label: 'Rules' },
   { id: 'settings', label: 'Settings' },
 ];
 
@@ -27,6 +28,8 @@ export function MenuPanel({
   onTab: (t: MenuTab) => void;
   onLeave: () => void;
 }) {
+  // Two MenuPanels mount at once (sidebar + sheet), so rules anchors need a per-instance prefix.
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
   return (
     <div className="g-menu">
       <div className="seg g-menu__tabs" role="tablist" aria-label="Menu sections">
@@ -49,6 +52,7 @@ export function MenuPanel({
         {tab === 'players' && <Players view={view} />}
         {tab === 'sets' && <MySets view={view} />}
         {tab === 'log' && <Log view={view} />}
+        {tab === 'rules' && <RulesContent idPrefix={`r${uid}`} />}
         {tab === 'settings' && <Settings view={view} onLeave={onLeave} />}
       </div>
     </div>
@@ -145,9 +149,6 @@ function Settings({ view, onLeave }: { view: PlayerView; onLeave: () => void }) 
         Mode: {view.opts.mode === 'frenzy' ? 'Frenzy' : 'Classic'}
         {view.opts.relaxed ? ', relaxed timing x1.5' : ''}
       </p>
-      <Link className="btn" href="/rules" target="_blank">
-        How to play
-      </Link>
       {confirm ? (
         <button type="button" className="btn btn--danger" onClick={onLeave}>
           Really leave? Tap to confirm

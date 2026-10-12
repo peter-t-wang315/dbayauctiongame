@@ -6,10 +6,10 @@ import { useRoom } from '../../lib/net/useRoom';
 import { BottomSheet } from '../shell/BottomSheet';
 import { Bay, type Hint } from './Bay';
 import { CollectionStrip } from './Collections';
-import { GiftOverlay } from './GiftOverlay';
+import { GiftStep } from '../gift/GiftStep';
 import { Hand } from './Hand';
 import { MenuPanel, MySets, type MenuTab } from './MenuPanel';
-import { RevealSlot } from './RevealSlot';
+import { RevealScreen } from '../reveal/RevealScreen';
 import { StatusStrip } from './StatusStrip';
 import { TurnBanner } from './TurnBanner';
 import { useBarTotal, useOutbid, useServerNow, useSoldStamps } from '../../lib/game-ui/hooks';
@@ -119,6 +119,11 @@ export function GameScreen() {
         return;
       }
       if (e.key === 'm' || e.key === 'M') return; // sound toggle: WS8
+      if (e.key === '?') {
+        setTab('rules');
+        setMenuOpen(true);
+        return;
+      }
       const c = cardForKey(e.key, view.myHand);
       if (c) {
         onCard(c);
@@ -151,7 +156,7 @@ export function GameScreen() {
   const leave = useCallback(() => room.leave(), [room]);
 
   if (!view) return null;
-  if (view.phase === 'reveal' || view.phase === 'ended') return <RevealSlot view={view} />;
+  if (view.phase === 'reveal' || view.phase === 'ended') return <RevealScreen view={view} />;
 
   const me = playerById(view, view.me);
   const bays = bayViewModels(view);
@@ -238,7 +243,7 @@ export function GameScreen() {
         </div>
         <CollectionStrip summary={summary} onOpen={() => setSetsOpen(true)} />
         <Hand slots={slots} selected={sel.card} locked={locked} shake={shake} keyHints={keyHints} onTap={onCard} />
-        {gifting && <GiftOverlay view={view} now={now} send={room.send} />}
+        {gifting && <GiftStep view={view} now={now} send={room.send} />}
       </div>
 
       <aside className="g-side" aria-label="Players, sets, log and settings">
