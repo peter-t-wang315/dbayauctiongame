@@ -70,10 +70,21 @@
   width: 64px;
 }
 .g-progress__bar {
+  position: relative;
   height: 6px;
   background: rgba(255, 255, 255, 0.25);
   border-radius: var(--r-pill);
   overflow: hidden;
+}
+/* Midpoint tick: marks "halfway" for the rest of the game once the tag is gone. */
+.g-progress__bar::after {
+  content: '';
+  position: absolute;
+  left: calc(50% - 1px);
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.6);
 }
 .g-progress__fill {
   display: block;

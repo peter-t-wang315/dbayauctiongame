@@ -203,6 +203,8 @@ describe('view-model', () => {
   it('progress: fraction, labels; never a "Round X of Y" string', () => {
     expect(progressOf(makeView())).toMatchObject({ fraction: 2 / 8, label: null });
     expect(progressOf(makeView({ round: { n: 5, of: 8, halfway: true, last: false } })).label).toBe('halfway');
+    // Past the halfway round the tag goes away (the bar keeps going).
+    expect(progressOf(makeView({ round: { n: 6, of: 8, halfway: true, last: false } })).label).toBeNull();
     expect(progressOf(makeView({ round: { n: 8, of: 8, halfway: true, last: true } }))).toMatchObject({
       fraction: 1,
       label: 'last',

@@ -13,18 +13,8 @@ export const CATEGORY_ORDER: CategoryId[] = ['toys', 'media', 'glass', 'collecti
 const CATEGORY_BY_ID = new Map(CATEGORIES.map((c) => [c.id, c]));
 
 export const categoryName = (id: CategoryId) => CATEGORY_BY_ID.get(id)?.name ?? id;
-/** Short label for chips (first word of the full name, "Books" etc.). */
-export function categoryShort(id: CategoryId): string {
-  const map: Record<CategoryId, string> = {
-    toys: 'Toys',
-    media: 'Media',
-    glass: 'Glass',
-    collectibles: 'Collectibles',
-    antiques: 'Antiques',
-    misc: 'Misc',
-  };
-  return map[id];
-}
+/** Same as categoryName: one name per category everywhere (user decision 2026-10-12). */
+export const categoryShort = categoryName;
 export const categoryEmoji = (id: CategoryId) => CATEGORY_BY_ID.get(id)?.emoji ?? '';
 
 export function playerById(view: PlayerView, id: string | undefined): PlayerInfo | undefined {
@@ -201,7 +191,10 @@ export interface Progress {
 export function progressOf(view: PlayerView): Progress {
   const { n, of, halfway, last } = view.round;
   const fraction = of > 0 ? Math.min(1, Math.max(0, (last ? of : n - 1) / of)) : 0;
-  return { fraction, label: last ? 'last' : halfway ? 'halfway' : null, now: n, max: of };
+  // "Halfway" is a moment, not a state: show it only in the round it's announced (R9:
+  // floor(rounds/2)+1). After that the bar's midpoint tick still marks the half.
+  const halfwayNow = halfway && n <= Math.floor(of / 2) + 1;
+  return { fraction, label: last ? 'last' : halfwayNow ? 'halfway' : null, now: n, max: of };
 }
 
 // ---------- status strip text ----------
@@ -242,6 +235,8 @@ export function eventText(view: PlayerView, e: LogEntry): string | null {
     case 'sold':
       return e.by === me ? `Yours! ${item} for ${amt}` : `SOLD! ${item} to ${nm} for ${amt}`;
     case 'unsold':
+      // 01 no-bid round: a whole Classic round without bids clears every bay.
+      if (e.extra === 'noBidRound') return `No bids all round: ${item} cleared.`;
       return `${item}: no bids. Carried over.`;
     case 'refill':
       return `New in bay ${letter}: ${item}`;

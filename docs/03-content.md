@@ -8,12 +8,12 @@ Ids are fixed by the lead. Emoji and accent hints are suggestions only; doc 04 f
 
 | id | Display name | Emoji | Accent hint (colorblind-friendly, suggestion) |
 |---|---|---|---|
-| `toys` | Toys & Plush | 🧸 | warm orange `#E69F00` |
-| `media` | Books, Movies & Music | 📀 | sky blue `#56B4E9` |
-| `glass` | Pottery & Glass | 🏺 | teal-green `#009E73` |
+| `toys` | Toys (toys & plush) | 🧸 | warm orange `#E69F00` |
+| `media` | Media (books, movies & music) | 📀 | sky blue `#56B4E9` |
+| `glass` | Glass (pottery & glass) | 🏺 | teal-green `#009E73` |
 | `collectibles` | Collectibles | 🪙 | yellow `#F0E442` (dark text on it) |
-| `antiques` | Antiques & Art | 🖼️ | vermillion `#D55E00` |
-| `misc` | Everything Else | 📦 | reddish purple `#CC79A7` |
+| `antiques` | Antiques (antiques & art) | 🖼️ | vermillion `#D55E00` |
+| `misc` | Misc (everything else) | 📦 | reddish purple `#CC79A7` |
 
 (The hints are the Okabe-Ito palette. If 04 uses Okabe-Ito for players, it should choose a different set for categories or rely on emoji + pattern.)
 
