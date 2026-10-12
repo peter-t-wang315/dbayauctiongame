@@ -224,7 +224,8 @@ export function eventText(view: PlayerView, e: LogEntry): string | null {
     case 'pass':
       return `${nm} passes`;
     case 'autoPass':
-      return `${nm} is away: auto-pass`;
+      // R13: auto-pass is either a disconnected human or a player with no legal bid (bots are never away).
+      return who && !who.isBot && !who.connected ? `${nm} is away: auto-pass` : `${nm} has no legal bid: skipped`;
     case 'bid':
       return `${nm} bids ${amt} on ${item}`;
     case 'outbid': {

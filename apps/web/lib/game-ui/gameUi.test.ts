@@ -227,6 +227,9 @@ describe('view-model', () => {
     );
     expect(e({ kind: 'halfway' })).toBe('Halfway there!');
     expect(e({ kind: 'lastRound' })).toBe('Last round! Everything sells.');
+    expect(e({ kind: 'autoPass', by: 'pat' })).toBe('▲ Pat has no legal bid: skipped');
+    v.players.find((p) => p.id === 'pat')!.connected = false;
+    expect(e({ kind: 'autoPass', by: 'pat' })).toBe('▲ Pat is away: auto-pass');
   });
   it('latestStatus picks the newest displayable entry', () => {
     const v = makeView({
