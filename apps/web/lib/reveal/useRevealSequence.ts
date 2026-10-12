@@ -14,9 +14,10 @@ export function prefersReducedMotion(): boolean {
 export function useRevealSequence(total: number, startFinished: boolean, stepMs = REVEAL_STEP_MS) {
   const [shown, setShown] = useState(() => (startFinished ? total : 0));
 
+  // Re-checked when data arrives late (e.g. `ended` mounted before `reveal` was present).
   useEffect(() => {
-    if (prefersReducedMotion()) setShown(total);
-  }, [total]);
+    if (startFinished || prefersReducedMotion()) setShown(total);
+  }, [total, startFinished]);
 
   useEffect(() => {
     if (shown >= total) return;

@@ -11,7 +11,7 @@
 
 ## Next
 - (done) Playwright `e2e/reveal.pw.ts`: Frenzy vs 2 bots to reveal, Skip, standings, Rematch -> lobby; `/rules` TOC. Passing locally.
-- Pre-PR review, PR.
+- Pre-PR review passed (1 round, no blockers; notes 1-2 applied). PR open; merge when CI is green.
 
 ## Gotchas / decisions
 - Rules TOC has 10 chips (04 listed 7): added Setup, Bidding, Last round so every rule is covered with each section < 80 words.

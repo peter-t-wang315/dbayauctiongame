@@ -146,7 +146,7 @@ export const RULES: RulesSection[] = [
       // 02 F1-F7
       'Frenzy (default for 5-6): no turns. Anyone bids on any bay at any time. Each bay has its own timer, and a late bid pushes it back to 3 seconds. After a bid you wait 1 second.',
       // R11, 02 F8
-      'Relaxed timing makes every timer 1.5x longer.',
+      'Relaxed timing makes timers 1.5x longer (except the 1-second wait after a Frenzy bid).',
     ],
   },
 ];
