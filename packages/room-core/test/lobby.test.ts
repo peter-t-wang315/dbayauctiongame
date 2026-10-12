@@ -11,7 +11,12 @@ describe('lobby', () => {
     const sends = h.sends();
     const welcome = sends.find((s) => s.msg.t === 'welcome')!;
     expect(welcome.to).toEqual({ conn: `c-${id}` });
-    expect(welcome.msg).toMatchObject({ t: 'welcome', playerId: id, secret: `s-${id}`, code: 'K7QMX' });
+    expect(welcome.msg).toMatchObject({
+      t: 'welcome',
+      playerId: id,
+      secret: `s-${id}`,
+      code: 'K7QMX',
+    });
     const snap = sends.find((s) => s.msg.t === 'snap')!;
     expect(PlayerViewSchema.safeParse((snap.msg as { view: unknown }).view).success).toBe(true);
     // the secret/hash never reach the state view
@@ -99,7 +104,13 @@ describe('lobby', () => {
     const h = new Harness();
     const host = h.join('Host');
     expect(view(h.state, host).opts.length).toBe('standard');
-    h.act(host, { t: 'setOpts', length: 'quick', mode: 'frenzy', relaxed: true, bidWindowMs: 8000 });
+    h.act(host, {
+      t: 'setOpts',
+      length: 'quick',
+      mode: 'frenzy',
+      relaxed: true,
+      bidWindowMs: 8000,
+    });
     expect(h.state.meta.opts).toEqual({
       mode: 'frenzy',
       relaxed: true,
@@ -167,7 +178,14 @@ describe('lobby', () => {
     h.run({ type: 'join', conn: 'c', name: 'G', playerId: g, secret: 's', secretHash: 'new' });
     expect(h.errCode()).toBe('BANNED');
     // same secret hash is banned as well
-    h.run({ type: 'join', conn: 'c', name: 'G', playerId: 'g2', secret: 's', secretHash: hashOf(`s-${g}`) });
+    h.run({
+      type: 'join',
+      conn: 'c',
+      name: 'G',
+      playerId: 'g2',
+      secret: 's',
+      secretHash: hashOf(`s-${g}`),
+    });
     expect(h.errCode()).toBe('BANNED');
   });
 
@@ -238,7 +256,11 @@ describe('lobby', () => {
     expect(fx).toContainEqual({ type: 'closeSocket', playerId: id, why: 'expired' });
     expect(h.sends(fx).some((s) => s.to === 'all' && s.msg.t === 'closing')).toBe(true);
     expect(fx).toContainEqual({ type: 'setAlarm', at: null });
-    const r = reduce(h.state, { type: 'hello', conn: 'c9', playerId: id, secretHash: 'x' }, T0 + 62 * 60 * 1000);
+    const r = reduce(
+      h.state,
+      { type: 'hello', conn: 'c9', playerId: id, secretHash: 'x' },
+      T0 + 62 * 60 * 1000,
+    );
     expect(r.effects).toEqual(roomNotFound('c9'));
     expect(r.state).toBe(h.state);
   });

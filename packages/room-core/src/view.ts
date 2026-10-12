@@ -34,7 +34,8 @@ export function view(state: RoomState, playerId: string, now?: number): PlayerVi
   const t = now ?? state.meta.updatedAt ?? 0;
   const { meta } = state;
   const g: EngineState | null = state.game;
-  const inGame = g !== null && (meta.phase === 'playing' || meta.phase === 'reveal' || meta.phase === 'ended');
+  const inGame =
+    g !== null && (meta.phase === 'playing' || meta.phase === 'reveal' || meta.phase === 'ended');
   const playing = inGame && meta.phase === 'playing' && g.stage !== 'done';
   const me = g?.players.find((p) => p.id === playerId);
 

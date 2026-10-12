@@ -91,7 +91,9 @@ export class Harness {
   }
 
   errCode(effects: Effect[] = this.last): string | undefined {
-    const m = this.sends(effects).find((s) => s.msg.t === 'err' || (s.msg.t === 'ack' && !s.msg.ok))?.msg;
+    const m = this.sends(effects).find(
+      (s) => s.msg.t === 'err' || (s.msg.t === 'ack' && !s.msg.ok),
+    )?.msg;
     return m && 'code' in m ? m.code : undefined;
   }
 }

@@ -172,11 +172,16 @@ describe('disconnect, auto-pass, reconnect', () => {
     const h = Harness.started(3, 0);
     const p = h.state.players[1]!;
     h.run({ type: 'disconnect', playerId: p.id }, T0 + 100);
-    h.run({ type: 'hello', conn: 'again', playerId: p.id, secretHash: hashOf(`s-${p.id}`) }, T0 + 200);
+    h.run(
+      { type: 'hello', conn: 'again', playerId: p.id, secretHash: hashOf(`s-${p.id}`) },
+      T0 + 200,
+    );
     expect(h.state.players[1]!.connected).toBe(true);
     expect(game(h).players[1]!.connected).toBe(true);
     expect(h.state.log.some((e) => e.kind === 'rejoined' && e.by === p.id)).toBe(true);
-    const snap = h.sends().find((s) => s.to && typeof s.to === 'object' && 'conn' in s.to && s.msg.t === 'snap');
+    const snap = h
+      .sends()
+      .find((s) => s.to && typeof s.to === 'object' && 'conn' in s.to && s.msg.t === 'snap');
     expect(snap).toBeTruthy();
     // their hand is intact
     expect(view(h.state, p.id).myHand.length).toBe(12);

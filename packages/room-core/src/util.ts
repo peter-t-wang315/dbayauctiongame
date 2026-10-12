@@ -57,7 +57,8 @@ export function rateLimit(
     count = 0;
   }
   count += 1;
-  if (count <= limit) return { state: { windowStart, count, strikes, closed: false }, verdict: 'ok' };
+  if (count <= limit)
+    return { state: { windowStart, count, strikes, closed: false }, verdict: 'ok' };
   // Exactly one strike per window, on its first excess message.
   if (count === limit + 1) strikes += 1;
   const closed = strikes >= RATE_LIMIT_STRIKES;

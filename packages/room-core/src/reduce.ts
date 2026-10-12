@@ -1,11 +1,6 @@
 // Pure room reducer (05 sections 7-12). No clock, no randomness, no platform APIs: `now`, seeds and
 // secret hashes are passed in. A rejected event returns the SAME state object and only error effects.
-import {
-  engine,
-  type EngineAction,
-  type GameEvent,
-  type Mode,
-} from '@dbay/engine';
+import { engine, type EngineAction, type GameEvent, type Mode } from '@dbay/engine';
 import {
   BID_WINDOW_OPTIONS,
   LENGTH_OPTIONS,
@@ -100,8 +95,7 @@ const send = (d: Draft, to: SendTo, msg: ServerMsg): void => {
   d.out.push({ type: 'send', to, msg });
 };
 
-const connErr = (d: Draft, conn: string, code: ErrorCode) =>
-  send(d, { conn }, { t: 'err', code });
+const connErr = (d: Draft, conn: string, code: ErrorCode) => send(d, { conn }, { t: 'err', code });
 
 const humans = (s: RoomState) => s.players.filter((p) => !p.isBot);
 const find = (s: RoomState, id: PlayerId): RoomPlayer | undefined =>
@@ -236,8 +230,7 @@ function rebuildDeadlines(s: RoomState, t: number): void {
         continue;
       }
       const wants =
-        engine.botAction(g, bot.id, t) !== null ||
-        (g.mode === 'frenzy' && g.stage === 'bidding');
+        engine.botAction(g, bot.id, t) !== null || (g.mode === 'frenzy' && g.stage === 'bidding');
       if (wants) dl.push({ at: t + botDelay(s, bot.id, t), kind: 'bot', data: bot.id });
     }
   }
@@ -337,13 +330,17 @@ function onJoin(d: Draft, e: Extract<RoomEvent, { type: 'join' }>): void {
   });
   if (!s.meta.hostId || !find(s, s.meta.hostId) || find(s, s.meta.hostId)?.isBot)
     s.meta.hostId = e.playerId;
-  send(d, { conn: e.conn }, {
-    t: 'welcome',
-    v: PROTOCOL_VERSION,
-    playerId: e.playerId,
-    secret: e.secret,
-    code: s.meta.code,
-  });
+  send(
+    d,
+    { conn: e.conn },
+    {
+      t: 'welcome',
+      v: PROTOCOL_VERSION,
+      playerId: e.playerId,
+      secret: e.secret,
+      code: s.meta.code,
+    },
+  );
   d.newConn = { conn: e.conn, playerId: e.playerId };
   d.changed = d.bump = d.snaps = true;
 }
@@ -359,12 +356,16 @@ function onHello(d: Draft, e: Extract<RoomEvent, { type: 'hello' }>): void {
   p.lastSeen = d.now;
   delete p.disconnectedAt;
   d.extra.push({ type: 'closeSocket', playerId: p.id, why: 'replaced', exceptConn: e.conn });
-  send(d, { conn: e.conn }, {
-    t: 'welcome',
-    v: PROTOCOL_VERSION,
-    playerId: p.id,
-    code: s.meta.code,
-  });
+  send(
+    d,
+    { conn: e.conn },
+    {
+      t: 'welcome',
+      v: PROTOCOL_VERSION,
+      playerId: p.id,
+      code: s.meta.code,
+    },
+  );
   if (wasAway && s.game) {
     pushLog(d, [{ kind: 'rejoined', by: p.id }]);
     if (s.meta.phase === 'playing')
@@ -620,7 +621,10 @@ export function reduce(state: RoomState, event: RoomEvent, now: number): ReduceR
     }
     case 'snap': {
       if (find(state, event.playerId))
-        return { state, effects: [{ type: 'send', to: event.playerId, msg: snapMsg(state, event.playerId, now) }] };
+        return {
+          state,
+          effects: [{ type: 'send', to: event.playerId, msg: snapMsg(state, event.playerId, now) }],
+        };
       return noop;
     }
     case 'seed':
