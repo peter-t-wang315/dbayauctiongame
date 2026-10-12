@@ -7,13 +7,15 @@ Branch: `ws3b-server` (base origin/main after WS3a merge).
 - 6 DO integration tests (join, reconnect after eviction, bad secret, unknown room / origin / code, oversized frame, kick 4000, alarm after eviction drives bots) all pass.
 - Root scripts: `dev`, `dev:server`, `dev:web`.
 
+## Verified manually
+- `node apps/server/scripts/smoke.mjs localhost:8787 frenzy`: full bot game (1 passive human + 2 bots, quick) reached reveal in ~230s on the local wrangler dev server.
+- Playwright (temporary spec, not committed) drove the real web app against `wrangler dev`: create -> join -> add 2 bots -> refresh restores seat -> start; unknown room shows "No such room".
+
 ## In progress
-- Manual smoke against the web app; full bot game test; PR.
+- Pre-PR review pending.
 
 ## Next
-1. Smoke: `pnpm dev`, open web, create room, add bots, start; verify snapshots flow.
-2. Optional full-game test (frenzy + quick + bots) if fast enough.
-3. Draft PR.
+1. Address review feedback; WS7 deploys (not done here).
 
 ## Gotchas / decisions
 - Effects are executed as: persist/setAlarm/log in order, then sends, then socket closes, then deleteRoom, so `kicked`/`closing` go out before the socket closes and `welcome` binds conn->player before `replaced` closes.

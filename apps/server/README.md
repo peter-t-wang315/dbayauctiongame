@@ -39,3 +39,8 @@ Node and workerd through Windows Firewall (private network). Local state lives i
 
 `pnpm --filter @dbay/server test` runs Durable Object integration tests with
 `@cloudflare/vitest-plugin` (Miniflare/workerd, native on Windows).
+
+## Smoke script
+
+With `pnpm dev:server` running: `node apps/server/scripts/smoke.mjs [host] [frenzy|classic]` creates a room, adds two
+bots and plays to reveal (about 4 minutes in Frenzy/quick).
