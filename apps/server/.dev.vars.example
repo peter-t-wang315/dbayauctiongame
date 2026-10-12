@@ -1,0 +1,4 @@
+# Copy to .dev.vars (git-ignored) to override wrangler.jsonc vars during `wrangler dev`.
+# Add a LAN origin to play from phones on the same Wi-Fi:
+# ALLOWED_ORIGINS=http://localhost:3000,http://192.168.1.50:3000
+# LOG_LEVEL=debug

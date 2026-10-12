@@ -1,15 +1,57 @@
-// Room server Worker. WS3b owns this after WS0 (docs/05-tech-stack.md sections 9, 12-15).
+// Room server Worker (docs/05-tech-stack.md sections 9, 12-15).
+// Top level = local `wrangler dev` (generous limits, localhost origins). `preview` and `production`
+// repeat the DO bindings/migrations because wrangler envs do not inherit them.
+// Override any var locally in apps/server/.dev.vars (see .dev.vars.example).
 {
   "name": "dbay-server",
   "main": "src/index.ts",
   "compatibility_date": "2026-10-01",
   "durable_objects": {
-    "bindings": [{ "name": "Room", "class_name": "Room" }],
+    "bindings": [
+      { "name": "Room", "class_name": "Room" },
+      { "name": "Limiter", "class_name": "Limiter" },
+    ],
   },
   // SQLite-backed DOs are required on the Workers Free plan.
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }],
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room", "Limiter"] }],
   "vars": {
-    "ALLOWED_ORIGINS": "http://localhost:3000",
+    "ALLOWED_ORIGINS": "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3100",
     "LOG_LEVEL": "info",
+    "CREATE_LIMIT_PER_HOUR": "1000",
+    "JOIN_LIMIT_PER_MIN": "600",
+  },
+  "env": {
+    "preview": {
+      "name": "dbay-server-preview",
+      "durable_objects": {
+        "bindings": [
+          { "name": "Room", "class_name": "Room" },
+          { "name": "Limiter", "class_name": "Limiter" },
+        ],
+      },
+      "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room", "Limiter"] }],
+      "vars": {
+        "ALLOWED_ORIGINS": "https://*.vercel.app",
+        "LOG_LEVEL": "info",
+        "CREATE_LIMIT_PER_HOUR": "10",
+        "JOIN_LIMIT_PER_MIN": "60",
+      },
+    },
+    "production": {
+      "name": "dbay-server",
+      "durable_objects": {
+        "bindings": [
+          { "name": "Room", "class_name": "Room" },
+          { "name": "Limiter", "class_name": "Limiter" },
+        ],
+      },
+      "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room", "Limiter"] }],
+      "vars": {
+        "ALLOWED_ORIGINS": "https://CHANGE-ME.vercel.app",
+        "LOG_LEVEL": "info",
+        "CREATE_LIMIT_PER_HOUR": "10",
+        "JOIN_LIMIT_PER_MIN": "60",
+      },
+    },
   },
 }

@@ -10,6 +10,9 @@
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
     "mock": "pnpm --filter @dbay/mock-server start",
+    "dev:server": "pnpm --filter @dbay/server dev",
+    "dev:web": "pnpm --filter @dbay/web dev",
+    "dev": "pnpm --parallel --filter @dbay/server --filter @dbay/web dev",
     "format": "prettier --write ."
   },
   "devDependencies": {
