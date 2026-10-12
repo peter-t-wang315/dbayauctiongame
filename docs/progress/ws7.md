@@ -5,14 +5,14 @@ Branch: `ws7-integration` (base origin/main at 820b2ff, after WS6 merge).
 ## Done
 - `tools/smoke`: fast create-room + WS join + lobby-snapshot assert (`pnpm --filter @dbay/smoke start [host]`, env `SMOKE_ORIGIN`). Verified against local wrangler dev. The full bot-game smoke stays in `apps/server/scripts/smoke.mjs` (WS3b-owned, not moved).
 - `tools/e2e`: Playwright config starts real `wrangler dev` (:8788) + `next dev` (:3200); spec plays a Frenzy bots game (with a mid-game reload) to the reveal. Passes locally in ~3.8 min.
-- `.github/workflows/deploy.yml`: push-to-main (server/packages paths) + `workflow_dispatch` (production|preview); every step is skipped when `CLOUDFLARE_API_TOKEN` is absent (job stays green). Then `wrangler deploy --env X` and smoke against repo var `WORKER_HOST`.
+- `.github/workflows/deploy.yml`: push-to-main (server/packages paths) + `workflow_dispatch` (production|preview); every step is skipped when `CLOUDFLARE_API_TOKEN` is absent (job stays green). Then `wrangler deploy --env X` and smoke against repo var `WORKER_HOST` (production) or `WORKER_HOST_PREVIEW` (preview; review fix).
 - `docs/07-deploy-checklist.md` (account steps, env vars, iPhone-over-LAN checklist), `docs/07-playtest-log.md` template, README deploy section.
 
 ## In progress
 - Nothing. PR open, awaiting user.
 
 ## Next (needs user accounts)
-1. Cloudflare token + account id secrets, `WORKER_HOST`/`SMOKE_ORIGIN` vars, fix `CHANGE-ME` origin in `apps/server/wrangler.jsonc`, Vercel project + `NEXT_PUBLIC_GAME_HOST`.
+1. Cloudflare token + account id secrets, `WORKER_HOST`/`WORKER_HOST_PREVIEW`/`SMOKE_ORIGIN` vars, fix `CHANGE-ME` origin in `apps/server/wrangler.jsonc`, Vercel project + `NEXT_PUBLIC_GAME_HOST`.
 2. First `workflow_dispatch` deploy (preview, then production), real-device checklist.
 
 ## Findings / gotchas

@@ -31,10 +31,12 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       WORKER_ENV: ${{ inputs.environment || 'production' }}
       # Repository variables (Settings > Secrets and variables > Actions > Variables):
-      #   WORKER_HOST   host of the deployed Worker, no scheme, e.g. dbay-server.<acct>.workers.dev
-      #   SMOKE_ORIGIN  an origin in that Worker's ALLOWED_ORIGINS, e.g. https://dbay.vercel.app
-      WORKER_HOST: ${{ vars.WORKER_HOST }}
-      SMOKE_ORIGIN: ${{ vars.SMOKE_ORIGIN }}
+      #   WORKER_HOST          production Worker host, no scheme, e.g. dbay-server.<acct>.workers.dev
+      #   WORKER_HOST_PREVIEW  preview Worker host, e.g. dbay-server-preview.<acct>.workers.dev
+      #   SMOKE_ORIGIN         an origin in the target Worker's ALLOWED_ORIGINS, e.g. https://dbay.vercel.app
+      #   SMOKE_ORIGIN_PREVIEW optional override for preview (preview allows https://*.vercel.app)
+      WORKER_HOST: ${{ inputs.environment == 'preview' && vars.WORKER_HOST_PREVIEW || vars.WORKER_HOST }}
+      SMOKE_ORIGIN: ${{ inputs.environment == 'preview' && (vars.SMOKE_ORIGIN_PREVIEW || vars.SMOKE_ORIGIN) || vars.SMOKE_ORIGIN }}
     steps:
       - name: Check deploy credentials
         id: guard
@@ -73,7 +75,7 @@ jobs:
         if: steps.guard.outputs.enabled == 'true'
         run: |
           if [ -z "$WORKER_HOST" ] || [ -z "$SMOKE_ORIGIN" ]; then
-            echo "::error::Set repository variables WORKER_HOST and SMOKE_ORIGIN (docs/07-deploy-checklist.md)."
+            echo "::error::Set repository variables WORKER_HOST (production) or WORKER_HOST_PREVIEW (preview), and SMOKE_ORIGIN (docs/07-deploy-checklist.md)."
             exit 1
           fi
           pnpm --filter @dbay/smoke start "$WORKER_HOST"

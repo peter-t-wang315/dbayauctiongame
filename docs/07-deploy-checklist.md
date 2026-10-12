@@ -10,7 +10,7 @@ Nothing here has been done yet. Needs the owner's Cloudflare and Vercel accounts
    - The first `workers.dev` subdomain must be registered once (dashboard > Workers & Pages > it prompts).
 2. **GitHub repo** (Settings > Secrets and variables > Actions):
    - Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
-   - Variables: `WORKER_HOST` (e.g. `dbay-server.<subdomain>.workers.dev`), `SMOKE_ORIGIN` (the Vercel production URL, must be in the Worker's `ALLOWED_ORIGINS`).
+   - Variables: `WORKER_HOST` (e.g. `dbay-server.<subdomain>.workers.dev`), `WORKER_HOST_PREVIEW` (e.g. `dbay-server-preview.<subdomain>.workers.dev`), `SMOKE_ORIGIN` (the Vercel production URL). The smoke origin must be in the target Worker's `ALLOWED_ORIGINS`: preview allows any `https://*.vercel.app`, production only the exact origin you set. Optional `SMOKE_ORIGIN_PREVIEW` overrides it for preview runs.
    - Until the token exists, `.github/workflows/deploy.yml` skips cleanly.
 3. **Worker config** (`apps/server/wrangler.jsonc`): replace `https://CHANGE-ME.vercel.app` in `env.production.vars.ALLOWED_ORIGINS` with the real Vercel production origin (comma-separated for more, e.g. a custom domain). `env.preview` already allows `https://*.vercel.app`.
 4. **Vercel**: import the GitHub repo.
