@@ -6,7 +6,7 @@ This is a browser version of the 2001 *eBay Electronic Talking Auction Game*, re
 2. Friends join with a room code and a username.
 3. Everyone plays live.
 
-> **Status (2026-10-12):** M1 done; M2 nearly done. Merged: WS0, WS1 (+ Quick/Standard length presets), WS2 (content + sprites), WS3a room-core, WS3b local server, WS4 shell, WS5 game screen. A full game vs bots runs locally with `pnpm dev` (web :3000, server :8787). Next: WS6 reveal + gift screens (WS5 has stand-ins), then WS8 juice, then WS7 deploy (needs the user: Cloudflare/Vercel accounts). Per-workstream progress lives in `docs/progress/`.
+> **Status (2026-10-12):** M1 and M2 done. Merged: WS0, WS1 (+ Quick/Standard length presets), WS2 (content + sprites), WS3a room-core, WS3b local server, WS4 shell, WS5 game screen, WS6 reveal + gift + rules. A full game vs bots runs locally with `pnpm dev` (web :3000, server :8787). Next: WS8 juice, then WS7 deploy (needs the user: Cloudflare/Vercel accounts). Per-workstream progress lives in `docs/progress/`.
 
 ## Start here (new session or new agent)
 1. Read this file.
@@ -64,7 +64,7 @@ This is a browser version of the 2001 *eBay Electronic Talking Auction Game*, re
 - [x] Planning docs written (01–06, research)
 - [x] Mockups: white theme default, eBay-inspired player colors, pixel sprites (04 §11–13)
 - [x] **M1 (WS0):** contracts, monorepo, CI, mock server
-- [ ] **M2:** playable local game against bots (WS1 ✅, WS2 ✅, WS3a ✅, WS3b ✅ local, WS4 ✅, WS5 ✅, WS6 pending)
+- [x] **M2:** playable local game against bots (WS1 ✅, WS2 ✅, WS3a ✅, WS3b ✅ local, WS4 ✅, WS5 ✅, WS6 ✅)
 - [ ] **M3:** online multiplayer deployed (WS3b, WS6, WS7)
 - [ ] **M4:** juice and polish (WS8)
 - [ ] **M5:** playtest with friends, then tune constants with the simulator
