@@ -41,7 +41,6 @@ export function MenuPanel({
             role="tab"
             id={`g-tab-${t.id}`}
             aria-selected={tab === t.id}
-            aria-pressed={tab === t.id}
             className="seg__opt"
             onClick={() => onTab(t.id)}
           >

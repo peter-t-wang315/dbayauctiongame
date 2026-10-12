@@ -10,20 +10,24 @@
   --card: #ffffff;
   --ink: #0e1511;
   --text: #191919;
-  --text-dim: #6b7280;
+  --text-dim: #5b6370;
   --line: #e5e7eb;
   --navy: #1e2a44;
   --on-navy: #ffffff;
-  --gold: #b07400;
+  --gold: #8f5e00;
   --ok: #22a35a;
   --danger: #ff6b5e;
   --danger-text: #b3261e;
   --focus: #1e2a44;
   --dim-opacity: 0.45;
+  /* text on the cream/white --card surface: always dark, in both themes (a11y: 4.5:1) */
+  --on-card: var(--text);
+  --on-card-dim: var(--text-dim);
+  --gold-on-card: var(--gold);
 
   /* player palette (section 12): identity = color + shape + name, never color alone */
   --p-red: #f04b3e;
-  --p-blue: #2f7cf6;
+  --p-blue: #3a85f8;
   --p-yellow: #ffb81c;
   --p-green: #8bc53f;
   --p-purple: #a97cf8;
@@ -91,4 +95,7 @@
   --danger: #ff6b5e;
   --danger-text: #ff6b5e;
   --focus: #8ab4ff;
+  --on-card: #191919;
+  --on-card-dim: #5b6370;
+  --gold-on-card: #8f5e00;
 }
