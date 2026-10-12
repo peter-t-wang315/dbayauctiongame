@@ -37,3 +37,6 @@ Pre-PR review (one reviewer, diff only), then merge. WS3b wires the wrapper (see
 - Call `roomNotFound(conn)` when a `hello`/`join` hits a room with no stored state; close code 4000 for `closeSocket why:'kicked'` (ws4 note).
 - Wrapper owns: crypto (secret + SHA-256), `seed`, per-connection `RateState` (`rateLimit`), size/zod parse (`parseClientFrame`), binding conn -> playerId on `welcome`, honoring `exceptConn`, `setAlarm` from the effect, `ping/pong`.
 - `view(state, pid, now)` can take the live clock; the snapshots emitted by the reducer use the event `now`.
+- Default mode follows player count (Classic 3-4, Frenzy 5-6) until the host sets one via setOpts (`meta.modeSet`); fixed at start.
+- Decision: `reveal.tiebreak` (remaining-hand totals) is public after the game.
+- Decision: in-game kick bans the player and keeps the seat (disconnected, auto-passed).

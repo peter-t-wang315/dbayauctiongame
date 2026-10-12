@@ -204,14 +204,12 @@ describe('fast-check: mid-game sequences', () => {
         },
         {
           weight: 3,
-          arbitrary: fc
-            .constantFrom('p1', 'p2', 'p3')
-            .map((id): RoomEvent => ({
-              type: 'hello',
-              conn: 'c',
-              playerId: id,
-              secretHash: hashOf(`s-${id}`),
-            })),
+          arbitrary: fc.constantFrom('p1', 'p2', 'p3').map((id): RoomEvent => ({
+            type: 'hello',
+            conn: 'c',
+            playerId: id,
+            secretHash: hashOf(`s-${id}`),
+          })),
         },
         {
           weight: 1,

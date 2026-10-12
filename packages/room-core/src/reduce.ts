@@ -452,6 +452,7 @@ function onAction(d: Draft, playerId: PlayerId, msg: ClientAction): void {
         return fail('BAD_OPTS');
       if (o.length !== undefined && !(LENGTH_OPTIONS as readonly unknown[]).includes(o.length))
         return fail('BAD_OPTS');
+      if (o.mode !== undefined) s.meta.modeSet = true;
       s.meta.opts = {
         mode: (o.mode as Mode | undefined) ?? s.meta.opts.mode,
         relaxed: (o.relaxed as boolean | undefined) ?? s.meta.opts.relaxed,
@@ -656,6 +657,10 @@ export function reduce(state: RoomState, event: RoomEvent, now: number): ReduceR
   if (s.meta.hostId && !find(s, s.meta.hostId)) {
     s.meta.hostId = null;
     migrateHost(d, false);
+  }
+  // Default mode follows player count (Classic 3-4, Frenzy 5-6) until the host picks one.
+  if (s.meta.phase === 'lobby' && !s.meta.modeSet) {
+    s.meta.opts.mode = s.players.length >= 5 ? 'frenzy' : 'classic';
   }
   if (d.bump) s.rev += 1;
   rebuildDeadlines(s, now);

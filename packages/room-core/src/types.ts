@@ -58,6 +58,8 @@ export interface RoomState {
     revealAt?: number;
     /** Time of the last state-changing event (lets `view` judge cooldowns without a clock). */
     updatedAt?: number;
+    /** True once the host explicitly chose a mode via setOpts; then it sticks (02). */
+    modeSet?: boolean;
     /** Last game-log number issued. */
     logN?: number;
     /** True once the room expired. Further events get ROOM_NOT_FOUND. */
