@@ -6,7 +6,7 @@ This is a browser version of the 2001 *eBay Electronic Talking Auction Game*, re
 2. Friends join with a room code and a username.
 3. Everyone plays live.
 
-> **Status (2026-10-12):** M1 and M2 done; M4 code done. Merged: WS0-WS6, WS8 (juice + sound, sound off by default), WS7 prep (smoke, real-server bots e2e in `tools/e2e`, deploy workflow that skips until secrets exist), lobby game-length selector. A full game vs bots runs locally with `pnpm dev` (web :3000, server :8787). **Next (needs the user):** Cloudflare + Vercel accounts and the steps in [07-deploy-checklist.md](07-deploy-checklist.md) (incl. replacing `CHANGE-ME.vercel.app` in `apps/server/wrangler.jsonc`), then the iPhone checklist. Per-workstream progress lives in `docs/progress/`.
+> **Status (2026-10-12):** M1 and M2 done; M4 code done. Merged: WS0-WS6, WS8, WS7 prep, lobby length selector, a11y audit (axe in CI), WS5 polish (item details, 320px fit, assertive announcements), smarter bots, robustness e2e (+ server fix: stale `connected` flags after restart). CI: `check`, `e2e-web` (mock), `e2e-real` and `e2e-robustness` (real local server). Run locally with `pnpm dev` (web :3000, server :8787). **Next (needs the user):** play-test locally; Cloudflare + Vercel accounts and [07-deploy-checklist.md](07-deploy-checklist.md) (incl. replacing `CHANGE-ME.vercel.app` in `apps/server/wrangler.jsonc`); iPhone/Android checks. Per-workstream progress lives in `docs/progress/`.
 
 ## Start here (new session or new agent)
 1. Read this file.
