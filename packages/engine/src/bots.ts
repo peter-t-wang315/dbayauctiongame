@@ -214,7 +214,8 @@ export function bestBid(
     const values = cards
       .filter((c) => c.kind === 'value')
       .sort((a, c) => (a.value ?? 0) - (c.value ?? 0));
-    // Face cards: smallest that reaches the target rung, else the largest below it.
+    // Face cards: smallest within budget that reaches 0.9x the valuation (or the smallest within budget
+    // for cheap-increment bots), else the largest within budget.
     const maxVal = w * prm.maxMult * (state.mode === 'frenzy' && !prm.minimal ? 1.05 : 1);
     const wantVal = w * 0.9;
     const held = isTop || late ? new Set<string>() : heldBack;
@@ -225,7 +226,7 @@ export function bestBid(
     if (!pick && okVals.length > 0) pick = okVals[okVals.length - 1];
     // Reserve: do not drain the value cards below the reserve for an ordinary item.
     if (pick && valueCards - 1 < reserve && !isTop) pick = undefined;
-    // A bay already holding a bid has proven interest; a much lower target card is not worth a fight.
+    // A card far below the valuation of a real item would just be outbid; do not waste a turn on it.
     if (pick && (pick.value ?? 0) < wantVal * 0.5 && wantVal >= 60) pick = undefined;
 
     let chosen: BidCard | undefined = pick;

@@ -12,13 +12,14 @@
   - Frenzy: `rebid` chance after being outbid, cooldown respected as before.
 - Unit tests `packages/engine/test/bots.test.ts` (legality over seeded games, determinism, value-awareness, reserve, cooldown).
 - `tools/sim` prints the per-seat win share by skill (`levelWinPerSeat`).
+- Slice 2: Frenzy tuning (non-minimal bots may pay 5% more), random personality made the weakest, softer collection premium. docs/02 section 7 and sim README updated with before/after numbers.
 - Replay snapshots in `packages/engine/test/__snapshots__/replay.test.ts.snap` regenerated (they pin bot behavior).
 
 ## In progress
-Final sim table for docs/02 section 7 and the PR body.
+PR open (`Engine: smarter bots`); waiting for review. Pre-PR reviewer subagent not run (usage limits); author self-review only.
 
 ## Next
-- Full 1000-game before/after runs, update docs/02 section 7, open PR `Engine: smarter bots`.
+- Address review comments. After the playtest, retune `PERSONALITY` (top of bots.ts) from real-player feedback.
 
 ## Gotchas / decisions
 - Mixed-bot auto-skip was 14-19% at Standard 3p/4p with the old bots; the old careful bot also won ~70% of 4-player mixed games. New personalities are closer to parity (see PR table).

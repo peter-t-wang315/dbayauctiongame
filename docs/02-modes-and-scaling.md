@@ -72,7 +72,7 @@ Run with bots over many seeds (at least 1000 per mode and player count). Bot ski
 | First-seat (Classic) or fastest-seat (Frenzy) advantage | < 5 points win rate | - |
 Tune order if failing: `pBase/pMax` and `maxBayAgeCycles` (length, sales), rounds, Frenzy open timers, cats in play, deck size, then Proxy count.
 
-Additional metric: Classic auto-skip rate (R13, calls with no legal bid / calls) should be rare (< 5%; Standard 3p Classic accepts up to 8% so it can reach 12-15 min, user decision 2026-10-11, ASSUMED, revisit after playtest). The limit is measured with all-careful bots (the sim default); random and greedy bots burn their hands and skip far more (see section 7 for the mixed-bot figures), so treat the mixed-bot rate as a playtest risk.
+Additional metric: Classic auto-skip rate (R13, calls with no legal bid / calls) should be rare (< 5%; Standard 3p Classic accepts up to 8% so it can reach 12-15 min, user decision 2026-10-11, ASSUMED, revisit after playtest). The limit is measured with all-careful bots (the sim default); with the smarter bots (section 7) a mixed table of random, greedy and careful bots also stays within the limit (highest 4.5%).
 
 ## 6. Simulator pacing (ASSUMED)
 `tools/sim` has two bot pacings. **Bot pacing** (default): every seat polls on a 1.5-4 s timer and acts at once. **Human pacing** (`--pacing human`): the Classic caller acts uniformly 40-90% into the bid window (2-4.5 s of 5 s) and lets the window expire 10% of the time; Frenzy seats look at the board every 1.5-5 s and bid with probability 0.8 when the policy has a bid; gift choices take 2-6 s. Length targets apply to human pacing. See `tools/sim/README.md`.
@@ -80,25 +80,27 @@ Additional metric: Classic auto-skip rate (R13, calls with no legal bid / calls)
 ## 7. Latest sim results (1000 games per cell, all-careful bots, REAL 60-item base pack (`--pack active`), human pacing)
 | preset | mode | n | length min median / p95 / max | Classic rounds median / max | collect | autoskip | spread | nonterm |
 |---|---|---|---|---|---|---|---|---|
-| quick | classic | 3 | 8.2 / 9.2 / 10.4 | 34 / 42 | 65.7% | 4.6% | 2.21x | 0 |
-| quick | classic | 4 | 10.9 / 11.9 / 12.3 | 34 / 36 | 65.1% | 3.8% | 2.87x | 0 |
-| quick | classic | 5 | 9.9 / 10.3 / 10.6 | 23 / 23 | 61.0% | 1.0% | 3.90x | 0 |
-| quick | classic | 6 | 9.9 / 10.2 / 10.5 | 19 / 19 | 46.7% | 0.0% | 6.90x | 0 |
-| quick | frenzy | 3 | 4.0 / 4.2 / 4.4 | - | 70.7% | - | 2.19x | 0 |
-| quick | frenzy | 4 | 5.5 / 5.7 / 6.1 | - | 71.9% | - | 2.55x | 0 |
-| quick | frenzy | 5 | 5.3 / 5.6 / 5.8 | - | 73.3% | - | 3.16x | 0 |
-| quick | frenzy | 6 | 6.3 / 6.6 / 6.8 | - | 75.8% | - | 3.64x | 0 |
-| standard | classic | 3 | 12.0 / 12.6 / 12.9 | 50 / 50 | 77.8% | 6.1% | 2.01x | 0 |
-| standard | classic | 4 | 16.5 / 17.1 / 17.5 | 50 / 50 | 84.5% | 4.0% | 2.23x | 0 |
-| standard | classic | 5 | 16.0 / 17.5 / 18.0 | 39 / 42 | 88.8% | 3.4% | 2.38x | 0 |
-| standard | classic | 6 | 17.0 / 17.5 / 17.8 | 33 / 33 | 84.3% | 1.2% | 3.12x | 0 |
-| standard | frenzy | 3 | 6.0 / 6.3 / 6.5 | - | 90.5% | - | 1.71x | 0 |
-| standard | frenzy | 4 | 8.3 / 8.6 / 8.9 | - | 90.2% | - | 1.96x | 0 |
-| standard | frenzy | 5 | 7.8 / 8.1 / 8.3 | - | 92.5% | - | 2.15x | 0 |
-| standard | frenzy | 6 | 9.5 / 9.8 / 10.1 | - | 90.4% | - | 2.39x | 0 |
+| quick | classic | 3 | 8.0 / 9.1 / 12.8 | 33 / 50 | 71.3% | 3.6% | 2.44x | 0 |
+| quick | classic | 4 | 10.4 / 11.7 / 12.2 | 32 / 36 | 71.2% | 3.3% | 3.19x | 0 |
+| quick | classic | 5 | 8.8 / 9.8 / 10.3 | 21 / 23 | 69.6% | 1.6% | 3.94x | 0 |
+| quick | classic | 6 | 9.9 / 10.2 / 10.5 | 19 / 19 | 67.5% | 0.4% | 5.29x | 0 |
+| quick | frenzy | 3 | 4.0 / 4.2 / 4.5 | - | 75.3% | - | 2.38x | 0 |
+| quick | frenzy | 4 | 5.4 / 5.7 / 6.1 | - | 74.5% | - | 2.94x | 0 |
+| quick | frenzy | 5 | 5.3 / 5.6 / 5.8 | - | 74.4% | - | 3.96x | 0 |
+| quick | frenzy | 6 | 6.3 / 6.6 / 6.9 | - | 74.3% | - | 4.81x | 0 |
+| standard | classic | 3 | 12.2 / 12.7 / 13.1 | 50 / 50 | 83.8% | 4.4% | 2.03x | 0 |
+| standard | classic | 4 | 16.5 / 17.2 / 17.6 | 50 / 50 | 88.8% | 4.1% | 2.35x | 0 |
+| standard | classic | 5 | 15.2 / 17.0 / 18.1 | 37 / 42 | 90.0% | 4.2% | 2.53x | 0 |
+| standard | classic | 6 | 16.6 / 17.3 / 17.8 | 33 / 33 | 88.2% | 2.8% | 3.14x | 0 |
+| standard | frenzy | 3 | 6.0 / 6.3 / 6.7 | - | 91.6% | - | 1.76x | 0 |
+| standard | frenzy | 4 | 8.3 / 8.6 / 8.9 | - | 92.8% | - | 2.01x | 0 |
+| standard | frenzy | 5 | 7.8 / 8.1 / 8.4 | - | 90.4% | - | 2.39x | 0 |
+| standard | frenzy | 6 | 9.5 / 9.8 / 10.0 | - | 89.3% | - | 2.73x | 0 |
 
 Classic was retuned on the real pack (2026-10-11, ws1-classic-retune): the previous Classic constants gave auto-skip above 5% at several cells in the pre-PR review. Slow closes and long `maxBayAgeCycles` keep bid cards locked on bays, so hands run dry late in the game. Faster closes (a long, flat start and a steeper ramp, shorter bay ages) free the cards. Auto-skip (careful bots) is now below 5% in every Classic cell except Standard 3p, which accepts up to 8% (6.1% measured) to reach its length target; skip rate rises with game length at a fixed deck, so length and skips conflict at 3 players. Standard 3p close values: rounds 50, pBase .005, pMax .03, maxBayAgeCycles 8 (was .005/.15/5).
 
-Known risk, mixed bots (random/greedy/careful seats, 1000 games, real pack, human pacing), auto-skip: Quick 3p 9.2%, 4p 11.5%, 5p 3.1%, 6p 0.7%; Standard 3p 18.9%, 4p 19.4%, 5p 8.7%, 6p 5.6%. Weak or reckless players empty their hands early and may be skipped often, worst at Standard 4p and 3p. Check in the playtest.
+Smarter bots (2026-10-11, branch bots-smarter). All three bot levels now share one value-aware bidder (`packages/engine/src/bots.ts`): they value the item from its estimate and collection progress, pay a face value of about 0.9x to `maxMult` x that value (careful 1.3x, greedy 1.4x opening with the smallest card that works, random 1.15x with fixed +/-35% misjudgment and 20% idle turns), keep a reserve of face cards, spend a Proxy only on the best items, and cap the cards locked on bays. The table above is the all-careful result (1000 games per cell); every Classic cell is inside its auto-skip limit (< 5%, Standard 3p < 8%).
 
-Misses (ASSUMED, accepted for now): Quick collection share 47-76% (Frenzy 71-76%, slightly above 70%); Standard collection share 84-93% (accepted up to ~95% pending playtest); score spread above 4x at Quick Classic 6 players (6.9x). Classic auto-skip (careful bots) is close to the limit at Quick 3p (4.6%), Standard 4p (4.0%); Standard 3p is 6.1% against its 8% limit. Bot-pacing results are in the PR description.
+Mixed bots (random, greedy, careful, careful seats cycled; 500 games per cell, same seeds before and after, real pack, human pacing). Auto-skip, old to new: Quick 3p 9.2% to 3.7%, 4p 8.5% to 3.2%, 5p 3.3% to 1.4%, 6p 0.7% to 0.2%; Standard 3p 18.8% to 4.5%, 4p 14.3% to 3.5%, 5p 10.1% to 4.0%, 6p 5.7% to 1.9%. Win share per seat across the 16 mode x length x players cells (fair = 1/n): the ratio between the best and the worst skill level was 12x on average and up to 101x (old Standard Frenzy 6p: careful 30.4% per seat, random 0.3%); it is now 1.8x on average and at most 2.3x, and the mean distance of a level from its fair share fell from 9.8 to 4.9 points. Careful is still the strongest on average, random the weakest on purpose (a casual player); greedy is slightly ahead at 3 players. Example, Standard 4p Classic win share per seat, old to new: random 12.8% to 14.4%, greedy 18.8% to 29.4%, careful 34.2% to 28.1% (fair 25%).
+
+Misses (ASSUMED, accepted for now): Quick collection share 67-75% (Classic 67-71%, Frenzy 74-75%, slightly above 70%; smarter bots chase collections a little better); Standard collection share 84-93% (accepted up to ~95% pending playtest); score spread above 4x at Quick Classic 6 players (5.3x) and Quick Frenzy 6 players (4.8x). Classic auto-skip (careful bots) is below the limit everywhere (highest: Standard 3p 4.4% of 8%, Standard 4p 4.1% and 5p 4.2% of 5%). Bot-pacing results are in the PR description.
