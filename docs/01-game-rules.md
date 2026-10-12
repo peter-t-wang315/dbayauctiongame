@@ -88,7 +88,7 @@ This doc defines shared rules plus Classic mode. Frenzy overrides are in `02-mod
 - **R36 Reveal data**: each scorable card exposes `estValue`, `actualValue`, delta, for STEAL!/Ripped off! tags (UX in 04).
 
 ## 8. Per-player-count table (ASSUMED)
-The host picks a **game length** in the lobby (`length`: `quick` or `standard`, default `standard`; independent of mode). Each length is a preset of constants (`LENGTH_PRESETS` in `packages/engine/src/config.ts`). Classic bays are in the first table column (R1); Frenzy uses fewer bays (`FRENZY_BAYS_BY_PLAYERS`, 02 section 2) so the same deck spreads over more auction slots: Quick {3:2, 4:2, 5:3, 6:4}, Standard {3:2, 4:2, 5:3, 6:3} (ASSUMED).
+The host picks a **game length** in the lobby (`length`: `quick` or `standard`, default `standard`; independent of mode). Each length is a preset of constants (`LENGTH_PRESETS` in `packages/engine/src/config.ts`). Bays (R1) are one table for both modes: 3 bays for 3-4 players, 4 for 5-6 (ASSUMED).
 
 **Standard** (~8 deck cards per player; Classic target 15-25 min, 12-15 min at 3 players; Classic rounds capped near 50):
 | Players | Bays | Deck | Items | Display Case | Gift | Cats in play | Classic rounds | Calls N |
@@ -113,8 +113,7 @@ Rationale: the original single table (now Quick, with more categories at 3-4 pla
 |---|---|---|
 | `BID_VALUES` | [10,25,50,75,100,125,150,200,250,300] | R2 |
 | `PROXIES_PER_PLAYER` | 2 | R2 |
-| `BAYS_BY_PLAYERS` | {3:3,4:3,5:4,6:4} | R1 (Classic) |
-| `LENGTH_PRESETS[length].FRENZY_BAYS_BY_PLAYERS` | section 8 | R1 for Frenzy (02 section 2) |
+| `BAYS_BY_PLAYERS` | {3:3,4:3,5:4,6:4} | R1 (both modes) |
 | `LENGTH_PRESETS[length].DECK_BY_PLAYERS` | section 8 | R4 |
 | `LENGTH_PRESETS[length].ROUNDS_BY_PLAYERS` | section 8 | R7; targets per mode x preset in 02 section 5 (human pacing) |
 | `LENGTH_PRESETS[length].CLOSE_BY_PLAYERS` (`pBase`, `pMax`, `maxBayAgeCycles`) | Quick {3: .02/.07/7, 4: .04/.12/4, 5: .05/.15/3, 6: .05/.15/3}; Standard {3: .014/.055/8, 4: .025/.08/6, 5: .03/.085/5, 6: .04/.10/4} | R17; the deck is mostly sold by ~85% of calls; per player count because the deck-to-bay ratio differs |

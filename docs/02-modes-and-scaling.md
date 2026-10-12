@@ -7,7 +7,7 @@ Rules not mentioned here are identical to `01-game-rules.md` (R-IDs). Mode is ch
 - Pros: orderly, low spam, readable. Cons: with 6 players each waits ~5 calls between turns (downtime), so 5-6 default to Frenzy.
 
 ## 2. Frenzy (ASSUMED; the original had no such mode)
-Default for 5-6, optional for 3-4. No color calls; anyone may bid on any bay at any time. Auctions stay fast (about 35-55 s open timer); Frenzy games are accepted as shorter than Classic (ASSUMED). To land the length targets Frenzy uses fewer bays than Classic at 3-4 players (`FRENZY_BAYS_BY_PLAYERS`: Quick 2/2/3/4, Standard 2/2/3/3 for 3/4/5/6 players), spreading the same deck over more auction slots.
+Default for 5-6, optional for 3-4. No color calls; anyone may bid on any bay at any time. Auctions stay fast (about 35-55 s open timer); Frenzy uses the same bays and decks as Classic (3 bays at 3-4 players, 4 at 5-6; 01 R1). Frenzy is intentionally shorter than Classic (user decision 2026-10-11; ASSUMED targets in section 5).
 
 - **F1 Bid legality**: same as 01 R16 (own top, equal, proxy rules). No "called player" check.
 - **F2 Bay timer**: each bay has `closesAt`.
@@ -59,7 +59,7 @@ Classic close-roll constants (`pBase`, `pMax`, `maxBayAgeCycles`) per player cou
 Run with bots over many seeds (at least 1000 per mode and player count). Bot skill levels: random, greedy, careful.
 | Metric | Target | Hard limit |
 |---|---|---|
-| Game length, median (simulated clock, **human pacing**, section 6) | Classic Quick 8-12 min; Classic Standard 15-25 min (3 players 12-15, accepted shorter); Frenzy Quick 6-8 min; Frenzy Standard 10-15 min (ASSUMED) | game always terminates, < 40 min |
+| Game length, median (simulated clock, **human pacing**, section 6) | Classic Quick 8-12 min; Classic Standard 15-25 min (3 players 12-15, accepted shorter); Frenzy Quick 3.5-7 min; Frenzy Standard 5.5-10 min (intentionally shorter than Classic, ASSUMED) | game always terminates, < 40 min |
 | Classic rounds played | <= ~50 (prefer fewer); report max per cell | - |
 | Items won per player (average) | >= 3 (deck gives ~5-6 Quick, ~7-8 Standard) | no seat averages < 2 |
 | Players dry before last 25% of game | < 20% of players | - |
@@ -84,17 +84,17 @@ Additional metric: Classic auto-skip rate (R13, calls with no legal bid / calls)
 | quick | classic | 4 | 9.4 / 10.6 / 11.7 | 29 / 35 | 5.75 / 5.71 | 64.2% | 2.0% | 3.17x | 0 |
 | quick | classic | 5 | 9.7 / 10.3 / 10.5 | 23 / 23 | 5.59 / 5.56 | 62.7% | 0.8% | 4.26x | 0 |
 | quick | classic | 6 | 9.9 / 10.2 / 10.5 | 19 / 19 | 4.89 / 4.83 | 54.7% | 0.0% | 6.65x | 0 |
-| quick | frenzy | 3 | 6.1 / 6.4 / 6.7 | - | 5.67 / 5.62 | 71.4% | 0.0% | 2.24x | 0 |
-| quick | frenzy | 4 | 8.2 / 8.6 / 8.9 | - | 5.75 / 5.73 | 71.3% | 0.0% | 2.76x | 0 |
-| quick | frenzy | 5 | 7.0 / 7.3 / 7.5 | - | 5.60 / 5.54 | 73.3% | 0.0% | 3.19x | 0 |
+| quick | frenzy | 3 | 4.0 / 4.2 / 4.5 | - | 5.67 / 5.64 | 70.5% | 0.0% | 2.12x | 0 |
+| quick | frenzy | 4 | 5.5 / 5.7 / 6.0 | - | 5.75 / 5.70 | 69.5% | 0.0% | 2.80x | 0 |
+| quick | frenzy | 5 | 5.3 / 5.6 / 5.8 | - | 5.60 / 5.52 | 73.0% | 0.0% | 3.33x | 0 |
 | quick | frenzy | 6 | 6.3 / 6.6 / 6.8 | - | 5.67 / 5.62 | 76.1% | 0.0% | 4.03x | 0 |
 | standard | classic | 3 | 12.2 / 12.7 / 13.0 | 50 / 50 | 7.52 / 7.51 | 86.0% | 4.3% | 1.89x | 0 |
 | standard | classic | 4 | 16.0 / 17.0 / 17.4 | 48 / 50 | 7.49 / 7.47 | 87.6% | 3.0% | 2.25x | 0 |
 | standard | classic | 5 | 16.1 / 17.7 / 18.3 | 39 / 42 | 7.60 / 7.55 | 90.3% | 1.9% | 2.51x | 0 |
 | standard | classic | 6 | 17.1 / 17.5 / 18.2 | 33 / 33 | 7.33 / 7.29 | 86.2% | 0.6% | 3.25x | 0 |
-| standard | frenzy | 3 | 9.2 / 9.5 / 9.8 | - | 7.67 / 7.66 | 89.6% | 0.0% | 1.78x | 0 |
-| standard | frenzy | 4 | 12.5 / 12.8 / 13.2 | - | 7.50 / 7.48 | 92.1% | 0.0% | 2.03x | 0 |
-| standard | frenzy | 5 | 10.5 / 10.8 / 11.0 | - | 7.60 / 7.54 | 93.2% | 0.0% | 2.18x | 0 |
-| standard | frenzy | 6 | 12.6 / 13.0 / 13.4 | - | 7.50 / 7.46 | 92.7% | 0.0% | 2.27x | 0 |
+| standard | frenzy | 3 | 6.0 / 6.3 / 6.5 | - | 7.66 / 7.63 | 89.2% | 0.0% | 1.82x | 0 |
+| standard | frenzy | 4 | 8.3 / 8.6 / 9.0 | - | 7.50 / 7.49 | 92.1% | 0.0% | 2.04x | 0 |
+| standard | frenzy | 5 | 7.8 / 8.1 / 8.3 | - | 7.60 / 7.56 | 92.6% | 0.0% | 2.23x | 0 |
+| standard | frenzy | 6 | 9.5 / 9.7 / 10.0 | - | 7.50 / 7.46 | 92.8% | 0.0% | 2.35x | 0 |
 
-Misses (ASSUMED, accepted for now): Frenzy Quick 4 players 8.2 min (target 6-8); Frenzy Standard 3 players 9.2 min (target 10-15; 8 cards per player and 2 bays cannot fill more at 40-55 s per auction); Quick collection share 64-76% (Frenzy 71-76%, just above 70%); Standard collection share 86-93% (accepted up to ~95% pending playtest); score spread above 4x at Quick Classic 5-6 players (4.3x, 6.7x) and Frenzy Quick 6 players (4.0x). Classic Standard 3 players sits at the 50-round cap (median 50, so the cap ends the game and 12.2 min is near the lower target edge); auto-skip is 4.3% (Standard) and 4.4% (Quick) at 3 players. Bot-pacing results are in the PR description.
+Misses (ASSUMED, accepted for now): Quick collection share 64-76% (Frenzy 70-76%, slightly above 70%); Standard collection share 86-93% (accepted up to ~95% pending playtest); score spread above 4x at Quick Classic 5-6 players (4.3x, 6.7x) and Frenzy Quick 6 players (4.03x). Classic Standard 3 players sits at the 50-round cap (median 50, so the cap ends the game and 12.2 min is near the lower target edge); auto-skip is 4.3% (Standard) and 4.4% (Quick) at 3 players. Bot-pacing results are in the PR description.

@@ -210,8 +210,8 @@ export function evaluate(r: BatchResult): Check[] {
   const [lo, hi] =
     r.mode === 'frenzy'
       ? r.length === 'quick'
-        ? [6, 8]
-        : [10, 15]
+        ? [3.5, 7]
+        : [5.5, 10]
       : r.length === 'quick'
         ? [8, 12]
         : r.players === 3

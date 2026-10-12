@@ -77,3 +77,9 @@ Part 2: human-pacing mode in tools/sim; tune LENGTH_PRESETS; update docs 01 s8-9
 - Next: docs 01 s8-9, 02 (targets, s2/s4/s7), 04 progress-bar note, sim README, 1000-game runs, PR body.
 - Done (slice 2): docs 01 s8-9, 02 (s2, s4, s5 targets, s7 results), one-line 04 note, sim README, 1000-game human + bot runs. Final presets: see config.ts. Misses: Frenzy Quick 4p 8.2 min, Frenzy Standard 3p 9.2 min, collection share (Quick Frenzy 71-76%, Standard 86-93% accepted), spread >4x at Quick Classic 5-6p and Frenzy Quick 6p.
 - Next: pre-PR review by caller; real pack rerun after WS2.
+
+## Part 4: Frenzy bays revert (branch ws1-bays-revert, pushes to ws1-length-presets; PR #6)
+- Branch / base: `ws1-bays-revert` from `origin/ws1-length-presets`.
+- Done: user rejected fewer Frenzy bays (2026-10-11). Removed `FRENZY_BAYS_BY_PLAYERS` (config, setup); Frenzy uses `BAYS_BY_PLAYERS` (3 bays 3-4p, 4 bays 5-6p). Timers/decks unchanged. New sim Frenzy targets Quick 3.5-7 min, Standard 5.5-10 min (measured: Quick 4.0/5.5/5.3/6.3, Standard 6.0/8.3/7.8/9.5 for 3-6p). Classic unchanged (re-run 1000 games). Docs 01 s8-9, 02 updated, Frenzy replay snapshot regenerated, sim README.
+- Next: update PR #6 body; pre-PR review by caller; real pack rerun after WS2.
+- Gotchas: Frenzy 3p Quick median is 4.0 min, at the low edge of the range.

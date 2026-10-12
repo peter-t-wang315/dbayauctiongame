@@ -18,8 +18,6 @@ export interface LengthPreset {
   DECK_BY_PLAYERS: Record<PlayerCount, DeckSpec>;
   /** R7. */
   ROUNDS_BY_PLAYERS: Record<PlayerCount, number>;
-  /** R1 for Frenzy (02 section 2): fewer bays stretch the same deck over more auction slots. */
-  FRENZY_BAYS_BY_PLAYERS: Record<PlayerCount, number>;
   /** F2: a Frenzy bay's open timer is uniform in [min, max]. */
   frenzyOpenMinMs: number;
   frenzyOpenMaxMs: number;
@@ -51,7 +49,6 @@ const QUICK: LengthPreset = {
     5: { items: 26, displayCase: 2, gift: 2, catsInPlay: 6 },
     6: { items: 31, displayCase: 3, gift: 2, catsInPlay: 6 },
   },
-  FRENZY_BAYS_BY_PLAYERS: { 3: 2, 4: 2, 5: 3, 6: 4 },
   ROUNDS_BY_PLAYERS: { 3: 52, 4: 36, 5: 23, 6: 19 },
   frenzyOpenMinMs: 35000,
   frenzyOpenMaxMs: 50000,
@@ -74,7 +71,6 @@ const STANDARD: LengthPreset = {
     5: { items: 35, displayCase: 3, gift: 2, catsInPlay: 6 },
     6: { items: 42, displayCase: 3, gift: 3, catsInPlay: 6 },
   },
-  FRENZY_BAYS_BY_PLAYERS: { 3: 2, 4: 2, 5: 3, 6: 3 },
   ROUNDS_BY_PLAYERS: { 3: 50, 4: 50, 5: 42, 6: 33 },
   frenzyOpenMinMs: 40000,
   frenzyOpenMaxMs: 55000,
