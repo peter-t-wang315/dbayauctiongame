@@ -63,6 +63,27 @@ export class Room extends Server<Env> {
       const other = await this.ctx.storage.list({ prefix: 'state:v', limit: 1 });
       if (other.size > 0) this.incompatible = true;
     });
+    this.reconcileConnections();
+  }
+
+  /**
+   * After a process restart/crash the stored `connected` flags can outlive the sockets (no close
+   * event ever ran), which would block auto-pass, host migration and the all-disconnected expiry.
+   * Mark every human with no live socket as disconnected. Hibernation wake-ups keep their sockets,
+   * so those humans stay connected.
+   */
+  private reconcileConnections(): void {
+    if (!this.state) return;
+    const live = new Set<string>();
+    for (const c of this.getConnections<ConnState>()) {
+      if (c.state?.playerId) live.add(c.state.playerId);
+    }
+    const stale = this.state.players.filter((p) => !p.isBot && p.connected && !live.has(p.id));
+    if (stale.length === 0) return;
+    this.apply(
+      stale.map((p) => ({ type: 'disconnect' as const, playerId: p.id })),
+      Date.now(),
+    );
   }
 
   // ------------------------------------------------------------------ HTTP (internal only)
