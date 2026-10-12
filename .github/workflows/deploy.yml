@@ -35,8 +35,12 @@ jobs:
       #   WORKER_HOST_PREVIEW  preview Worker host, e.g. dbay-server-preview.<acct>.workers.dev
       #   SMOKE_ORIGIN         an origin in the target Worker's ALLOWED_ORIGINS, e.g. https://dbay.vercel.app
       #   SMOKE_ORIGIN_PREVIEW optional override for preview (preview allows https://*.vercel.app)
-      WORKER_HOST: ${{ inputs.environment == 'preview' && vars.WORKER_HOST_PREVIEW || vars.WORKER_HOST }}
-      SMOKE_ORIGIN: ${{ inputs.environment == 'preview' && (vars.SMOKE_ORIGIN_PREVIEW || vars.SMOKE_ORIGIN) || vars.SMOKE_ORIGIN }}
+      # Picked per environment in the smoke step (shell), so a missing preview var fails loudly
+      # instead of falling back to the production host.
+      WORKER_HOST_PROD: ${{ vars.WORKER_HOST }}
+      WORKER_HOST_PREVIEW: ${{ vars.WORKER_HOST_PREVIEW }}
+      SMOKE_ORIGIN_PROD: ${{ vars.SMOKE_ORIGIN }}
+      SMOKE_ORIGIN_PREVIEW: ${{ vars.SMOKE_ORIGIN_PREVIEW }}
     steps:
       - name: Check deploy credentials
         id: guard
@@ -74,8 +78,13 @@ jobs:
       - name: Smoke test deployed Worker
         if: steps.guard.outputs.enabled == 'true'
         run: |
-          if [ -z "$WORKER_HOST" ] || [ -z "$SMOKE_ORIGIN" ]; then
-            echo "::error::Set repository variables WORKER_HOST (production) or WORKER_HOST_PREVIEW (preview), and SMOKE_ORIGIN (docs/07-deploy-checklist.md)."
+          if [ "$WORKER_ENV" = preview ]; then
+            H="$WORKER_HOST_PREVIEW"; O="${SMOKE_ORIGIN_PREVIEW:-$SMOKE_ORIGIN_PROD}"; NAME=WORKER_HOST_PREVIEW
+          else
+            H="$WORKER_HOST_PROD"; O="$SMOKE_ORIGIN_PROD"; NAME=WORKER_HOST
+          fi
+          if [ -z "$H" ] || [ -z "$O" ]; then
+            echo "::error::Set repository variables $NAME and SMOKE_ORIGIN (docs/07-deploy-checklist.md)."
             exit 1
           fi
-          pnpm --filter @dbay/smoke start "$WORKER_HOST"
+          SMOKE_ORIGIN="$O" pnpm --filter @dbay/smoke start "$H"
