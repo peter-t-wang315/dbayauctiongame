@@ -2,7 +2,7 @@
 // refill (R21), Gift resolution (R28-R31), and mode flows (R7-R14, R17-R18, R22-R24, F1-F8).
 // Every function here mutates the (already cloned) state it is given; engine.ts owns cloning.
 import type { CardId, ErrorCode, PlayerId } from '@dbay/protocol';
-import { CONFIG, type PlayerCount } from './config';
+import { CONFIG, presetOf, type PlayerCount } from './config';
 import type { PackIndex } from './pack';
 import { nextFloat, shuffle } from './rng';
 import type {
@@ -363,8 +363,9 @@ function settleDisconnected(state: EngineState, ctx: Ctx, t: number): void {
 
 function openBay(state: EngineState, bay: EngineBay, t: number): void {
   const u =
-    CONFIG.frenzyOpenMinMs +
-    nextFloat(state.rng, 'closes') * (CONFIG.frenzyOpenMaxMs - CONFIG.frenzyOpenMinMs);
+    presetOf(state.length).frenzyOpenMinMs +
+    nextFloat(state.rng, 'closes') *
+      (presetOf(state.length).frenzyOpenMaxMs - presetOf(state.length).frenzyOpenMinMs);
   bay.openedAt = t;
   bay.closesAt = t + Math.round(u * scaleOf(state));
   bay.idleExpiries = 0;

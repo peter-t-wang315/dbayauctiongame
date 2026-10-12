@@ -2,7 +2,7 @@
 // Changing anything here is a contract change (docs/06-workstreams.md, "Contract-change process").
 import { z } from 'zod';
 
-export const PROTOCOL_VERSION = 1;
+export const PROTOCOL_VERSION = 2;
 /** Max inbound frame size in bytes (05 section 6). */
 export const MAX_INBOUND_BYTES = 2048;
 
@@ -27,6 +27,11 @@ export type PlayerColor = z.infer<typeof PlayerColorSchema>;
 export const MIN_PLAYERS = 3;
 export const MAX_PLAYERS = 6;
 export const BID_WINDOW_OPTIONS = [3000, 5000, 8000] as const;
+/** Game length preset (01 section 8). Independent of mode. Absent in opts means 'standard'. */
+export const LENGTH_OPTIONS = ['quick', 'standard'] as const;
+export const GameLengthSchema = z.enum(LENGTH_OPTIONS);
+export type GameLength = z.infer<typeof GameLengthSchema>;
+export const DEFAULT_LENGTH: GameLength = 'standard';
 
 export const ErrorCodeSchema = z.enum([
   'BAD_MESSAGE',
@@ -137,6 +142,7 @@ export const ClientMsgSchema = z.discriminatedUnion('t', [
     mode: z.enum(['classic', 'frenzy']).optional(),
     relaxed: z.boolean().optional(),
     bidWindowMs: z.union([z.literal(3000), z.literal(5000), z.literal(8000)]).optional(),
+    length: GameLengthSchema.optional(),
   }),
   z.object({ t: z.literal('addBot'), seq: Seq }),
   z.object({ t: z.literal('rmBot'), seq: Seq, playerId: PlayerIdSchema }),
@@ -167,6 +173,8 @@ export const PlayerViewSchema = z.object({
     mode: z.enum(['classic', 'frenzy']),
     relaxed: z.boolean(),
     bidWindowMs: z.number().int().positive(),
+    /** Absent means 'standard' (older servers). */
+    length: GameLengthSchema.optional(),
   }),
   me: PlayerIdSchema,
   hostId: PlayerIdSchema,

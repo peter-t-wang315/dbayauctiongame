@@ -77,7 +77,12 @@ function estOf(card: string): number {
 export class MockRoom {
   phase: PlayerView['phase'] = 'lobby';
   stage: 'bidding' | 'gifts' = 'bidding';
-  opts: PlayerView['opts'] = { mode: 'classic', relaxed: false, bidWindowMs: 5000 };
+  opts: PlayerView['opts'] = {
+    mode: 'classic',
+    relaxed: false,
+    bidWindowMs: 5000,
+    length: 'standard',
+  };
   players: MockPlayer[] = [];
   hostId = '';
   bays: MockBay[] = [];
@@ -240,6 +245,7 @@ export class MockRoom {
           mode: msg.mode ?? this.opts.mode,
           relaxed: msg.relaxed ?? this.opts.relaxed,
           bidWindowMs: msg.bidWindowMs ?? this.opts.bidWindowMs,
+          length: msg.length ?? this.opts.length,
         };
         return null;
       case 'addBot':

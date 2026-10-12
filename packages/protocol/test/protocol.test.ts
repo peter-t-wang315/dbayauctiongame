@@ -27,7 +27,14 @@ const validClient: Record<ClientMsg['t'], ClientMsg> = {
   giftGive: { t: 'giftGive', seq: 4, item: 'toys-pink-snake' },
   rename: { t: 'rename', seq: 5, name: 'Pat' },
   start: { t: 'start', seq: 6 },
-  setOpts: { t: 'setOpts', seq: 7, mode: 'frenzy', relaxed: true, bidWindowMs: 8000 },
+  setOpts: {
+    t: 'setOpts',
+    seq: 7,
+    mode: 'frenzy',
+    relaxed: true,
+    bidWindowMs: 8000,
+    length: 'quick',
+  },
   addBot: { t: 'addBot', seq: 8 },
   rmBot: { t: 'rmBot', seq: 9, playerId: 'b1' },
   kick: { t: 'kick', seq: 10, playerId: 'p3' },
@@ -62,6 +69,7 @@ const invalidClient: Record<ClientMsg['t'], unknown[]> = {
   setOpts: [
     { t: 'setOpts', seq: 1, mode: 'turbo' },
     { t: 'setOpts', seq: 1, bidWindowMs: 4000 },
+    { t: 'setOpts', seq: 1, length: 'long' },
   ],
   addBot: [{ t: 'addBot' }],
   rmBot: [{ t: 'rmBot', seq: 1 }],
@@ -73,7 +81,7 @@ export const sampleView: PlayerView = {
   code: 'K7QMX',
   phase: 'playing',
   stage: 'bidding',
-  opts: { mode: 'classic', relaxed: false, bidWindowMs: 5000 },
+  opts: { mode: 'classic', relaxed: false, bidWindowMs: 5000, length: 'standard' },
   me: 'p1',
   hostId: 'p1',
   myHand: [
@@ -223,6 +231,15 @@ describe('server messages', () => {
     for (const bad of invalidServer) {
       expect(parseServerFrame(JSON.stringify(bad)).ok).toBe(false);
     }
+  });
+  it('opts.length: optional (absent = standard), quick/standard accepted, others rejected', () => {
+    const snap = (opts: unknown) =>
+      JSON.stringify({ t: 'snap', rev: 1, now: 0, view: { ...sampleView, opts } });
+    const base = { mode: 'classic', relaxed: false, bidWindowMs: 5000 };
+    expect(parseServerFrame(snap(base)).ok).toBe(true);
+    expect(parseServerFrame(snap({ ...base, length: 'quick' })).ok).toBe(true);
+    expect(parseServerFrame(snap({ ...base, length: 'standard' })).ok).toBe(true);
+    expect(parseServerFrame(snap({ ...base, length: 'epic' })).ok).toBe(false);
   });
   it('a snapshot of the sample view stays under 5KB', () => {
     expect(JSON.stringify({ t: 'snap', rev: 1, now: 0, view: sampleView }).length).toBeLessThan(

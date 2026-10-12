@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { fixturePack } from '@dbay/content';
 import { CATEGORY_IDS } from '@dbay/protocol';
-import { CONFIG, type PlayerCount } from '../src/config';
+import { LENGTH_PRESETS, type PlayerCount } from '../src/config';
 import { indexPack } from '../src/pack';
 import { hashString, initRng, nextFloat, shuffle } from '../src/rng';
 import { scoreCards, scoreGame } from '../src/scoring';
@@ -47,7 +47,7 @@ describe('R3/R4 deck build', () => {
   it.each([3, 4, 5, 6] as PlayerCount[])('R4: deck for %i players follows the table', (n) => {
     const s = initState(idx, mkSetup(n), 0);
     const all = [...s.bays.map((b) => b.card as string), ...s.deck];
-    const spec = CONFIG.DECK_BY_PLAYERS[n];
+    const spec = LENGTH_PRESETS.standard.DECK_BY_PLAYERS[n];
     expect(all).toHaveLength(spec.items + spec.displayCase + spec.gift);
     expect(new Set(all).size).toBe(all.length);
     const items = all.filter((id) => idx.cards.get(id)?.kind === 'item');

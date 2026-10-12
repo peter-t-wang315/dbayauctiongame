@@ -143,7 +143,7 @@ ClientMsg =
 
   // Host-only (rejected with NOT_HOST otherwise)
   | { t:"start";   seq:number }                                // uses the lobby opts; needs >= 3 seats
-  | { t:"setOpts"; seq:number; mode?:"classic"|"frenzy"; relaxed?:boolean; bidWindowMs?:3000|5000|8000 }
+  | { t:"setOpts"; seq:number; mode?:"classic"|"frenzy"; relaxed?:boolean; bidWindowMs?:3000|5000|8000; length?:"quick"|"standard" }
   | { t:"addBot";  seq:number }
   | { t:"rmBot";   seq:number; playerId:string }
   | { t:"kick";    seq:number; playerId:string }
@@ -176,7 +176,7 @@ PlayerView = {
   code: string
   phase: "lobby" | "playing" | "reveal" | "ended"
   stage?: "bidding" | "gifts"          // only while phase = "playing" (engine phases; 01 section 6)
-  opts: { mode:"classic"|"frenzy"; relaxed:boolean; bidWindowMs:number }   // Relaxed x1.5 is applied server-side to deadlines
+  opts: { mode:"classic"|"frenzy"; relaxed:boolean; bidWindowMs:number; length?:"quick"|"standard" /* absent = standard */ }   // Relaxed x1.5 is applied server-side to deadlines
   me: PlayerId
   hostId: PlayerId
   myHand: Array<{ id:CardId; kind:"value"|"proxy"; value?:number /* absent for proxy */; onBay?:number /* bay idx if currently committed */ }>
@@ -253,6 +253,18 @@ view(state, playerId) -> PlayerView                  // pure, in room-core; the 
 - Wrapper is the only caller of `Date.now()`.
 - The DO handles one message at a time; wrap wake-up load in `blockConcurrencyWhile`.
 - Never log hidden values during a game; log only `{room, event, rev}` JSON.
+
+### 7.1 Engine API used by room-core (SPEC)
+
+```
+// SPEC (not code). `@dbay/engine` exports `engine` (the real rules engine; `stubEngine` stays for tests).
+GameSetup = { seed; mode; bidWindowMs; relaxed; length?: "quick"|"standard" /* default standard */; players:[...] }
+Engine.botAction(state, playerId, now, level?: "random"|"greedy"|"careful" /* default careful */) -> EngineAction | null
+Engine.revealDelayMs(state) -> number     // R37: time in phase `reveal` before `ended`
+```
+
+- `length` is a lobby option (`setOpts`, `PlayerView.opts.length`), independent of mode. It selects a constants preset in `packages/engine/src/config.ts` (`LENGTH_PRESETS`): deck table, Classic rounds, Frenzy timers (01 section 8-9, 02 section 4).
+- room-core passes `opts.length` into `GameSetup`; protocol version 2 added the field (see `packages/protocol/CHANGELOG.md`).
 
 ## 8. Room lifecycle
 

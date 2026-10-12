@@ -1,8 +1,17 @@
 // Engine contract consumed by room-core (WS3a) and implemented by WS1.
 // Changing these types is a contract change (docs/06-workstreams.md).
-import type { CardId, ErrorCode, EventKind, PlayerId, PlayerView } from '@dbay/protocol';
+import type {
+  CardId,
+  ErrorCode,
+  EventKind,
+  GameLength,
+  PlayerId,
+  PlayerView,
+} from '@dbay/protocol';
 
 export type Mode = 'classic' | 'frenzy';
+/** Bot skill (docs/06 WS1). room-core uses 'careful' unless the room says otherwise. */
+export type BotLevel = 'random' | 'greedy' | 'careful';
 export type Stage = 'bidding' | 'gifts' | 'done';
 export type RngStream = 'deck' | 'calls' | 'closes' | 'misc';
 
@@ -78,6 +87,8 @@ export interface EngineState {
   mode: Mode;
   bidWindowMs: number;
   relaxed: boolean;
+  /** Game length preset; absent in states from older snapshots means 'standard'. */
+  length?: GameLength;
   stage: Stage;
   players: EnginePlayer[];
   bays: EngineBay[];
@@ -118,6 +129,8 @@ export interface GameSetup {
   mode: Mode;
   bidWindowMs: number;
   relaxed: boolean;
+  /** Game length preset (lobby option). Default 'standard'. */
+  length?: GameLength;
   /** In seat order. 3-6 players. */
   players: Array<{ id: PlayerId; isBot: boolean; connected: boolean }>;
 }
@@ -136,6 +149,13 @@ export interface Engine {
   nextDeadline(state: EngineState): number | null;
   /** Valid only when stage === 'done'. */
   score(state: EngineState): ScoreResult;
-  /** A bot seat's next action from public information only, or null to wait. */
-  botAction(state: EngineState, player: PlayerId, now: number): EngineAction | null;
+  /** A bot seat's next action from public information only, or null to wait. `level` defaults to 'careful'. */
+  botAction(
+    state: EngineState,
+    player: PlayerId,
+    now: number,
+    level?: BotLevel,
+  ): EngineAction | null;
+  /** R37: how long the `reveal` phase lasts before `ended`, from the final state. */
+  revealDelayMs(state: EngineState): number;
 }
