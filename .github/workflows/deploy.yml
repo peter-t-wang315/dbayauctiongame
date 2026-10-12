@@ -1,0 +1,90 @@
+name: Deploy Worker
+
+# Deploys apps/server to Cloudflare and smoke-tests the result. Skips cleanly (green, no deploy)
+# when the CLOUDFLARE_API_TOKEN secret is absent, so it is safe on forks and before setup.
+# Setup steps: docs/07-deploy-checklist.md. Never deploy during a playtest (drops all sockets).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/server/**'
+      - 'packages/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Worker environment'
+        type: choice
+        options: [production, preview]
+        default: production
+
+concurrency:
+  group: deploy-${{ inputs.environment || 'production' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      WORKER_ENV: ${{ inputs.environment || 'production' }}
+      # Repository variables (Settings > Secrets and variables > Actions > Variables):
+      #   WORKER_HOST          production Worker host, no scheme, e.g. dbay-server.<acct>.workers.dev
+      #   WORKER_HOST_PREVIEW  preview Worker host, e.g. dbay-server-preview.<acct>.workers.dev
+      #   SMOKE_ORIGIN         an origin in the target Worker's ALLOWED_ORIGINS, e.g. https://dbay.vercel.app
+      #   SMOKE_ORIGIN_PREVIEW optional override for preview (preview allows https://*.vercel.app)
+      # Picked per environment in the smoke step (shell), so a missing preview var fails loudly
+      # instead of falling back to the production host.
+      WORKER_HOST_PROD: ${{ vars.WORKER_HOST }}
+      WORKER_HOST_PREVIEW: ${{ vars.WORKER_HOST_PREVIEW }}
+      SMOKE_ORIGIN_PROD: ${{ vars.SMOKE_ORIGIN }}
+      SMOKE_ORIGIN_PREVIEW: ${{ vars.SMOKE_ORIGIN_PREVIEW }}
+    steps:
+      - name: Check deploy credentials
+        id: guard
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "CLOUDFLARE_API_TOKEN not set: skipping deploy."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.guard.outputs.enabled == 'true'
+      - uses: pnpm/action-setup@v4 # version comes from package.json "packageManager"
+        if: steps.guard.outputs.enabled == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.guard.outputs.enabled == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        if: steps.guard.outputs.enabled == 'true'
+
+      - name: Typecheck and test server
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          pnpm --filter @dbay/server typecheck
+          pnpm --filter @dbay/server test
+
+      - name: Deploy Worker
+        if: steps.guard.outputs.enabled == 'true'
+        working-directory: apps/server
+        run: pnpm exec wrangler deploy --env "$WORKER_ENV"
+
+      - name: Smoke test deployed Worker
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          if [ "$WORKER_ENV" = preview ]; then
+            H="$WORKER_HOST_PREVIEW"; O="${SMOKE_ORIGIN_PREVIEW:-$SMOKE_ORIGIN_PROD}"; NAME=WORKER_HOST_PREVIEW
+          else
+            H="$WORKER_HOST_PROD"; O="$SMOKE_ORIGIN_PROD"; NAME=WORKER_HOST
+          fi
+          if [ -z "$H" ] || [ -z "$O" ]; then
+            echo "::error::Set repository variables $NAME and SMOKE_ORIGIN (docs/07-deploy-checklist.md)."
+            exit 1
+          fi
+          SMOKE_ORIGIN="$O" pnpm --filter @dbay/smoke start "$H"

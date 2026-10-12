@@ -1,0 +1,15 @@
+{
+  "name": "@dbay/smoke",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "echo \"no typecheck (plain .mjs)\"",
+    "lint": "eslint .",
+    "test": "echo \"smoke is run explicitly: pnpm --filter @dbay/smoke start [host]\"",
+    "start": "node src/smoke.mjs"
+  },
+  "dependencies": {
+    "ws": "8.22.0"
+  }
+}
