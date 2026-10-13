@@ -346,7 +346,7 @@ Sound-off must lose no information: every row above has a text line in the statu
 | `MoreSheet` (tabs) | players, collections, log, settings | game |
 | `StatusStrip` | event text, round pips, ⋯ | game |
 | `EventLog` | last 30 events | game |
-| `TurnBanner` / `TimerBar` | turn + countdown | game |
+| `StatusStrip` (merged HUD) | turn, event text, clock, Pass, timer bar, menu | game |
 | `BayGrid` / `Bay` | layout + bay anatomy | game |
 | `BidChip`, `TopBid` | animated number + bidder | game |
 | `SoldStamp` | slam animation | game |
