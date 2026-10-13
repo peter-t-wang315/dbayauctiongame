@@ -303,3 +303,59 @@ a {
     transition: none;
   }
 }
+
+/* ---------- lobby ---------- */
+/* Names must not truncate next to HOST/YOU/BOT tags: tags wrap to a second line instead. */
+.lobby-players .chip {
+  flex-wrap: wrap;
+  row-gap: 4px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+.lobby-players .chip__name {
+  flex: 1 1 auto;
+  min-width: 4ch;
+}
+/* Guest view of host-only settings: keep the selected value full strength, mute the rest. */
+.seg--readonly .seg__opt:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.seg--readonly .seg__opt[aria-pressed='false']:disabled {
+  background: transparent;
+  color: var(--text-dim);
+  border-style: dashed;
+}
+
+/* ---------- landing ---------- */
+.lot-row {
+  display: flex;
+  justify-content: center;
+  gap: var(--s-2);
+  max-width: 100%;
+}
+.lot-row__lot {
+  display: block;
+  padding: 4px;
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--r-chip);
+  box-shadow: var(--shadow);
+  line-height: 0;
+}
+.lot-row__lot > span {
+  display: block;
+}
+.landing-pitch {
+  margin: 0;
+  max-width: 28ch;
+  text-align: center;
+  font: 700 18px/1.35 var(--font-body);
+  color: var(--text);
+}
+.btn--outline {
+  background: transparent;
+  color: var(--text);
+  box-shadow: none;
+  min-width: 160px;
+}
