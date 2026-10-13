@@ -4,6 +4,14 @@ import { crossedSecond, deriveFx } from './events';
 import { parseSettings } from './settings';
 import { patternFor } from './haptics';
 import { sfxFor } from './plan';
+import { centre, flyCard } from './fly';
+
+describe('flyCard', () => {
+  it('centres a rect and is a no-op without elements', () => {
+    expect(centre({ left: 10, top: 20, width: 40, height: 20 })).toEqual({ x: 30, y: 30 });
+    expect(() => flyCard(null, null, '$10')).not.toThrow();
+  });
+});
 
 type Bay = PlayerView['bays'][number];
 const bay = (idx: number, card: string | null, top: { by: string; value?: number } | null): Bay =>
