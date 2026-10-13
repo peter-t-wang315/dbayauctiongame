@@ -117,6 +117,8 @@ export const CONFIG = {
   PROXIES_PER_PLAYER: 2,
   // R1
   BAYS_BY_PLAYERS: { 3: 3, 4: 3, 5: 4, 6: 4 } satisfies Record<PlayerCount, number>,
+  // R18b: consecutive full rounds with no accepted bid before every bay is cleared (user decision 2026-10-12)
+  NO_BID_ROUNDS_TO_CLEAR: { 3: 2, 4: 1, 5: 1, 6: 1 } satisfies Record<PlayerCount, number>,
   // R11-R13
   bidWindowMs: 5000,
   relaxedMultiplier: 1.5,

@@ -7,6 +7,7 @@
 - Slice 1: sim metrics (bay wait first bid to sale, no-bid clears per game).
 - Slice 2: engine R18b (no-bid round clears all Classic bays) and R17 age term (`ageBonusPerCycle`), tests, replay snapshot, mock-server mirror.
 - Slice 3: docs 01 (R17, R18b, section 9) and 02 (sections 5, 7), final constants, before/after tables.
+- Slice 4 (user decisions 2026-10-12): accept shorter Classic games (02 section 5 ranges, sim ranges); R18b needs 2 quiet rounds at 3p (`NO_BID_ROUNDS_TO_CLEAR`).
 
 ## In progress
 - Nothing; PR open, awaiting review (do not merge).

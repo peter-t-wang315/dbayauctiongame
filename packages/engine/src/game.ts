@@ -263,7 +263,8 @@ function noBidRoundClear(
   fresh: readonly EngineBay[],
 ): void {
   if (callNo % players !== 0 || callNo >= state.callsTotal) return;
-  if (callNo - (state.lastBidCallNo ?? 0) < players) return; // a bid landed in this round
+  const quiet = CONFIG.NO_BID_ROUNDS_TO_CLEAR[players as PlayerCount];
+  if (callNo - (state.lastBidCallNo ?? 0) < players * quiet) return; // a bid landed recently
   const cleared: EngineBay[] = [];
   for (const bay of state.bays) {
     if (bay.card === null || fresh.includes(bay)) continue;

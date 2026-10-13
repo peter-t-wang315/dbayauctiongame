@@ -239,6 +239,12 @@ export function runBatch(o: BatchOptions): BatchResult {
   };
 }
 
+/** docs/02 section 5: Classic game-length target (min) per preset and player count. */
+const CLASSIC_RANGE: Record<string, Record<number, [number, number]>> = {
+  quick: { 3: [4, 6], 4: [6, 8.5], 5: [7.5, 10], 6: [9, 12] },
+  standard: { 3: [5, 8], 4: [8, 11], 5: [10.5, 14], 6: [13.5, 18] },
+};
+
 export interface Check {
   name: string;
   value: string;
@@ -259,9 +265,8 @@ export function evaluate(r: BatchResult): Check[] {
         : [5.5, 10]
       : r.length === 'quick'
         ? [8, 12]
-        : r.players === 3
-          ? [12, 15]
-          : [15, 25];
+        : // user decision 2026-10-12: accept shorter Classic games after the R17 age bonus (docs/02 section 5)
+          (CLASSIC_RANGE[r.length]?.[r.players] ?? [8, 25]);
   const add = (name: string, value: string, status: Check['status'], target: string) =>
     checks.push({ name, value, status, target });
   add(

@@ -33,11 +33,11 @@ function passUntil(s: EngineState, n: number, events: GameEvent[]): EngineState 
 
 describe('R18b no-bid round clears every bay', () => {
   it('R18b: a full round of passes discards empty bays unsold and refills them in bay order', () => {
-    const g = newGame(3);
+    const g = newGame(4);
     const before = g.state.bays.map((b) => b.card);
     const deckTop = g.state.deck.slice(0, before.length);
     const events: GameEvent[] = [];
-    const s = passUntil(g.state, 3, events);
+    const s = passUntil(g.state, 4, events);
     const unsold = events.filter((e) => e.kind === 'unsold');
     expect(unsold.map((e) => e.bay)).toEqual([0, 1, 2]);
     expect(unsold.map((e) => e.card)).toEqual(before);
@@ -52,7 +52,7 @@ describe('R18b no-bid round clears every bay', () => {
   });
 
   it('R18b: bays holding bids from earlier rounds are cleared too; cards return, nobody wins', () => {
-    const g = newGame(3);
+    const g = newGame(4);
     const s0 = clone(g.state);
     stackOn(s0, 0, [
       ['p1', v(50)],
@@ -61,7 +61,7 @@ describe('R18b no-bid round clears every bay', () => {
     const handsBefore = s0.players.map((p) => p.hand.length);
     const itemBefore = s0.bays[0]!.card;
     const events: GameEvent[] = [];
-    const s = passUntil(s0, 3, events);
+    const s = passUntil(s0, 4, events);
     expect(s.bays[0]!.stack).toEqual([]);
     expect(s.bays[0]!.card).not.toBe(itemBefore);
     expect(kinds(events)).not.toContain('sold');
@@ -78,25 +78,25 @@ describe('R18b no-bid round clears every bay', () => {
   });
 
   it('R18b: an accepted bid anywhere in the round prevents the clear', () => {
-    const g = newGame(3);
+    const g = newGame(4);
     let s = g.state;
     const events: GameEvent[] = [];
     const p = caller(s);
     s = act(s, { type: 'bid', player: p, card: 'v10', bay: 1 }, T(s)).state;
     s = engine.tick(s, engine.nextDeadline(s)!).state; // gap -> call 2
-    s = passUntil(s, 3, events);
+    s = passUntil(s, 4, events);
     expect(kinds(events)).not.toContain('unsold');
     expect(s.bays[1]!.stack).toHaveLength(1);
   });
 
   it('R18b: not in the final round (R22 sweeps) and not mid-round', () => {
-    const g = newGame(3);
+    const g = newGame(4);
     const s0 = clone(g.state);
     // jump to the start of the final round: callsDone = callsTotal - 3
-    s0.callsDone = s0.callsTotal - 3;
+    s0.callsDone = s0.callsTotal - 4;
     s0.colorBag = [];
     const events: GameEvent[] = [];
-    const s = passUntil(s0, s0.callsTotal - 1, events); // two calls into the last round
+    const s = passUntil(s0, s0.callsTotal - 2, events); // two calls into the last round
     expect(kinds(events)).not.toContain('unsold');
     const done = runAllPass(s, events);
     // the sweep discards the (still empty) bays without the noBidRound tag
@@ -107,20 +107,20 @@ describe('R18b no-bid round clears every bay', () => {
   });
 
   it('R18b: no clear when every bay is already null (R23 ends the game first)', () => {
-    const g = newGame(3);
+    const g = newGame(4);
     const s0 = clone(g.state);
     s0.deck = [];
     for (const b of s0.bays) b.card = null;
     const events: GameEvent[] = [];
-    const s = passUntil(s0, 3, events);
+    const s = passUntil(s0, 4, events);
     expect(kinds(events)).not.toContain('unsold');
     expect(s.stage).not.toBe('bidding');
   });
 
   it('R18b: bays refilled on the same call are not cleared', () => {
-    const g = newGame(3);
+    const g = newGame(4);
     const s0 = clone(g.state);
-    s0.callsDone = 2; // the next call is the third of round 1
+    s0.callsDone = 3; // the next call is the last of round 1
     s0.colorBag = [];
     // bay 0 is old enough to be force-closed on this call
     stackOn(s0, 0, [['p1', v(50)]]);
@@ -138,6 +138,36 @@ describe('R18b no-bid round clears every bay', () => {
     expect(soldBay0Card).toBe(g.state.deck[0]);
   });
 
+  it('R18b: 3 players need two quiet rounds; one quiet round does not clear', () => {
+    const g = newGame(3);
+    expect(CONFIG.NO_BID_ROUNDS_TO_CLEAR[3]).toBe(2);
+    const events: GameEvent[] = [];
+    const one = passUntil(g.state, 3, events);
+    expect(kinds(events)).not.toContain('unsold');
+    expect(one.bays.map((b) => b.card)).toEqual(g.state.bays.map((b) => b.card));
+    const two = passUntil(one, 6, events);
+    expect(events.filter((e) => e.extra === 'noBidRound').map((e) => e.bay)).toEqual([0, 1, 2]);
+    expect(two.bays.map((b) => b.card)).toEqual(g.state.deck.slice(0, 3));
+  });
+
+  it('R18b: at 3 players a bid in either quiet round resets the count', () => {
+    const g = newGame(3);
+    const events: GameEvent[] = [];
+    let s = passUntil(g.state, 3, events);
+    s = engine.tick(s, engine.nextDeadline(s)!).state; // gap -> next call
+    s = act(s, { type: 'bid', player: caller(s), card: 'v10', bay: 2 }, T(s)).state;
+    s = engine.tick(s, engine.nextDeadline(s)!).state;
+    passUntil(s, 6, events);
+    expect(kinds(events)).not.toContain('unsold');
+  });
+
+  it('R18b: 4 players clear after one quiet round', () => {
+    expect(CONFIG.NO_BID_ROUNDS_TO_CLEAR[4]).toBe(1);
+    const events: GameEvent[] = [];
+    passUntil(newGame(4).state, 4, events);
+    expect(events.filter((e) => e.extra === 'noBidRound')).toHaveLength(3);
+  });
+
   it('R18b: deterministic, and an all-pass game still terminates with consistent cards', () => {
     const a = runAllPass(newGame(4, 'classic', 'nobid').state);
     const b = runAllPass(newGame(4, 'classic', 'nobid').state);
@@ -147,7 +177,7 @@ describe('R18b no-bid round clears every bay', () => {
   });
 
   it('R18b: Frenzy is unaffected (no noBidRound events)', () => {
-    const g = newGame(3, 'frenzy');
+    const g = newGame(4, 'frenzy');
     const events: GameEvent[] = [];
     let s = g.state;
     let guard = 0;

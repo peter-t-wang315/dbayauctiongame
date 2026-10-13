@@ -378,6 +378,7 @@ export class MockRoom {
     this.sales = 0;
     this.bidThisRound = false;
     this.callsThisRound = 0;
+    this.quietRounds = 0;
     this.log = [];
     this.giftLog = [];
     this.reveal = undefined;
@@ -433,6 +434,7 @@ export class MockRoom {
   private gapUntil = 0;
   private bidThisRound = false;
   private callsThisRound = 0;
+  private quietRounds = 0;
 
   /** Mirrors 01 R18b roughly: a whole round without a bid clears every bay but those just refilled. */
   private noBidRoundClear(fresh: MockBay[]) {
@@ -440,7 +442,9 @@ export class MockRoom {
     const had = this.bidThisRound;
     this.callsThisRound = 0;
     this.bidThisRound = false;
-    if (had || this.round.last) return;
+    this.quietRounds = had ? 0 : this.quietRounds + 1;
+    if (this.quietRounds < (this.players.length === 3 ? 2 : 1) || this.round.last) return;
+    this.quietRounds = 0;
     const cleared = this.bays.filter((b) => b.card && !fresh.includes(b));
     for (const bay of cleared) {
       for (const s of bay.stack) this.players.find((p) => p.id === s.by)?.hand.push(s.card);
