@@ -29,12 +29,13 @@ export function PlayerGrid({
   return (
     <>
       <ul
+        className="lobby-players"
         style={{
           listStyle: 'none',
           margin: 0,
           padding: 0,
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
           gap: 8,
         }}
       >

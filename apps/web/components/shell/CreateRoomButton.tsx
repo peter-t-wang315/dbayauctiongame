@@ -2,6 +2,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { createRoom } from '../../lib/net/config';
+import { gotoRoom } from './gotoRoom';
 
 /** "Create a new room" for terminal cards: makes a room and navigates to it. */
 export function CreateRoomButton({ label = 'Create a new room' }: { label?: string }) {
@@ -12,7 +13,7 @@ export function CreateRoomButton({ label = 'Create a new room' }: { label?: stri
     setBusy(true);
     setFailed(false);
     const res = await createRoom();
-    if (res.ok) return router.push(`/r/${res.code}`);
+    if (res.ok) return gotoRoom(router, res.code);
     setBusy(false);
     setFailed(true);
   };

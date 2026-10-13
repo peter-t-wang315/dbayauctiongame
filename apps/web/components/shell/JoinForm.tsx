@@ -36,6 +36,9 @@ export function JoinForm() {
       <h1 style={{ margin: 0, font: '400 28px/1.2 var(--font-display)' }}>
         Room <span style={{ letterSpacing: 3 }}>{room.code}</span>
       </h1>
+      <p className="hint" style={{ margin: 0 }}>
+        You&apos;re invited to a dBay auction. Pick a name to take a seat.
+      </p>
       <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }} noValidate>
         {staleSeat && (
           <p className="hint" role="status">
