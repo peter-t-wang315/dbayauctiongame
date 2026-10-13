@@ -58,7 +58,7 @@ export function RevealScreen({ view }: { view: PlayerView }) {
               aria-label={p ? `${p.name}'s items` : 'Items'}
             >
               <h2 className="rv-player__head">
-                {done && <span className="rv-player__rank" aria-label={`Rank ${rank}`}>{rank}</span>}
+                {done && <span className="rv-player__rank"><span className="sr-only">Rank </span>{rank}</span>}
                 {p && <PlayerChip color={p.color} shape={p.shape} name={r.id === view.me ? `${p.name} (you)` : p.name} />}
                 {winner && (
                   <span className="rv-crown" role="img" aria-label="Winner">
@@ -102,7 +102,6 @@ export function RevealScreen({ view }: { view: PlayerView }) {
           </section>
         )}
       </div>
-
 
       <footer className="rv-actions">
         {/* R37: Rematch is offered as soon as the standings show. */}

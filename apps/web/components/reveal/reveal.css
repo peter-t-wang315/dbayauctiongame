@@ -102,15 +102,13 @@
   grid-row: 1 / span 3;
   align-self: start;
 }
-.rv-card__vals {
-  grid-column: 2;
-}
 .rv-card__actual {
   font-size: 17px;
 }
 .rv-card__vals {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  grid-column: 2;
 }
 .rv-card__est {
   color: var(--text-dim);
