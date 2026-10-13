@@ -13,3 +13,25 @@
 [data-fx='reveal-flip'] {
   backface-visibility: hidden;
 }
+
+/* Ghost card flying from the hand to the bay that took the bid (lib/fx/fly.ts). */
+.fx-fly {
+  position: fixed;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  pointer-events: none;
+  font: 400 20px/1 var(--font-display);
+  color: var(--ink);
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--r-chip);
+  box-shadow: var(--shadow);
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx-fly {
+    display: none;
+  }
+}
