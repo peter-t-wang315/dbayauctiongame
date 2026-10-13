@@ -59,13 +59,14 @@ Classic close-roll constants (`pBase`, `pMax`, `maxBayAgeCycles`) per player cou
 Run with bots over many seeds (at least 1000 per mode and player count). Bot skill levels: random, greedy, careful.
 | Metric | Target | Hard limit |
 |---|---|---|
-| Game length, median (simulated clock, **human pacing**, section 6) | Classic Quick 8-12 min; Classic Standard 15-25 min (3 players 12-15, accepted shorter); Frenzy Quick 3.5-7 min; Frenzy Standard 5.5-10 min (intentionally shorter than Classic, ASSUMED) | game always terminates, < 40 min |
+| Game length, median (simulated clock, **human pacing**, section 6) | Classic (user decision 2026-10-12: accept shorter games after the R17 age bonus; deck sizes unchanged), Quick: 3p 4-6, 4p 6-8.5, 5p 7.5-10, 6p 9-12 min; Classic Standard: 3p 5-8, 4p 8-11, 5p 10.5-14, 6p 13.5-18 min; Frenzy Quick 3.5-7 min; Frenzy Standard 5.5-10 min (intentionally shorter than Classic, ASSUMED) | game always terminates, < 40 min |
 | Classic rounds played | <= ~50 (prefer fewer); report max per cell | - |
+| Classic bay wait (rounds from a bay's first bid to its sale), p95 | <= ~4 rounds (user decision 2026-10-12, ASSUMED; before: 6-8 rounds at 3-4 players); sim reports median / p95 / max | - |
 | Items won per player (average) | >= 3 (deck gives ~5-6 Quick, ~7-8 Standard) | no seat averages < 2 |
 | Players dry before last 25% of game | < 20% of players | - |
 | Players with >= 1 collection | Quick 30-70%; Standard: accepted up to ~95% pending playtest (ASSUMED, structural at ~8 cards per player and 6 categories) | Quick outside 15-85% = fail; Standard > 98% = fail |
 | Winner share among seats (same skill) | within 1/players +/- 8 points | - |
-| Share of items discarded unsold | < 10% | - |
+| Share of items discarded unsold (includes no-bid round clears, 01 R18b) | < 10% | - |
 | Share of sales that are Proxy wins | 10-30% | - |
 | Gift fizzles | < 5% of Gifts | - |
 | Score spread (winner/last) | 1.2x-4x | - |
@@ -104,3 +105,38 @@ Smarter bots (2026-10-11, branch bots-smarter). All three bot levels now share o
 Mixed bots (random, greedy, careful, careful seats cycled; 500 games per cell, same seeds before and after, real pack, human pacing). Auto-skip, old to new: Quick 3p 9.2% to 3.7%, 4p 8.5% to 3.2%, 5p 3.3% to 1.4%, 6p 0.7% to 0.2%; Standard 3p 18.8% to 4.5%, 4p 14.3% to 3.5%, 5p 10.1% to 4.0%, 6p 5.7% to 1.9%. Win share per seat across the 16 mode x length x players cells (fair = 1/n): the ratio between the best and the worst skill level was 12x on average and up to 101x (old Standard Frenzy 6p: careful 30.4% per seat, random 0.3%); it is now 1.8x on average and at most 2.3x, and the mean distance of a level from its fair share fell from 9.8 to 4.9 points. Careful is still the strongest on average, random the weakest on purpose (a casual player); greedy is slightly ahead at 3 players. Example, Standard 4p Classic win share per seat, old to new: random 12.8% to 14.4%, greedy 18.8% to 29.4%, careful 34.2% to 28.1% (fair 25%).
 
 Misses (ASSUMED, accepted for now): Quick collection share 67-75% (Classic 67-71%, Frenzy 74-75%, slightly above 70%; smarter bots chase collections a little better); Standard collection share 84-93% (accepted up to ~95% pending playtest); score spread above 4x at Quick Classic 6 players (5.3x) and Quick Frenzy 6 players (4.8x). Classic auto-skip (careful bots) is below the limit everywhere (highest: Standard 3p 4.4% of 8%, Standard 4p 4.1% and 5p 4.2% of 5%). Bot-pacing results are in the PR description.
+
+### Stale bays: no-bid round clear and age-based close (2026-10-12, branch rules-stale-bays; user decision, ASSUMED)
+Two rule changes (01 R17 age term, R18b no-bid round clear; the clear needs 2 quiet rounds at 3 players, 1 at 4-6). 300 games per cell, same seeds before and after, real pack, human pacing, Classic. "Bay wait" = rounds from a bay's first bid to its sale. Frenzy is unchanged. User decision 2026-10-12: accept shorter Classic games after the R17 age bonus (targets in section 5 updated; decks unchanged).
+
+All-careful bots:
+| cell | length min median/p95 before | after | bay wait rounds median/p95 before | after | no-bid clears/game | autoskip before | after | unsold after | collect after |
+|---|---|---|---|---|---|---|---|---|---|
+| quick 3p | 8.2 / 9.1 | 4.8 / 5.6 | 6.00 / 6.00 | 2.00 / 4.00 | 0.25 | 3.7% | 1.2% | 1.8% | 66.6% |
+| quick 4p | 10.5 / 11.7 | 6.7 / 7.5 | 3.50 / 5.00 | 1.75 / 3.25 | 1.07 | 3.2% | 1.0% | 8.5% | 62.3% |
+| quick 5p | 8.8 / 9.8 | 8.0 / 9.0 | 1.80 / 3.00 | 1.40 / 3.00 | 0.44 | 1.6% | 1.2% | 2.5% | 66.9% |
+| quick 6p | 9.9 / 10.2 | 9.7 / 10.2 | 1.33 / 3.00 | 1.17 / 3.00 | 0.12 | 0.3% | 0.8% | 1.3% | 69.4% |
+| standard 3p | 12.2 / 12.7 | 6.1 / 6.8 | 8.00 / 8.00 | 2.00 / 3.67 | 0.35 | 5.0% | 1.8% | 1.9% | 88.0% |
+| standard 4p | 16.5 / 17.1 | 8.9 / 9.9 | 5.75 / 6.00 | 1.75 / 3.25 | 1.27 | 4.1% | 1.2% | 7.7% | 83.8% |
+| standard 5p | 15.1 / 17.1 | 11.3 / 12.7 | 2.80 / 5.00 | 1.80 / 4.00 | 0.95 | 4.5% | 1.5% | 5.5% | 86.3% |
+| standard 6p | 16.7 / 17.3 | 14.5 / 15.9 | 1.83 / 4.00 | 1.50 / 3.83 | 0.74 | 2.9% | 2.2% | 3.3% | 87.3% |
+
+Mixed bots (random, greedy, careful, careful cycled):
+| cell | length min median/p95 before | after | bay wait rounds median/p95 before | after | no-bid clears/game | autoskip before | after | unsold after | collect after |
+|---|---|---|---|---|---|---|---|---|---|
+| quick 3p | 8.3 / 9.8 | 5.1 / 5.9 | 6.00 / 6.00 | 2.00 / 4.00 | 0.26 | 4.1% | 1.3% | 2.0% | 58.2% |
+| quick 4p | 10.6 / 11.9 | 7.0 / 7.9 | 3.50 / 5.00 | 1.75 / 3.25 | 0.89 | 3.3% | 1.0% | 7.0% | 58.3% |
+| quick 5p | 9.0 / 10.0 | 8.2 / 9.2 | 1.80 / 3.00 | 1.40 / 3.00 | 0.38 | 1.5% | 1.2% | 1.8% | 60.0% |
+| quick 6p | 9.9 / 10.2 | 9.9 / 10.2 | 1.33 / 3.00 | 1.17 / 3.00 | 0.05 | 0.2% | 0.5% | 1.6% | 60.7% |
+| standard 3p | 12.2 / 12.7 | 6.4 / 7.5 | 8.00 / 8.00 | 2.00 / 3.67 | 0.47 | 4.7% | 1.7% | 2.8% | 82.1% |
+| standard 4p | 16.6 / 17.1 | 9.1 / 10.3 | 5.75 / 6.00 | 1.75 / 3.25 | 1.23 | 3.7% | 1.2% | 7.6% | 78.2% |
+| standard 5p | 15.4 / 17.4 | 11.8 / 13.1 | 2.80 / 5.00 | 1.80 / 4.00 | 0.94 | 4.2% | 1.4% | 5.1% | 83.6% |
+| standard 6p | 16.9 / 17.4 | 15.0 / 16.7 | 1.83 / 4.00 | 1.50 / 3.83 | 0.54 | 1.8% | 1.7% | 2.0% | 81.9% |
+
+
+Findings:
+- Bay wait p95 is 3.0-4.0 rounds everywhere (before: 3-8; the old median at 3-4 players was the forced-close cap itself). Meets the <= ~4 rounds target.
+- Classic games are shorter at 3-5 players: bays now turn over in about 2 rounds, so the deck is spent well before the round cap (decks cannot grow: 6x10 pack shared with Frenzy). Accepted by the user; section 5 ranges follow these results.
+- 3 players: requiring 2 quiet rounds keeps unsold at about 2% (with a 1-round clear it was 15-16%) and collection share at 67% Quick / 88% Standard.
+- Unsold share: highest 8.5% (Quick 4p), all < 10%. Auto-skip fell everywhere (cards no longer sit locked on stale bays): all cells <= 2.2%.
+- Standard collection share 84-88% is inside the accepted ~95%.

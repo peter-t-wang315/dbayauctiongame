@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CONFIG, LENGTH_PRESETS } from '../src/config';
+import { CONFIG, LENGTH_PRESETS, closeProbability } from '../src/config';
 import { topOf } from '../src/game';
 import type { BidCard, EngineState, GameEvent, StackEntry } from '../src/types';
 import {
@@ -56,7 +56,7 @@ describe('R7 rounds', () => {
       expect(g.state.callsTotal).toBe(rounds * n);
       expect(g.state.round.of).toBe(rounds);
       const events: GameEvent[] = [...g.events];
-      const end = runAllPass(g.state, events);
+      const end = runAllPass(g.state, events, true);
       expect(end.callsDone).toBe(rounds * n);
       const turns = events.filter((e) => e.kind === 'turn').map((e) => e.by);
       expect(turns).toHaveLength(rounds * n);
@@ -88,7 +88,7 @@ describe('R9 announcements', () => {
   it('R9: Halfway at the start of round floor(rounds/2)+1, Last round at the final round, Game over after the sweep', () => {
     const g = newGame(3);
     const events: GameEvent[] = [...g.events];
-    runAllPass(g.state, events);
+    runAllPass(g.state, events, true);
     const ks = kinds(events);
     const turnIdx = (k: number) => {
       let seen = -1;
@@ -332,7 +332,7 @@ describe('R17 close roll', () => {
       true,
     );
   });
-  it('R17: probability rises from about pBase to pMax over the game (closes stream)', () => {
+  it('R17: probability follows ramp + age term over the game (closes stream)', () => {
     const base = newGame(3).state;
     const rate = (callsDone: number) => {
       let sold = 0;
@@ -346,9 +346,10 @@ describe('R17 close roll', () => {
       }
       return sold / N;
     };
-    const { pBase, pMax } = LENGTH_PRESETS.standard.CLOSE_BY_PLAYERS[3];
+    const spec = LENGTH_PRESETS.standard.CLOSE_BY_PLAYERS[3];
     const total = base.callsTotal;
-    const expected = (callsDone: number) => pBase + ((pMax - pBase) * (callsDone + 1)) / total;
+    // the bay was first bid on the previous call: one call (= 1/3 cycle) old, so the age term applies
+    const expected = (callsDone: number) => closeProbability(spec, callsDone + 1, total, 1 / 3);
     const late = total - 3;
     expect(Math.abs(rate(0) - expected(0))).toBeLessThan(0.012);
     expect(Math.abs(rate(late) - expected(late))).toBeLessThan(0.012);
@@ -366,9 +367,9 @@ describe('R18 unbid items', () => {
     const g = newGame(3);
     const cards = g.state.bays.map((b) => b.card);
     const events: GameEvent[] = [];
-    // all-pass until the final round starts: no sale, no refill
+    // all-pass until the end of the first round (R18b clears the bays after that): no sale, no refill
     let s = g.state;
-    while (s.callsDone < s.callsTotal - 1) {
+    while (s.callsDone < 2) {
       const r = engine.tick(s, engine.nextDeadline(s)!);
       s = r.state;
       events.push(...r.events);

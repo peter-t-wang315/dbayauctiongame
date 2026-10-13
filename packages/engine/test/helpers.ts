@@ -76,12 +76,18 @@ export function toGifts(state: EngineState, now = T0): EngineState {
 }
 
 /** Run a whole game with all-pass actions by waiting out each window; returns final state. */
-export function runAllPass(state: EngineState, events: GameEvent[] = []): EngineState {
+export function runAllPass(
+  state: EngineState,
+  events: GameEvent[] = [],
+  /** Pretend a bid landed on every call so the no-bid round clear (R18b) never fires. */
+  noClear = false,
+): EngineState {
   let s = state;
   let guard = 0;
   while (s.stage === 'bidding' && guard++ < 10000) {
     const d = engine.nextDeadline(s);
     if (d === null) break;
+    if (noClear) s = { ...s, lastBidCallNo: s.callsDone + 1 };
     const r = engine.tick(s, d);
     s = r.state;
     events.push(...r.events);

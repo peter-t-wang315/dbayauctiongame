@@ -3,6 +3,8 @@ export {
   CONFIG,
   LENGTH_PRESETS,
   presetOf,
+  closeProbability,
+  type CloseSpec,
   type LengthPreset,
   type DeckSpec,
   type EngineConfig,

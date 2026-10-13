@@ -101,6 +101,8 @@ export interface EngineState {
   call: Call | null;
   callsDone: number;
   callsTotal: number;
+  /** Classic: number of the last call (1-based) that placed an accepted bid; absent = none yet (01 R18b). */
+  lastBidCallNo?: number;
   round: { n: number; of: number; halfway: boolean; last: boolean };
   /** Game-wide sale sequence (01 R28). */
   saleSeq: number;

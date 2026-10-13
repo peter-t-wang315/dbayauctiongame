@@ -38,6 +38,22 @@ export interface CloseSpec {
   pBase: number;
   pMax: number;
   maxBayAgeCycles: number;
+  /**
+   * R17: extra close probability per full cycle (= players calls) since the bay's first bid, so
+   * older bays close sooner; the total p is capped at 1. maxBayAgeCycles stays the hard cap.
+   */
+  ageBonusPerCycle: number;
+}
+
+/** R17: p = pBase + (pMax - pBase) x callNo / callsTotal + ageBonusPerCycle x ageCycles, in [0, 1]. */
+export function closeProbability(
+  spec: CloseSpec,
+  callNo: number,
+  callsTotal: number,
+  ageCycles: number,
+): number {
+  const ramp = spec.pBase + ((spec.pMax - spec.pBase) * callNo) / callsTotal;
+  return Math.min(1, ramp + spec.ageBonusPerCycle * Math.max(0, ageCycles));
 }
 
 // ASSUMED (docs/01 section 8-9, docs/02 section 4). Tuned with `tools/sim` under human pacing.
@@ -56,10 +72,10 @@ const QUICK: LengthPreset = {
   frenzyIdleRecheckMs: 15000,
   frenzyMaxMs: 600000,
   CLOSE_BY_PLAYERS: {
-    3: { pBase: 0.005, pMax: 0.12, maxBayAgeCycles: 6 },
-    4: { pBase: 0.005, pMax: 0.12, maxBayAgeCycles: 5 },
-    5: { pBase: 0.05, pMax: 0.15, maxBayAgeCycles: 3 },
-    6: { pBase: 0.05, pMax: 0.15, maxBayAgeCycles: 3 },
+    3: { pBase: 0.005, pMax: 0.02, maxBayAgeCycles: 4, ageBonusPerCycle: 0.12 },
+    4: { pBase: 0.005, pMax: 0.02, maxBayAgeCycles: 4, ageBonusPerCycle: 0.12 },
+    5: { pBase: 0.05, pMax: 0.15, maxBayAgeCycles: 3, ageBonusPerCycle: 0.04 },
+    6: { pBase: 0.05, pMax: 0.15, maxBayAgeCycles: 3, ageBonusPerCycle: 0.04 },
   },
 };
 
@@ -78,10 +94,10 @@ const STANDARD: LengthPreset = {
   frenzyIdleRecheckMs: 15000,
   frenzyMaxMs: 1080000,
   CLOSE_BY_PLAYERS: {
-    3: { pBase: 0.005, pMax: 0.03, maxBayAgeCycles: 8 },
-    4: { pBase: 0.005, pMax: 0.05, maxBayAgeCycles: 6 },
-    5: { pBase: 0.03, pMax: 0.085, maxBayAgeCycles: 5 },
-    6: { pBase: 0.04, pMax: 0.1, maxBayAgeCycles: 4 },
+    3: { pBase: 0.005, pMax: 0.02, maxBayAgeCycles: 4, ageBonusPerCycle: 0.12 },
+    4: { pBase: 0.005, pMax: 0.03, maxBayAgeCycles: 4, ageBonusPerCycle: 0.12 },
+    5: { pBase: 0.03, pMax: 0.085, maxBayAgeCycles: 4, ageBonusPerCycle: 0.04 },
+    6: { pBase: 0.04, pMax: 0.1, maxBayAgeCycles: 4, ageBonusPerCycle: 0.03 },
   },
 };
 
@@ -101,6 +117,8 @@ export const CONFIG = {
   PROXIES_PER_PLAYER: 2,
   // R1
   BAYS_BY_PLAYERS: { 3: 3, 4: 3, 5: 4, 6: 4 } satisfies Record<PlayerCount, number>,
+  // R18b: consecutive full rounds with no accepted bid before every bay is cleared (user decision 2026-10-12)
+  NO_BID_ROUNDS_TO_CLEAR: { 3: 2, 4: 1, 5: 1, 6: 1 } satisfies Record<PlayerCount, number>,
   // R11-R13
   bidWindowMs: 5000,
   relaxedMultiplier: 1.5,

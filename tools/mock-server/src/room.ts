@@ -327,6 +327,7 @@ export class MockRoom {
     const prevTop = this.top(bay);
     bay.stack.push({ by: p.id, card });
     bay.lastBidAt = now;
+    this.bidThisRound = true;
     this.event('bid', {
       by: p.id,
       card: bay.card ?? undefined,
@@ -375,6 +376,9 @@ export class MockRoom {
     this.phase = 'playing';
     this.stage = 'bidding';
     this.sales = 0;
+    this.bidThisRound = false;
+    this.callsThisRound = 0;
+    this.quietRounds = 0;
     this.log = [];
     this.giftLog = [];
     this.reveal = undefined;
@@ -414,15 +418,45 @@ export class MockRoom {
 
   private endCall(now: number) {
     // Fake close roll: each bay with bids closes with 35% chance (the real rules are 01 R17).
+    const sold: MockBay[] = [];
     for (const bay of this.bays) {
-      if (bay.stack.length && Math.random() < 0.35) this.sell(bay);
+      if (bay.stack.length && Math.random() < 0.35) {
+        this.sell(bay);
+        sold.push(bay);
+      }
     }
+    this.noBidRoundClear(sold);
     if (this.finishedBidding()) return this.toGifts(now);
     this.turnIdx++;
     this.turn = { player: this.turn!.player, color: this.turn!.color, phase: 'gap' };
     this.gapUntil = now + 1200;
   }
   private gapUntil = 0;
+  private bidThisRound = false;
+  private callsThisRound = 0;
+  private quietRounds = 0;
+
+  /** Mirrors 01 R18b roughly: a whole round without a bid clears every bay but those just refilled. */
+  private noBidRoundClear(fresh: MockBay[]) {
+    if (++this.callsThisRound < this.players.length) return;
+    const had = this.bidThisRound;
+    this.callsThisRound = 0;
+    this.bidThisRound = false;
+    this.quietRounds = had ? 0 : this.quietRounds + 1;
+    if (this.quietRounds < (this.players.length === 3 ? 2 : 1) || this.round.last) return;
+    this.quietRounds = 0;
+    const cleared = this.bays.filter((b) => b.card && !fresh.includes(b));
+    for (const bay of cleared) {
+      for (const s of bay.stack) this.players.find((p) => p.id === s.by)?.hand.push(s.card);
+      this.event('unsold', { card: bay.card ?? undefined, bay: bay.idx, extra: 'noBidRound' });
+      bay.stack = [];
+      bay.card = null;
+    }
+    for (const bay of cleared) {
+      bay.card = this.deck.shift() ?? null;
+      if (bay.card) this.event('refill', { bay: bay.idx, card: bay.card });
+    }
+  }
 
   private sell(bay: MockBay) {
     const top = this.top(bay)!;
