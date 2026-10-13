@@ -61,7 +61,12 @@ export function StatusStrip({
           onClick={onOpenLog}
           aria-label={`${title}. Open event log`}
         >
-          <span className="g-strip__title" data-fx="turn-banner">
+          {/* Stable e2e/fx hook: data-fx="turn-banner" carries data-mine on my turn (tools/e2e relies on it). */}
+          <span
+            className="g-strip__title"
+            data-fx="turn-banner"
+            data-mine={mine ? 'true' : undefined}
+          >
             <span className="g-strip__who">{title}</span>
             {sub && <span className="g-strip__sub">{sub}</span>}
           </span>
