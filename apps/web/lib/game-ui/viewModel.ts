@@ -1,7 +1,7 @@
 // View-model mapping from PlayerView (+ public content) to what the game components render.
 // Pure: no React, no clock. Text strings come from the table in docs/04 section 4.5.
 import type { CategoryId, PlayerView } from '@dbay/protocol';
-import { CATEGORIES, CATEGORY_SPRITES, ITEM_SPRITES, getPublicCard } from '@dbay/content/public';
+import { CATEGORIES, CATEGORY_SPRITES, ITEM_SPRITES, SPECIAL_SPRITES, getPublicCard } from '@dbay/content/public';
 import type { Sprite } from '@dbay/content/public';
 
 export type PlayerInfo = PlayerView['players'][number];
@@ -60,7 +60,7 @@ export function cardInfo(id: string | null): CardInfo | null {
     est: c.fixedValue ?? null,
     special: c.type,
     flavor: c.flavor,
-    sprite: null,
+    sprite: c.sprite ?? SPECIAL_SPRITES[c.type],
   };
 }
 
