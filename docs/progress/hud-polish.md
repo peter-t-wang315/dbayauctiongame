@@ -14,7 +14,7 @@
 - Nothing. e2e game, fx, polish, a11y passed locally (19 passed, 1 skipped gift) on alternate ports 3400/8797 via a temporary config copy (not committed).
 
 ## Next
-- Main session: pre-PR review; update docs/04 section 4.1/4.5/4.6 if the merged HUD is accepted; before/after screenshots.
+- Main session: pre-PR review; before/after screenshots. (docs/04 4.1/4.2/4.5/4.6 and the winning-bay text are updated.)
 
 ## Gotchas / decisions
 - Docs 04 section 4.5/4.6 list a 44px strip plus 52px banner; the merged bar is ~94px (two 44px rows collapsed into one text button + right cluster). Update docs/04 if the layout is accepted.
