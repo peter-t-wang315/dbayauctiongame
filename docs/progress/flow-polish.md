@@ -4,7 +4,8 @@
 `fix/create-room-and-flow` off origin/main (e8a3c6a). Files: `apps/web/app/**`, `components/shell/**`, `components/lobby/**`.
 
 ## Done
-- Task 1: create-room hang. Root cause: the Next dev server blocks hydration/RSC for non-localhost origins (127.0.0.1, LAN IP) unless listed in `allowedDevOrigins`; the click then did nothing / `router.push` never landed. Fixed with `allowedDevOrigins` in `next.config.ts` plus a hard-navigation fallback (`components/shell/gotoRoom.ts`) used by the landing and "Create a new room" buttons.
+- Task 1: create-room hang. NOT reproduced (create landed on /r/CODE every time on localhost); likely stale dev-server state. Added a safety net: `allowedDevOrigins` (a separate dev issue for 127.0.0.1/LAN origins; does not affect localhost) and a hard-navigation fallback (`components/shell/gotoRoom.ts`, only fires if the pathname is unchanged, warns in the console) used by the landing and "Create a new room" buttons.
+- Pre-PR review round 1 blockers fixed: docs/04 updated, length hint matches docs/02 (rounded outward, unit-tested in `lengthHint.test.ts`), gotoRoom race.
 - Task 2: landing lot row (5 item sprites), pitch line, outlined "How to play", higher-contrast tagline.
 - Task 5: lobby names no longer truncated (single column on phones, tags wrap); guest settings chips read as intentional read-only.
 - Task 6: lobby length hint uses PR #21 targets per player count.

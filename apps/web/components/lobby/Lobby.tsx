@@ -5,23 +5,7 @@ import { MoreSheet } from '../shell/MoreSheet';
 import { useRoom } from '../../lib/net/useRoom';
 import type { SendResult } from '../../lib/net/client';
 import { PlayerGrid } from './PlayerGrid';
-
-// Median game length ranges in minutes from docs/02 section 5 (human pacing, after PR #21).
-// Classic: [quick, standard] per player count 3..6; Frenzy does not vary with player count.
-const CLASSIC_MIN: Record<number, [string, string]> = {
-  3: ['4-6', '5-8'],
-  4: ['6-8', '8-11'],
-  5: ['8-10', '11-14'],
-  6: ['9-12', '14-18'],
-};
-const FRENZY_MIN: [string, string] = ['4-7', '6-10'];
-
-export function lengthHint(classic: boolean, length: 'quick' | 'standard', seats: number): string {
-  const i = length === 'quick' ? 0 : 1;
-  const n = Math.min(6, Math.max(3, seats));
-  const range = classic ? CLASSIC_MIN[n]![i] : FRENZY_MIN[i];
-  return classic ? `About ${range} min with ${n} players.` : `About ${range} min.`;
-}
+import { lengthHint } from './lengthHint';
 
 const ERROR_COPY: Record<string, string> = {
   NOT_HOST: 'Only the host can do that.',
@@ -106,7 +90,7 @@ export function Lobby() {
           <span className="label" id="mode-l">
             Mode
           </span>
-          <div className={isHost ? "seg" : "seg seg--readonly"} role="group" aria-labelledby="mode-l">
+          <div className={isHost ? 'seg' : 'seg seg--readonly'} role="group" aria-labelledby="mode-l">
             {(['classic', 'frenzy'] as const).map((m) => (
               <button
                 key={m}
@@ -125,7 +109,7 @@ export function Lobby() {
           <span className="label" id="len-l">
             Game length
           </span>
-          <div className={isHost ? "seg" : "seg seg--readonly"} role="group" aria-labelledby="len-l">
+          <div className={isHost ? 'seg' : 'seg seg--readonly'} role="group" aria-labelledby="len-l">
             {(['quick', 'standard'] as const).map((l) => (
               <button
                 key={l}
@@ -148,7 +132,7 @@ export function Lobby() {
           <span className="label" id="win-l">
             Bid window {classic ? '' : '(Classic only)'}
           </span>
-          <div className={isHost ? "seg" : "seg seg--readonly"} role="group" aria-labelledby="win-l">
+          <div className={isHost ? 'seg' : 'seg seg--readonly'} role="group" aria-labelledby="win-l">
             {BID_WINDOW_OPTIONS.map((ms) => (
               <button
                 key={ms}
