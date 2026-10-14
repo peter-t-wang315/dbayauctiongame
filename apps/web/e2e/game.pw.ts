@@ -123,7 +123,7 @@ test('Frenzy 4 bays at 390x844: timers show, bid without waiting for a turn', as
   }
 });
 
-test('Desktop 1280x800: docked sidebar, one row of bays and cards, keyboard bid', async ({
+test('Desktop 1280x800: podiums, big bays, card rack, persistent rail, keyboard bid', async ({
   browser,
 }) => {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
@@ -131,6 +131,10 @@ test('Desktop 1280x800: docked sidebar, one row of bays and cards, keyboard bid'
   await startGame(page, 'Classic', 2);
   await expect(page.locator('.g-side')).toBeVisible();
   await expect(page.getByRole('button', { name: /Menu: players/ })).toBeHidden();
+  await expect(page.locator('[data-fx="podium"]')).toHaveCount(3);
+  await expect(page.locator('[data-fx="key-legend"]')).toBeVisible();
+  // Rail: sets + log open by default; L collapses and expands the log.
+  await expect(page.locator('#g-rail-log')).toBeVisible();
   const ys = await page
     .locator('[data-fx="bay"]')
     .evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
@@ -139,6 +143,17 @@ test('Desktop 1280x800: docked sidebar, one row of bays and cards, keyboard bid'
     .locator('[data-fx="hand-card"]')
     .evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
   expect(new Set(cardYs).size).toBe(1);
+  // Integer sprite scale (96px = 8x) and no page scroll.
+  const sprite = await page
+    .locator('[data-fx="bay"] .g-sprite')
+    .first()
+    .evaluate((e) => e.getBoundingClientRect().width);
+  expect(sprite - 8).toBe(96); // 96px art + 2x(2px padding + 2px border)
+  expect(await layout(page)).toMatchObject({ hScroll: false, vScroll: false, inner: false });
+  await page.keyboard.press('l');
+  await expect(page.locator('#g-rail-log')).toBeHidden();
+  await page.keyboard.press('l');
+  await expect(page.locator('#g-rail-log')).toBeVisible();
   await page.screenshot({ path: 'test-results/ws5-desktop.png' });
   await expect(page.getByText(/Your turn, Sam/).first()).toBeVisible({ timeout: 40_000 });
   await page.keyboard.press('3'); // third unspent value card ($50)

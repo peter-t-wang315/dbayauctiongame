@@ -901,35 +901,162 @@
   }
 }
 
-/* ---------- desktop: stage + docked sidebar, one row of bays, one row of cards ---------- */
+/* ---------- desktop (>=1024px): podiums, big bays, card rack, persistent rail (04 section 6) ---------- */
+/* Desktop-only components (Podiums, DesktopRail, KeyLegend) mount only at this width (useDesktop). */
 @media (min-width: 1024px) {
   .g-shell {
-    max-width: 1100px;
+    max-width: 1680px;
+    height: 100dvh;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-columns: minmax(0, 1fr) 340px;
     gap: var(--s-4);
     padding: 0 var(--s-4);
-    align-items: start;
+    align-items: stretch;
   }
-  .g-side {
-    display: block;
-    margin-top: var(--s-3);
-    padding: var(--s-3);
-    max-height: calc(100dvh - var(--s-5));
-    overflow: auto;
-    background: var(--bg);
-    border: var(--border);
-    border-radius: var(--r-bay);
+  .g-screen {
+    height: 100%;
+    max-width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+    gap: var(--s-3);
+    justify-content: flex-start;
   }
   .g-strip__menu {
     display: none;
   }
+  .g-strip__who {
+    font-size: 24px;
+  }
+  .g-strip__msg {
+    font-size: 15px;
+  }
+  .g-progress {
+    width: 96px;
+  }
+  .g-strip__clock {
+    font-size: 36px;
+    min-width: 88px;
+  }
+
+  /* podiums */
+  .g-pods {
+    flex: none;
+    list-style: none;
+    margin: 0;
+    padding: var(--s-2) 0 0;
+    display: grid;
+    grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr));
+    gap: var(--s-3);
+  }
+  .g-pods[data-count='3'] {
+    --n: 3;
+  }
+  .g-pods[data-count='4'] {
+    --n: 4;
+  }
+  .g-pods[data-count='5'] {
+    --n: 5;
+  }
+  .g-pods[data-count='6'] {
+    --n: 6;
+  }
+  .g-pod {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: var(--bg);
+    border: var(--border);
+    border-radius: var(--r-card);
+    overflow: hidden;
+  }
+  .g-pod[data-turn='true'] {
+    transform: translateY(-6px);
+    box-shadow:
+      0 0 0 3px var(--ink),
+      var(--shadow);
+  }
+  .g-pod__head {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-width: 0;
+    padding: 4px var(--s-3);
+    color: var(--ink);
+    background: var(--pc);
+    border-bottom: var(--border);
+    font: 400 18px/1.1 var(--font-display);
+  }
+  .g-pod__name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .g-pod__head .tag {
+    flex: none;
+    font: 800 10px/1 var(--font-body);
+    letter-spacing: 1px;
+    padding: 2px 6px;
+    border: 1.5px solid var(--ink);
+    border-radius: var(--r-pill);
+    background: var(--card);
+  }
+  .g-pod__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1);
+    padding: var(--s-2) var(--s-3) 0;
+  }
+  .g-pod__cards {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-2);
+  }
+  .g-pod__big {
+    font: 400 28px/1 var(--font-display);
+    color: var(--text);
+  }
+  .g-pod__small {
+    font: 800 11px/1.1 var(--font-body);
+    color: var(--text-dim);
+  }
+  .g-pod__won {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 3px;
+    min-height: 28px;
+    max-height: 62px;
+    overflow: hidden;
+  }
+  .g-pod__won .g-sprite {
+    padding: 0;
+    border-width: 1px;
+  }
+  .g-pod__live {
+    margin-top: auto;
+    padding: var(--s-1) var(--s-3) var(--s-2);
+    font: 800 12px/1.1 var(--font-body);
+    color: var(--text);
+  }
+  .g-pod__now {
+    display: inline-block;
+    padding: 1px var(--s-2);
+    background: var(--p-yellow);
+    color: var(--ink);
+    border: 1.5px solid var(--ink);
+    border-radius: var(--r-pill);
+  }
+
+  /* bays: one row, big stacked art (sprites stay at integer scale: 96px = 8x) */
   .g-screen .g-bays,
   .g-screen[data-layout='tile'] .g-bays {
+    flex: 1 1 0;
+    min-height: 0;
     grid-template-columns: repeat(var(--bay-cols, 3), minmax(0, 1fr));
-    grid-auto-rows: minmax(0, 1fr);
-    flex: 0 0 auto;
-    height: 240px;
+    grid-template-rows: minmax(0, 1fr);
+    gap: var(--s-3);
   }
   .g-screen[data-bays='4'] .g-bays {
     --bay-cols: 4;
@@ -937,34 +1064,240 @@
   .g-screen[data-bays='3'] .g-bays {
     --bay-cols: 3;
   }
-  .g-screen {
-    max-width: 100%;
-    height: auto;
-    min-height: 100dvh;
-    justify-content: flex-start;
+  .g-screen .g-bay {
+    padding: var(--s-3);
   }
-  .g-bay--tile .g-cat__label {
+  .g-screen .g-bay .g-bay__body {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: var(--s-2);
+    text-align: center;
+  }
+  .g-screen .g-bay .g-bay__text {
+    flex: none;
+    align-items: center;
+  }
+  /* inline size comes from Bay.tsx (mobile); desktop pins the integer scale */
+  .g-screen .g-bay .g-sprite {
+    width: 96px !important;
+    height: 96px !important;
+  }
+  .g-screen .g-bay .g-bay__name {
+    font-size: 20px;
+  }
+  .g-screen .g-bay .g-bay__est {
+    font-size: 15px;
+  }
+  .g-screen .g-bay .g-bay__bid {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+    min-height: 56px;
+  }
+  .g-screen .g-bay .g-bay__amount,
+  .g-screen .g-bay[data-state='winning'] .g-bay__amount {
+    font-size: 48px;
+  }
+  .g-screen .g-bay .g-bay__none {
+    font-size: 18px;
+  }
+  .g-screen .g-bay .g-bay__bid .chip {
+    min-height: 32px;
+    font-size: 15px;
+  }
+  .g-screen .g-bay .g-cat__label {
     display: inline;
   }
+  .g-screen .g-bay .g-bay__label,
+  .g-screen .g-bay .g-pill,
+  .g-screen .g-bay .g-cat {
+    font-size: 13px;
+  }
+  .g-screen .g-bay .g-bay__timer {
+    height: 28px;
+  }
+  .g-screen .g-bay .g-bay__clock {
+    font-size: 24px;
+  }
+  .g-screen .g-bay .g-sold {
+    font-size: 48px;
+  }
+  /* key cap under the header row, clear of the "tap to bid" hint */
+  .g-screen .g-bay .g-kbd {
+    display: block;
+    position: absolute;
+    top: 48px;
+    right: var(--s-3);
+    bottom: auto;
+    min-width: 22px;
+    padding: 3px 6px;
+    text-align: center;
+    font: 800 12px/1 var(--font-body);
+    color: var(--on-card);
+    background: var(--card);
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    box-shadow: 0 1px 0 var(--ink);
+  }
+  .g-screen .g-bay[data-state='winning'] .g-kbd {
+    top: 56px;
+  }
+
+  /* hand: a card rack under the bays */
   .g-hand {
     grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--s-2);
+    padding: var(--s-4) var(--s-4) var(--s-3);
+    background: var(--navy);
+    border: var(--border);
+    border-radius: var(--r-card);
+    box-shadow: var(--shadow);
   }
   .g-card,
   .g-screen[data-bays='4'] .g-card {
-    height: 80px;
+    height: clamp(76px, 12dvh, 112px);
   }
-  .g-kbd {
+  .g-card__face {
+    font-size: clamp(20px, 1.9vw, 30px);
+  }
+  .g-card__face--proxy {
+    font-size: 12px;
+  }
+  .g-card__proxy-glyph {
+    font-size: 22px;
+  }
+  .g-card[data-state='out'],
+  .g-card[data-state='spent'] {
+    background: var(--bg-muted);
+  }
+  .g-card .g-kbd {
     display: block;
     position: absolute;
-    bottom: 2px;
-    right: 4px;
-    font: 800 10px/1 var(--font-body);
+    bottom: 6px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    font: 800 11px/1 var(--font-body);
+    color: var(--on-card-dim);
+  }
+  .g-card__badge {
+    font-size: 12px;
+  }
+
+  /* keyboard legend */
+  .g-legend {
+    flex: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: var(--s-1) var(--s-4);
+    font: 700 12px/1 var(--font-body);
     color: var(--text-dim);
   }
-  .g-bay .g-kbd {
-    bottom: auto;
-    top: 32px;
-    right: 8px;
+  .g-legend kbd {
+    display: inline-block;
+    min-width: 20px;
+    padding: 2px 5px;
+    text-align: center;
+    font: 800 11px/1.1 var(--font-body);
+    color: var(--on-card);
+    background: var(--card);
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    box-shadow: 0 1px 0 var(--ink);
+  }
+
+  /* persistent right rail */
+  .g-side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    min-height: 0;
+    margin: var(--s-3) 0;
+    overflow: hidden;
+  }
+  .g-rail__sec {
+    flex: none;
+    padding: var(--s-3);
+    background: var(--bg-raised);
+    border: var(--border);
+    border-radius: var(--r-card);
+  }
+  .g-rail__sec--log {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .g-rail__sec--log[data-open='false'] {
+    flex: none;
+  }
+  .g-rail__h {
+    margin: 0 0 var(--s-2);
+    font: 800 11px/1 var(--font-body);
+    letter-spacing: 2px;
+    color: var(--text-dim);
+  }
+  .g-rail__sec--log[data-open='false'] .g-rail__h {
+    margin: 0;
+  }
+  .g-rail__toggle {
+    width: 100%;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    cursor: pointer;
+  }
+  .g-rail__sec .g-log {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    gap: var(--s-1);
+  }
+  .g-rail__sec .g-log li {
+    font-size: 13px;
+  }
+  .g-rail__sec .g-collections {
+    gap: var(--s-1);
+  }
+  .g-rail__sec .g-crow {
+    min-height: 0;
+    padding: 3px var(--s-2);
+    background: var(--bg);
+  }
+  /* axe: opacity fades text below 4.5:1, so dim empty rows with the dim text color instead */
+  .g-rail__sec .g-crow[data-empty='true'] {
+    opacity: 1;
+  }
+  .g-rail__sec .g-crow[data-empty='true'] .g-crow__name {
+    color: var(--text-dim);
+  }
+  .g-rail__sec .g-crow--wild {
+    background: transparent;
+  }
+  .g-rail__sec .g-crow__name {
+    font-size: 13px;
+  }
+  .g-rail__sec .g-collections > .hint {
+    display: none;
+  }
+  .g-rail__foot {
+    flex: none;
+    display: flex;
+    gap: var(--s-2);
+  }
+  .g-rail__foot .btn {
+    flex: 1;
   }
 }
 
@@ -980,6 +1313,12 @@
 }
 .g-screen > .g-hand {
   order: 4;
+}
+.g-screen > .g-pods {
+  order: 1;
+}
+.g-screen > .g-legend {
+  order: 5;
 }
 
 /* ---------- bay wrapper + item details ---------- */
