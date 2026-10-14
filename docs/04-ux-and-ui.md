@@ -282,7 +282,7 @@ All motion is wrapped by `MotionConfig reducedMotion="user"` for Motion, and `@m
 | # | Moment | Timing and easing | Tech | Reduced-motion fallback |
 |---|---|---|---|---|
 | 1 | Bid bump: top-bid number pops, bidder chip flashes | number scale 1 -> 1.25 -> 1 over 280ms spring-ease; chip background flash 200ms | CSS (class toggled via `key` change) | no scale; 150ms color fade only |
-| 2 | Your turn: pulsing border + timer bar in your color; Android vibrate | border pulse 1s ease-in-out infinite (opacity 0.5 -> 1); bar depletes linear | CSS | static 3px border, no pulse; bar still depletes |
+| 2 | Your turn (Classic): 8px frame around the whole screen edge in your color, flashing, plus the timer bar; Android vibrate | frame 1s ease-in-out infinite (opacity 1 -> 0.2, 1 flash/s, under the 3/s limit); bar depletes linear | CSS (`.g-turnframe`, `data-fx="turn-frame"`) | static frame, no flashing; bar still depletes |
 | 3 | Outbid: your chip slides off bay, edge flashes red 300ms | chip translateX 0 -> 40px + fade 250ms; edge `--danger` 300ms | CSS | chip fades out in place; 300ms edge flash kept (single, non-flashing fade) |
 | 4 | Timer: red in last 3s; "+3s" floats up | color transition 200ms at t<=3s; "+3s" translateY 0 -> -20px, fade out 700ms | CSS | color change only; "+3s" appears static for 700ms |
 | 5 | SOLD: stamp slams, card flies into winner's collection | stamp scale 2 -> 1, rotate -8deg, 220ms with overshoot, holds 1.2s; card fades/translates to strip 450ms | Motion (`m`, `AnimatePresence`, `layoutId` for card travel) | stamp fades in 150ms; card swaps without travel |
