@@ -35,6 +35,15 @@ describe('R2 bid cards', () => {
       expect(p.hand).toEqual(s.players[0]?.hand);
     }
   });
+
+  it('R2: bot seats are dealt exactly the same hand as humans', () => {
+    const setup = mkSetup(4);
+    setup.players = setup.players.map((p, i) => ({ ...p, isBot: i > 0 }));
+    const s = initState(idx, setup, 0);
+    const human = s.players.find((p) => !p.isBot)!;
+    expect(s.players.filter((p) => p.isBot)).toHaveLength(3);
+    for (const p of s.players) expect(p.hand).toEqual(human.hand);
+  });
 });
 
 describe('R3/R4 deck build', () => {
