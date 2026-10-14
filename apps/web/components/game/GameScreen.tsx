@@ -9,12 +9,17 @@ import { CollectionStrip } from './Collections';
 import { FxController } from '../fx/FxController';
 import { toggleSound } from '../fx/SoundHapticsToggles';
 import { GiftStep } from '../gift/GiftStep';
+import { DesktopRail } from './DesktopRail';
 import { Hand } from './Hand';
+import { KeyLegend } from './KeyLegend';
+import { Podiums } from './Podiums';
 import { ItemDetailsBody } from './ItemDetails';
 import { MenuPanel, MySets, type MenuTab } from './MenuPanel';
 import { RevealScreen } from '../reveal/RevealScreen';
 import { StatusStrip } from './StatusStrip';
 import { flyCard } from '../../lib/fx/fly';
+import { podiumModels } from '../../lib/game-ui/podiums';
+import { useDesktop } from '../../lib/game-ui/useDesktop';
 import {
   useAnnouncer,
   useBarTotal,
@@ -71,6 +76,8 @@ function GameScreenInner() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [setsOpen, setSetsOpen] = useState(false);
   const [tab, setTab] = useState<MenuTab>('players');
+  const desktop = useDesktop();
+  const [logOpen, setLogOpen] = useState(true);
   const [detailBay, setDetailBay] = useState<number | null>(null);
   const flashTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const barTotals = useRef(new Map<number, { key: string; total: number }>());
@@ -170,6 +177,10 @@ function GameScreenInner() {
         if (view.bays[idx]?.card) setDetailBay(idx);
         return;
       }
+      if ((e.key === 'l' || e.key === 'L') && desktop) {
+        setLogOpen((o) => !o);
+        return;
+      }
       if (e.key === '?') {
         setTab('rules');
         setMenuOpen(true);
@@ -185,7 +196,7 @@ function GameScreenInner() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [view, onCard, onBay, showFlash]);
+  }, [view, desktop, onCard, onBay, showFlash]);
 
   const frenzy = view?.opts.mode === 'frenzy';
   // Banner timer (hooks must be unconditional).
@@ -276,6 +287,10 @@ function GameScreenInner() {
           showMenu
           onPass={() => void room.send({ t: 'pass' })}
           onOpenLog={() => {
+            if (desktop) {
+              setLogOpen(true);
+              return;
+            }
             setTab('log');
             setMenuOpen(true);
           }}
@@ -284,6 +299,7 @@ function GameScreenInner() {
             setMenuOpen(true);
           }}
         />
+        {desktop && <Podiums players={podiumModels(view)} />}
         <Hand
           slots={slots}
           selected={sel.card}
@@ -335,16 +351,27 @@ function GameScreenInner() {
             );
           })}
         </div>
-        <CollectionStrip summary={summary} onOpen={() => setSetsOpen(true)} />
+        {!desktop && <CollectionStrip summary={summary} onOpen={() => setSetsOpen(true)} />}
+        {desktop && <KeyLegend bays={bays.length} />}
         <div className="sr-only" aria-live="assertive" aria-atomic="true" data-fx="assertive-live">
           {announcement && <span key={announcement.n}>{announcement.text}</span>}
         </div>
         {gifting && <GiftStep view={view} now={now} send={room.send} />}
       </div>
 
-      <aside className="g-side" aria-label="Players, sets, log and settings">
-        <MenuPanel view={view} tab={tab} onTab={setTab} onLeave={leave} />
-      </aside>
+      {desktop && (
+        <aside className="g-side" aria-label="Your sets and event log">
+          <DesktopRail
+            view={view}
+            logOpen={logOpen}
+            onToggleLog={() => setLogOpen((o) => !o)}
+            onOpenPanel={(t) => {
+              setTab(t);
+              setMenuOpen(true);
+            }}
+          />
+        </aside>
+      )}
 
       <BottomSheet open={menuOpen} onClose={() => setMenuOpen(false)} title="Menu">
         <MenuPanel view={view} tab={tab} onTab={setTab} onLeave={leave} />
