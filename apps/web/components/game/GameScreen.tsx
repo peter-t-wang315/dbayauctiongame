@@ -251,6 +251,15 @@ function GameScreenInner() {
       data-mode={view.opts.mode}
       data-stage={view.stage}
     >
+      {/* Classic: pulse the screen edges in my color while it's my turn. */}
+      {banner.mine && view.canAct && view.stage === 'bidding' && (
+        <div
+          className="g-turnframe"
+          aria-hidden="true"
+          data-fx="turn-frame"
+          style={banner.color ? { ['--accent' as string]: `var(--p-${banner.color})` } : undefined}
+        />
+      )}
       <div className="g-screen" data-bays={bays.length} data-layout={layout}>
         <StatusStrip
           text={stripText}

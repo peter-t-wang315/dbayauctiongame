@@ -78,6 +78,8 @@ test('Classic 3 bays at 390x844: fits without scrolling, two-tap bid works', asy
 
   // wait for my turn (bots take turns first or later)
   await expect(page.getByText(/Your turn/).first()).toBeVisible({ timeout: 40_000 });
+  // the screen edges pulse while it's my turn
+  await expect(page.locator('[data-fx="turn-frame"]')).toBeVisible();
   await page.locator('[data-card="v50"]').click();
   await expect(page.locator('[data-card="v50"]')).toHaveAttribute('data-state', 'selected');
   await expect(page.locator('[data-fx="bay"][data-state="legal"]').first()).toBeVisible();
@@ -88,6 +90,7 @@ test('Classic 3 bays at 390x844: fits without scrolling, two-tap bid works', asy
   });
   // after my bid the turn ends: hand locked
   await expect(page.locator('[data-fx="hand-card"][data-state="locked"]').first()).toBeVisible();
+  await expect(page.locator('[data-fx="turn-frame"]')).toHaveCount(0);
   // the collection sheet opens and closes
   await page.getByRole('button', { name: /Your collections/ }).click();
   await expect(page.getByRole('dialog', { name: 'Your collections' })).toBeVisible();
@@ -98,6 +101,7 @@ test('Frenzy 4 bays at 390x844: timers show, bid without waiting for a turn', as
   await startGame(page, 'Frenzy', 4);
   await expect(page.locator('[data-fx="bay"]')).toHaveCount(4);
   await expect(page.locator('[data-fx="bay-timer"]').first()).toContainText(/\d:\d\d/);
+  await expect(page.locator('[data-fx="turn-frame"]')).toHaveCount(0); // no turns in Frenzy
   await page.screenshot({ path: 'test-results/ws5-frenzy4.png' });
   expect(await layout(page)).toMatchObject({
     hScroll: false,
