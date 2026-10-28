@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { ROOM_CODE_LENGTH, normalizeRoomCode } from '@dbay/protocol';
 import { createRoom } from '../lib/net/config';
+import { gotoRoom } from '../components/shell/gotoRoom';
 
 export function LandingActions() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export function LandingActions() {
     setCreateError(null);
     const res = await createRoom();
     if (res.ok) {
-      router.push(`/r/${res.code}`);
+      gotoRoom(router, res.code);
       return;
     }
     setCreating(false);
@@ -34,7 +35,7 @@ export function LandingActions() {
       setCodeError(`Room codes are ${ROOM_CODE_LENGTH} letters or digits.`);
       return;
     }
-    router.push(`/r/${normalized}`);
+    gotoRoom(router, normalized);
   };
 
   return (

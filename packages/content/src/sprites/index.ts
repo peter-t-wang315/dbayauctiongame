@@ -8,6 +8,7 @@ import { MISC_SPRITES } from './misc';
 import { TOYS_SPRITES } from './toys';
 
 export { CATEGORY_SPRITES } from './categories';
+export { SPECIAL_SPRITES } from './specials';
 export { SHARED_PALETTE } from './util';
 
 /** Per-item sprites keyed by item id. */
