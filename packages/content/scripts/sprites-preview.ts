@@ -35,6 +35,15 @@ for (const cat of publicPack.categories) {
   cards.push('</div>');
 }
 
+cards.push('<h2>Specials</h2><div class="grid">');
+for (const sp of publicPack.specials.filter((x) => x.id.endsWith('-1'))) {
+  const s = sp.sprite;
+  cards.push(
+    `<div class="card">${s ? svg(s, 48) + svg(s, 24) : '<em>none</em>'}<span>${esc(sp.name)}</span></div>`,
+  );
+}
+cards.push('</div>');
+
 const html = `<!doctype html><meta charset="utf-8"><title>dBay sprites</title>
 <style>
 body{font:14px system-ui;background:#FBF3DF;color:#0E1511;margin:16px}

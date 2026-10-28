@@ -1,5 +1,6 @@
 // The 9 special cards (docs/03-content.md section 4). No secrets here, so the public entry may import it.
 import type { SpecialDef } from './schema';
+import { SPECIAL_SPRITES } from './sprites/specials';
 
 export const DISPLAY_CASE_COUNT = 5;
 export const GIFT_COUNT = 4;
@@ -13,6 +14,7 @@ export const SPECIALS: SpecialDef[] = [
     estimatedDisplay: '$100 · Wild',
     fixedValue: 100,
     flavor: 'Fits anything. Judges nothing.',
+    sprite: SPECIAL_SPRITES.displayCase,
   })),
   ...Array.from({ length: GIFT_COUNT }, (_, i) => ({
     kind: 'special' as const,
@@ -21,5 +23,6 @@ export const SPECIALS: SpecialDef[] = [
     name: 'Gift',
     estimatedDisplay: '?',
     flavor: "Surprise! Someone else's stuff is now your stuff.",
+    sprite: SPECIAL_SPRITES.gift,
   })),
 ];

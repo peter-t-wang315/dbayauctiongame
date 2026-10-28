@@ -53,7 +53,7 @@ Why:
 | `bidCooldownMs` | 1000 | 1000 | anti-spam |
 | `frenzyLastRoundMaxMs` | 15000 | 15000 | quick finish |
 
-Classic close-roll constants (`pBase`, `pMax`, `maxBayAgeCycles`) per player count and length are in 01 section 9.
+Classic close-roll constants (`pBase`, `pMax`, `maxBayAgeCycles`, `ageBonusPerCycle`) per player count and length are in 01 section 9.
 
 ## 5. Balance targets (simulator MUST report; CI fails on hard limits)
 Run with bots over many seeds (at least 1000 per mode and player count). Bot skill levels: random, greedy, careful.
@@ -71,7 +71,7 @@ Run with bots over many seeds (at least 1000 per mode and player count). Bot ski
 | Gift fizzles | < 5% of Gifts | - |
 | Score spread (winner/last) | 1.2x-4x | - |
 | First-seat (Classic) or fastest-seat (Frenzy) advantage | < 5 points win rate | - |
-Tune order if failing: `pBase/pMax` and `maxBayAgeCycles` (length, sales), rounds, Frenzy open timers, cats in play, deck size, then Proxy count.
+Tune order if failing: `pBase/pMax`, `ageBonusPerCycle` and `maxBayAgeCycles` (length, sales), rounds, Frenzy open timers, cats in play, deck size, then Proxy count.
 
 Additional metric: Classic auto-skip rate (R13, calls with no legal bid / calls) should be rare (< 5%; Standard 3p Classic accepts up to 8% so it can reach 12-15 min, user decision 2026-10-11, ASSUMED, revisit after playtest). The limit is measured with all-careful bots (the sim default); with the smarter bots (section 7) a mixed table of random, greedy and careful bots also stays within the limit (highest 4.5%).
 

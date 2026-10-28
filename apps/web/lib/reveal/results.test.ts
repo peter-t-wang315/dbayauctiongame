@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PlayerView } from '@dbay/protocol';
-import { flipCount, giftLines, revealGroups, revealOrder, standings, type RevealRow } from './results';
+import { flipCount, giftLines, rankedRows, revealGroups, revealOrder, standings, type RevealRow } from './results';
 
 const player = (id: string, name: string) => ({
   id,
@@ -101,6 +101,26 @@ describe('revealGroups (R33, R34)', () => {
     expect(g[2]!.cards[0]!.displayCase).toBe(true);
     expect(g[2]!.subtotal).toBe(100);
     expect(g.flatMap((x) => x.cards).some((c) => c.card.startsWith('special-gift'))).toBe(false);
+  });
+});
+
+describe('rankedRows', () => {
+  it('lists the $0 seat-first player last and puts the winner on top', () => {
+    const v = view([row('a', 0, 3, 0), row('b', 2140, 1, 0), row('c', 1980, 2, 0)]);
+    expect(rankedRows(v).map((x) => [x.row.id, x.rank])).toEqual([
+      ['b', 1],
+      ['c', 2],
+      ['a', 3],
+    ]);
+  });
+
+  it('keeps shared first place tied and in seat order', () => {
+    const v = view([row('c', 800, 1, 100), row('a', 800, 1, 100), row('b', 0, 3, 0)]);
+    expect(rankedRows(v).map((x) => [x.row.id, x.rank])).toEqual([
+      ['a', 1],
+      ['c', 1],
+      ['b', 3],
+    ]);
   });
 });
 

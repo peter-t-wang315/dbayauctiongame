@@ -5,7 +5,7 @@
 import type { PlayerView } from '@dbay/protocol';
 import { useRoom } from '../../lib/net/useRoom';
 import { categoryEmoji, categoryName, playerById } from '../../lib/game-ui/viewModel';
-import { flipCount, giftLines, revealGroups, revealOrder, standings } from '../../lib/reveal/results';
+import { flipCount, giftLines, rankedRows, revealGroups, revealOrder, standings } from '../../lib/reveal/results';
 import { useRevealSequence } from '../../lib/reveal/useRevealSequence';
 import { PlayerChip } from '../shell/PlayerChip';
 import { FlipCard } from './FlipCard';
@@ -14,8 +14,9 @@ import './reveal.css';
 
 export function RevealScreen({ view }: { view: PlayerView }) {
   const room = useRoom();
-  const rows = revealOrder(view);
   const { shown, done, skip } = useRevealSequence(flipCount(view), view.phase === 'ended');
+  // While flipping: me first. Once done: final standing order, winner on top (ties share the crown).
+  const rows = done ? rankedRows(view) : revealOrder(view).map((row) => ({ row, rank: 0 }));
 
   if (!view.reveal) {
     return (
@@ -40,16 +41,30 @@ export function RevealScreen({ view }: { view: PlayerView }) {
         )}
       </header>
 
+      {done && <Scoreboard rows={standings(view)} me={view.me} />}
+
       <div className="rv-list" onClick={done ? undefined : skip}>
-        {rows.map((r) => {
+        {rows.map(({ row: r, rank }) => {
           const p = playerById(view, r.id);
+          const winner = done && rank === 1;
           const groups = revealGroups(r);
           const count = groups.reduce((n, g) => n + g.cards.length, 0);
           const playerDone = flip + count <= shown;
           return (
-            <section key={r.id} className="rv-player" aria-label={p ? `${p.name}'s items` : 'Items'}>
+            <section
+              key={r.id}
+              className="rv-player"
+              data-winner={winner ? 'true' : undefined}
+              aria-label={p ? `${p.name}'s items` : 'Items'}
+            >
               <h2 className="rv-player__head">
+                {done && <span className="rv-player__rank"><span className="sr-only">Rank </span>{rank}</span>}
                 {p && <PlayerChip color={p.color} shape={p.shape} name={r.id === view.me ? `${p.name} (you)` : p.name} />}
+                {winner && (
+                  <span className="rv-crown" role="img" aria-label="Winner">
+                    👑
+                  </span>
+                )}
                 <span className="rv-player__total">{playerDone ? `$${r.total.toLocaleString('en-US')}` : '...'}</span>
               </h2>
               {groups.length === 0 && <p className="hint">Empty-handed. Nothing to reveal.</p>}
@@ -87,8 +102,6 @@ export function RevealScreen({ view }: { view: PlayerView }) {
           </section>
         )}
       </div>
-
-      {done && <Scoreboard rows={standings(view)} me={view.me} />}
 
       <footer className="rv-actions">
         {/* R37: Rematch is offered as soon as the standings show. */}
