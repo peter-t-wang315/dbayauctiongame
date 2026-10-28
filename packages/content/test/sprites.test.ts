@@ -1,7 +1,7 @@
 import { CATEGORIES, SpriteSchema, basePack } from '../src/index';
 import type { Sprite } from '../src/index';
 import { publicPack } from '../src/public';
-import { CATEGORY_SPRITES, ITEM_SPRITES, SHARED_PALETTE } from '../src/sprites';
+import { CATEGORY_SPRITES, ITEM_SPRITES, SHARED_PALETTE, SPECIAL_SPRITES } from '../src/sprites';
 import { describe, expect, it } from 'vitest';
 
 function checkSprite(name: string, s: Sprite) {
@@ -47,6 +47,18 @@ describe('item sprites', () => {
     }
     for (const item of publicPack.items) {
       if (ITEM_SPRITES[item.id]) expect(item.sprite, item.id).toEqual(ITEM_SPRITES[item.id]);
+    }
+  });
+});
+
+describe('special sprites', () => {
+  it('Gift and Display Case have valid sprites on every copy, in both packs', () => {
+    checkSprite('gift', SPECIAL_SPRITES.gift);
+    checkSprite('displayCase', SPECIAL_SPRITES.displayCase);
+    expect(SPECIAL_SPRITES.gift.rows.join('/')).not.toBe(SPECIAL_SPRITES.displayCase.rows.join('/'));
+    for (const pack of [basePack, publicPack]) {
+      expect(pack.specials).toHaveLength(9);
+      for (const s of pack.specials) expect(s.sprite, s.id).toEqual(SPECIAL_SPRITES[s.type]);
     }
   });
 });

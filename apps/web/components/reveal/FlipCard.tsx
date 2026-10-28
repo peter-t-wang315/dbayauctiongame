@@ -9,7 +9,7 @@ export function FlipCard({ card, shown, doubled }: { card: RevealCard; shown: bo
   const sprite = cardInfo(card.card)?.sprite ?? null;
   return (
     <li className="rv-card" data-fx="reveal-flip" data-state={shown ? 'shown' : 'hidden'} data-tag={shown ? (card.tag ?? undefined) : undefined}>
-      <SpriteView sprite={sprite} size={24} />
+      <SpriteView sprite={sprite} size={40} />
       <span className="rv-card__name">
         {card.name}
         {card.displayCase && <span className="hint"> (wild)</span>}
@@ -31,7 +31,7 @@ export function FlipCard({ card, shown, doubled }: { card: RevealCard; shown: bo
       </span>
       {shown && card.tag && (
         <span className={`rv-tag rv-tag--${card.tag}`} data-fx="reveal-tag">
-          {TAG_TEXT[card.tag]}
+          {card.tag === 'steal' ? `★ ${TAG_TEXT.steal}` : TAG_TEXT[card.tag]}
         </span>
       )}
     </li>

@@ -110,6 +110,15 @@ export function revealOrder(view: PlayerView): RevealRow[] {
   return [...rows].sort((a, b) => seat(a.id) - seat(b.id));
 }
 
+/** Final-results order for the per-player cards: the same R35 standing order as the scoreboard. */
+export function rankedRows(view: PlayerView): { row: RevealRow; rank: number }[] {
+  const byId = new Map((view.reveal?.players ?? []).map((r) => [r.id, r]));
+  return standings(view).flatMap((s) => {
+    const row = byId.get(s.id);
+    return row ? [{ row, rank: s.rank }] : [];
+  });
+}
+
 /** Number of flips in the client-side sequence (one per scorable card). */
 export function flipCount(view: PlayerView): number {
   return revealOrder(view).reduce((n, r) => n + revealGroups(r).reduce((m, g) => m + g.cards.length, 0), 0);

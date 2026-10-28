@@ -5,6 +5,7 @@ import { MoreSheet } from '../shell/MoreSheet';
 import { useRoom } from '../../lib/net/useRoom';
 import type { SendResult } from '../../lib/net/client';
 import { PlayerGrid } from './PlayerGrid';
+import { lengthHint } from './lengthHint';
 
 const ERROR_COPY: Record<string, string> = {
   NOT_HOST: 'Only the host can do that.',
@@ -89,7 +90,7 @@ export function Lobby() {
           <span className="label" id="mode-l">
             Mode
           </span>
-          <div className="seg" role="group" aria-labelledby="mode-l">
+          <div className={isHost ? 'seg' : 'seg seg--readonly'} role="group" aria-labelledby="mode-l">
             {(['classic', 'frenzy'] as const).map((m) => (
               <button
                 key={m}
@@ -108,7 +109,7 @@ export function Lobby() {
           <span className="label" id="len-l">
             Game length
           </span>
-          <div className="seg" role="group" aria-labelledby="len-l">
+          <div className={isHost ? 'seg' : 'seg seg--readonly'} role="group" aria-labelledby="len-l">
             {(['quick', 'standard'] as const).map((l) => (
               <button
                 key={l}
@@ -124,14 +125,14 @@ export function Lobby() {
           </div>
           {/* Targets from docs/02 section 5 (median, human pacing). */}
           <span className="hint">
-            {classic ? 'Classic: Quick about 10 min, Standard 15-25 min.' : 'Frenzy: Quick about 5 min, Standard about 8 min.'}
+            {lengthHint(classic, view.opts.length ?? 'standard', seats)}
           </span>
         </div>
         <div className="field">
           <span className="label" id="win-l">
             Bid window {classic ? '' : '(Classic only)'}
           </span>
-          <div className="seg" role="group" aria-labelledby="win-l">
+          <div className={isHost ? 'seg' : 'seg seg--readonly'} role="group" aria-labelledby="win-l">
             {BID_WINDOW_OPTIONS.map((ms) => (
               <button
                 key={ms}

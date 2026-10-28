@@ -75,6 +75,7 @@ export const SpecialDefSchema = z
     estimatedDisplay: z.string(),
     fixedValue: z.number().int().positive().optional(),
     flavor: Flavor,
+    sprite: SpriteSchema.optional(),
   })
   .refine(
     (s) =>
