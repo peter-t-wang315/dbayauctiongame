@@ -168,6 +168,16 @@ describe('R18b no-bid round clears every bay', () => {
     expect(events.filter((e) => e.extra === 'noBidRound')).toHaveLength(3);
   });
 
+  it('R18b: auto-passed calls (R13 disconnected seat) count toward the quiet round', () => {
+    const s0 = clone(newGame(4).state);
+    s0.players[1]!.connected = false;
+    s0.players[2]!.connected = false;
+    const events: GameEvent[] = [];
+    passUntil(s0, 4, events);
+    expect(kinds(events).filter((k) => k === 'autoPass')).toHaveLength(2);
+    expect(events.filter((e) => e.extra === 'noBidRound')).toHaveLength(3);
+  });
+
   it('R18b: deterministic, and an all-pass game still terminates with consistent cards', () => {
     const a = runAllPass(newGame(4, 'classic', 'nobid').state);
     const b = runAllPass(newGame(4, 'classic', 'nobid').state);
