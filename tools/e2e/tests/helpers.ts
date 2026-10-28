@@ -119,7 +119,8 @@ export const reconnecting = (p: Page) => p.getByRole('heading', { name: 'Reconne
 export async function passIfMyTurn(p: Page): Promise<boolean> {
   const mine = p.locator('[data-fx="turn-banner"][data-mine="true"]');
   if (!(await mine.isVisible().catch(() => false))) return false;
-  const pass = mine.getByRole('button', { name: 'Pass' });
+  // Pass sits beside the title in the merged HUD (data-fx="status-strip"), not inside it.
+  const pass = p.locator('[data-fx="status-strip"]').getByRole('button', { name: 'Pass' });
   if (!(await pass.isVisible().catch(() => false))) return false;
   await pass.click({ timeout: 2000 }).catch(() => {});
   return true;

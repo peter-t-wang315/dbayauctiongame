@@ -50,8 +50,17 @@ function visual(e: FxEvent): void {
   const rm = reduced();
   if (e.t === 'bump') {
     const el = q(`[data-fx="bay"][data-bay="${e.bay}"] [data-fx="top-bid"]`);
-    if (rm) run(el, { opacity: [0.4, 1] }, 0.15);
-    else run(el, { scale: [1, 1.25, 1] }, 0.28, EASE);
+    const bay = q(`[data-fx="bay"][data-bay="${e.bay}"]`);
+    // The bay that took the bid pops and flashes a ring (mine: green, strong; others: soft).
+    const ring = e.mine ? 'var(--ok)' : 'var(--ink)';
+    const flash = ['0 0 0 0 transparent', `0 0 0 6px ${ring}`, '0 0 0 0 transparent'];
+    if (rm) {
+      run(el, { opacity: [0.4, 1] }, 0.15);
+      run(bay, { boxShadow: flash }, 0.3);
+    } else {
+      run(el, { scale: [1, 1.25, 1] }, 0.28, EASE);
+      run(bay, { scale: [1, e.mine ? 1.04 : 1.02, 1], boxShadow: flash }, 0.32, EASE);
+    }
   } else if (e.t === 'outbid') {
     // Single 300ms edge flash (kept under reduced motion: one pulse, not a flicker).
     const el = q(`[data-fx="bay"][data-bay="${e.bay}"]`);

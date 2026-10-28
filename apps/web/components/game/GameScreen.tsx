@@ -14,7 +14,7 @@ import { ItemDetailsBody } from './ItemDetails';
 import { MenuPanel, MySets, type MenuTab } from './MenuPanel';
 import { RevealScreen } from '../reveal/RevealScreen';
 import { StatusStrip } from './StatusStrip';
-import { TurnBanner } from './TurnBanner';
+import { flyCard } from '../../lib/fx/fly';
 import {
   useAnnouncer,
   useBarTotal,
@@ -38,6 +38,7 @@ import {
   bannerFor,
   bayLayout,
   bayViewModels,
+  BAY_LETTERS,
   handSlots,
   latestStatus,
   playerById,
@@ -124,10 +125,17 @@ function GameScreenInner() {
         return;
       }
       setPending({ card: card.id, bay: idx });
+      const face = card.kind === 'proxy' ? 'Proxy' : `$${card.value}`;
+      flyCard(
+        document.querySelector(`[data-fx="hand-card"][data-card="${card.id}"]`),
+        document.querySelector(`[data-fx="bay"][data-bay="${idx}"]`),
+        face,
+      );
       const r = await room.send({ t: 'bid', card: card.id, bay: idx });
       setPending(null);
       if (r.ok) {
         setSel(IDLE);
+        showFlash(`Bid sent: ${face} on ${BAY_LETTERS[idx] ?? idx + 1}`);
       } else {
         setSel(IDLE);
         setShake(card.id);
@@ -247,8 +255,17 @@ function GameScreenInner() {
         <StatusStrip
           text={stripText}
           silent={flash === null && !!status && isUrgentEntry(view, status.n)}
+          title={banner.title}
+          sub={subtext}
+          mine={banner.mine}
+          color={banner.color}
+          remaining={bannerRemaining}
+          barTotal={bannerTotal}
+          showClock={!frenzy}
+          canPass={!frenzy && banner.mine && view.canAct && view.stage === 'bidding'}
           progress={progress}
           showMenu
+          onPass={() => void room.send({ t: 'pass' })}
           onOpenLog={() => {
             setTab('log');
             setMenuOpen(true);
@@ -257,16 +274,6 @@ function GameScreenInner() {
             setTab('players');
             setMenuOpen(true);
           }}
-        />
-        <TurnBanner
-          title={banner.title}
-          sub={subtext}
-          mine={banner.mine}
-          color={banner.color}
-          remaining={bannerRemaining}
-          barTotal={bannerTotal}
-          canPass={!frenzy && banner.mine && view.canAct && view.stage === 'bidding'}
-          onPass={() => void room.send({ t: 'pass' })}
         />
         <Hand
           slots={slots}

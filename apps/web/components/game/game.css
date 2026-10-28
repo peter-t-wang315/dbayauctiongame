@@ -20,33 +20,81 @@
   display: none;
 }
 
-/* ---------- status strip ---------- */
+/* ---------- merged HUD: turn + event text + clock + Pass + menu (04 sections 4.5, 4.6) ---------- */
 .g-strip {
+  --accent: rgba(255, 255, 255, 0.4);
+  position: relative;
   flex: none;
-  height: 48px; /* 44px inner + 2px borders: the log button is a full 44px target */
   display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  padding: 0 0 0 var(--s-3);
+  flex-direction: column;
+  overflow: hidden;
   background: var(--navy);
   color: var(--on-navy);
   border: var(--border);
+  border-left: 8px solid var(--accent);
   border-radius: var(--r-card);
+}
+.g-strip[data-mine='true'] {
+  animation: g-pulse 1.4s ease-in-out infinite;
+}
+.g-strip__row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--hit);
+  padding-left: var(--s-3);
 }
 .g-strip__text {
   flex: 1;
   min-width: 0;
-  height: 100%;
-  padding: 0;
+  min-height: var(--hit);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  padding: 2px 0;
   text-align: left;
   background: transparent;
   border: 0;
   color: inherit;
-  font: 800 14px/1.2 var(--font-body);
+  font-family: var(--font-body);
   cursor: pointer;
 }
-.g-strip__text > span {
-  display: block;
+.g-strip__title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  min-width: 0;
+}
+.g-strip__who {
+  min-width: 0;
+  font: 400 20px/1.1 var(--font-display);
+  letter-spacing: 0.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.g-strip[data-mine='true'] .g-strip__who {
+  padding: 2px var(--s-2);
+  color: var(--ink);
+  background: var(--accent);
+  border-radius: var(--r-pill);
+}
+.g-strip__sub {
+  flex: none;
+  font: 800 12px/1 var(--font-body);
+  opacity: 0.85;
+}
+.g-strip__line {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+}
+.g-strip__msg {
+  flex: 1;
+  min-width: 0;
+  font: 800 13px/1.2 var(--font-body);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -61,13 +109,30 @@
   font: 800 24px/1 var(--font-body);
   cursor: pointer;
 }
+/* Big, high-contrast bid-window clock (Classic). Urgency only in the last seconds. */
+.g-strip__clock {
+  flex: none;
+  min-width: 68px;
+  padding: 3px var(--s-2);
+  font: 400 30px/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--ink);
+  background: var(--card);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-chip);
+}
+.g-strip[data-danger='true'] .g-strip__clock {
+  background: var(--danger);
+  animation: g-tick 0.5s ease-in-out infinite;
+}
 .g-progress {
   flex: none;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 2px;
-  width: 64px;
+  width: 52px;
 }
 .g-progress__bar {
   position: relative;
@@ -94,74 +159,24 @@
   transition: width 300ms linear;
 }
 .g-progress__tag {
-  font: 800 10px/1 var(--font-body);
+  font: 800 9px/1 var(--font-body);
   letter-spacing: 0.5px;
   text-transform: uppercase;
   text-align: center;
   color: #ffb81c;
   white-space: nowrap;
 }
-
-/* ---------- turn banner ---------- */
-.g-banner {
-  --accent: var(--text-dim);
-  flex: none;
-  height: 58px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: var(--s-1);
-  padding: 0 var(--s-3);
-  background: var(--bg-raised);
-  border: var(--border);
-  border-radius: var(--r-card);
-  border-left: 8px solid var(--accent);
-}
-.g-banner[data-mine='true'] {
-  background: var(--accent);
-  color: var(--ink);
-  animation: g-pulse 1.2s ease-in-out infinite;
-}
-.g-banner__row {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  min-height: 24px;
-}
-.g-banner__title {
-  flex: 1;
-  min-width: 0;
-  font: 400 20px/1 var(--font-display);
-  letter-spacing: 0.5px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.g-banner__sub {
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--text-dim);
-}
-.g-banner__clock {
-  font: 800 14px/1 var(--font-body);
-  font-variant-numeric: tabular-nums;
-}
-.g-banner[data-danger='true'] .g-banner__clock {
-  color: var(--danger-text);
-}
 .g-pass {
+  flex: none;
   min-height: var(--hit);
   min-width: var(--hit);
   padding: 0 var(--s-3);
-  font: 800 14px/1 var(--font-body);
+  font: 800 15px/1 var(--font-body);
   color: var(--on-card);
   background: var(--card);
   border: var(--border);
   border-radius: var(--r-pill);
   cursor: pointer;
-}
-.g-banner__row {
-  min-height: 0;
 }
 
 .g-bar {
@@ -172,15 +187,26 @@
   overflow: hidden;
   flex: 1;
 }
-.g-bar--banner {
+.g-bar--strip {
   flex: none;
-  height: 6px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 0;
+}
+/* Frenzy: the per-bay timers lead; the shared bar (soonest bay) is a quiet hint. */
+.g-strip:not([data-clock='true']) .g-bar--strip {
+  height: 3px;
+  opacity: 0.6;
 }
 .g-bar__fill {
   display: block;
   height: 100%;
   background: var(--ink);
   border-radius: var(--r-pill);
+}
+.g-bar--strip .g-bar__fill {
+  background: #ffb81c;
+  border-radius: 0;
 }
 [data-danger='true'] > .g-bar .g-bar__fill,
 [data-danger='true'] .g-bar .g-bar__fill {
@@ -236,11 +262,24 @@
     rgba(14, 21, 17, 0.12) 8px 10px
   );
 }
+/* Winning = strong and positive: your colour as a thick border + tint + top stripe, the "You're
+   winning" pill with a check, and a bigger price. Never faded (faded is for bays you cannot act on). */
 .g-bay[data-state='winning'] {
-  opacity: 0.55;
-  filter: saturate(0.5);
-  background: var(--bg-muted);
-  box-shadow: none;
+  border-color: var(--me, var(--ok));
+  border-width: 3px;
+  background: color-mix(in srgb, var(--me, var(--ok)) 16%, var(--bg-raised));
+  box-shadow:
+    inset 0 6px 0 var(--me, var(--ok)),
+    var(--shadow);
+}
+.g-bay[data-state='winning'] .g-bay__head {
+  margin-top: var(--s-1);
+}
+.g-bay[data-state='winning'] .g-bay__amount {
+  font-size: 32px;
+}
+.g-screen[data-layout='tile'] .g-bay[data-state='winning'] .g-bay__amount {
+  font-size: 28px;
 }
 .g-bay[data-state='outbid'] {
   border-color: var(--danger);
@@ -277,7 +316,10 @@
   white-space: nowrap;
 }
 .g-pill--win {
-  background: var(--me, var(--ok));
+  font-size: 13px;
+  font-weight: 800;
+  background: var(--ok);
+  border-color: var(--ink);
 }
 .g-pill--out {
   background: var(--danger);
@@ -390,16 +432,22 @@
   display: flex;
   align-items: center;
   gap: var(--s-2);
-  height: 16px;
+  height: 24px;
 }
+/* Frenzy per-bay timer: the important clock. Large, dark-on-light; urgent only in the last 3s. */
 .g-bay__clock {
-  font: 800 13px/1 var(--font-body);
+  font: 400 20px/1 var(--font-display);
   font-variant-numeric: tabular-nums;
-  min-width: 52px;
-  text-align: right;
+  min-width: 64px;
+  padding: 2px var(--s-1);
+  text-align: center;
+  color: var(--text);
+  border-radius: var(--r-chip);
 }
 .g-bay__timer[data-danger='true'] .g-bay__clock {
-  color: var(--danger-text);
+  color: var(--ink);
+  background: var(--danger);
+  animation: g-tick 0.5s ease-in-out infinite;
 }
 .g-plus3 {
   color: var(--ok);
@@ -608,7 +656,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 52px;
+  height: 58px;
   min-width: var(--hit);
   padding: 0;
   font-family: var(--font-body);
@@ -621,10 +669,10 @@
   transition: transform 80ms;
 }
 .g-screen[data-bays='4'] .g-card {
-  height: 60px;
+  height: 62px;
 }
 .g-card__face {
-  font: 400 20px/1 var(--font-display);
+  font: 400 24px/1 var(--font-display);
 }
 .g-card__face--proxy {
   font: 800 10px/1 var(--font-body);
@@ -698,6 +746,19 @@
   padding: 0 var(--s-3);
   font-size: 14px;
 }
+/* Docked 320px sidebar: five tabs share the width (no clipped labels); wrap rather than scroll. */
+.g-side .g-menu__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  overflow: visible;
+  gap: var(--s-1);
+}
+.g-side .g-menu__tabs .seg__opt {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0 var(--s-2);
+  font-size: 13px;
+}
 .g-plist,
 .g-log {
   list-style: none;
@@ -744,10 +805,19 @@
 @keyframes g-pulse {
   0%,
   100% {
-    box-shadow: inset 0 0 0 3px var(--ink);
+    box-shadow: inset 0 0 0 0 var(--accent);
   }
   50% {
-    box-shadow: inset 0 0 0 6px var(--ink);
+    box-shadow: inset 0 0 0 3px var(--accent);
+  }
+}
+@keyframes g-tick {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
   }
 }
 @keyframes g-nudge {
@@ -785,7 +855,9 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .g-banner[data-mine='true'],
+  .g-strip[data-mine='true'],
+  .g-strip[data-danger='true'] .g-strip__clock,
+  .g-bay__timer[data-danger='true'] .g-bay__clock,
   .g-bay[data-nudge='true'],
   .g-card[data-shake='true'],
   .g-sold {
@@ -877,9 +949,6 @@
 /* ---------- DOM order = tab order (strip, hand, bays); visual order restored with `order` ---------- */
 .g-screen > .g-strip {
   order: 0;
-}
-.g-screen > .g-banner {
-  order: 1;
 }
 .g-screen > .g-bays {
   order: 2;
@@ -998,7 +1067,18 @@
     min-height: 24px;
   }
   .g-bay--tile .g-bay__timer {
-    height: 12px;
+    height: 16px;
+  }
+  .g-bay__clock {
+    font-size: 14px;
+    min-width: 48px;
+  }
+  .g-strip__clock {
+    font-size: 24px;
+  }
+  .g-screen .g-card,
+  .g-screen[data-bays='4'] .g-card {
+    height: 52px;
   }
 }
 
@@ -1032,7 +1112,7 @@
   }
   .g-bay--row > .g-bay__timer {
     grid-area: timer;
-    height: 12px;
+    height: 16px;
   }
   .g-bay--row > .g-bay__empty {
     grid-column: 1 / -1;

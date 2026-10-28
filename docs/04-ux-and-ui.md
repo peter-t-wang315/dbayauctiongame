@@ -165,13 +165,12 @@ Semi-opaque scrim over current screen, centered card "Reconnecting..." with spin
 
 | Element | 3 bays (stacked) | 4 bays (2x2) |
 |---|---|---|
-| Status strip | 44 | 44 |
-| Turn banner + timer bar | 52 | 52 |
+| Merged HUD (turn + status text + clock + Pass + menu, timer bar; no separate TurnBanner) | 94 | 94 |
 | Bays | 408 (3 x 128 + 2 x 12 gap) | 336 (2 rows x 162 + 12 gap) |
-| My collection strip | 40 | 40 |
-| Hand | 112 | 128 |
+| My collection strip | 44 | 44 |
+| Hand (58px / 62px cards, 2 rows) | 128 | 136 |
 | Padding | 40 | 40 |
-| **Total** | **696** | **640** |
+| **Total** | **714** | **650** |
 
 Both are under the 780px ceiling; the leftover (84px / 140px) is slack for the iOS safe areas and dynamic browser chrome, not new UI. Use `100dvh` and `env(safe-area-inset-*)`. Use a flex column where bays are `flex:1` with `min-height`, so small phones (360x640) shrink bay and hand heights but never scroll. Below 700px viewport height, hide the estimated-value line on bays (it stays in long-press details).
 
@@ -191,7 +190,8 @@ Both are under the 780px ceiling; the leftover (84px / 140px) is slack for the i
 - **Est value**: "est $60", dim. Hidden on short screens.
 - **Top bid**: gold numerals; "No bids" in dim text when empty; also shows opening hint.
 - **Bidder chip**: player color + shape + name; slides in on bid.
-- **Per-bay timer (Frenzy only)**: bar plus mm:ss text; turns `--danger` in last 3s; "+3s" floats on extension. In Classic the bay has no timer; the shared turn timer is in the banner.
+- **Per-bay timer (Frenzy only)**: bar plus mm:ss text; the clock is a 20px display number, and only in the last 3s it turns into a `--danger` chip with a tick pulse (no pulse under reduced motion); "+3s" floats on extension. In Classic the bay has no timer; the shared clock is in the merged HUD (4.6).
+- **Winning state:** a bay you top is strong, not faded: 3px border in your player color, a tint of that color, a 6px top stripe, a green "✓ You're winning" pill (text + check, so it is not color-only) and a larger price. Faded (45%) plus stripes is only for illegal bays; empty bays are dashed.
 - **SOLD stamp**: rotated -8deg slab over the bay in the winner's color with their shape; stays 1.2s then bay refills (new item slides in). Reduced motion: stamp appears without slam.
 - **Legal/illegal** (when a card is selected): legal = `--ok` 3px glow border + "tap to bid"; illegal = 45% opacity plus diagonal-stripe pattern and a small reason label ("Beat $150"). Never color alone.
 - Long-press (400ms): item details sheet (name, category, est, flavor text).
@@ -223,6 +223,7 @@ Left: event text (one line, ellipsis, crossfade 150ms). Middle: round pips (ASSU
 | New bid | "{name} bids ${amount} on {item}" |
 | Outbid (you) | "Outbid by {name}! ${amount}" |
 | Your bid is top | "You lead {item} at ${amount}" |
+| Your bid accepted (local, 2.6s) | "Bid sent: ${amount} on {bay letter}" ("Proxy" for a Proxy card) |
 | Bid rejected | "Can't bid that. Beat ${top}." |
 | Timer extended (Frenzy) | "Late bid! +3s on {item}" |
 | Last 3 seconds | "Going once... going twice..." |
@@ -239,8 +240,11 @@ Left: event text (one line, ellipsis, crossfade 150ms). Middle: round pips (ASSU
 | Host changed | "{name} is now host" |
 | Reconnected | "Back in the room" |
 
-### 4.6 Turn banner + timer bar (52px)
-Classic: banner shows "Your turn" in your color (full-width pulsing border) or "{shape} {name}'s turn" in theirs; the timer bar beneath depletes. Frenzy: banner reads "FRENZY" with the round count; per-bay timers carry the urgency instead, and the bar shows the soonest-ending bay.
+### 4.6 Merged HUD: turn + clock (one ~94px bar with 4.5)
+There is no separate banner. One navy bar has a left accent border in the turn player's color. Row 1 (44px): tap area (opens the log) with the turn title on line 1 ("Your turn" as a pill in your color, or "{shape} {name}'s turn") and the status text on line 2 (plus the game-progress bar); then the clock, Pass (Classic, my turn) and the ⋯ button. A thin 8px timer bar sits along the bottom. The event text is exposed once, as a separate sr-only polite live region.
+- **Classic clock:** a large (30px) dark-on-white number. Urgency (coral chip + tick pulse) starts only in the last 3s; no pulse under reduced motion.
+- **Frenzy:** the title reads "FRENZY" and there is no global number; the bottom bar (3px, quiet) shows the soonest-ending bay. The per-bay clocks (4.2) carry the timing.
+- **Bid feedback (sound off included):** on tapping a legal bay a ghost card flies from the hand card to the bay (260ms, transform only); when the snapshot arrives the bay pops (scale 1.04, 1.02 for others' bids) and flashes a 6px ring (green for my bid), and the status says "Bid sent: ${amount} on {bay}". Reduced motion: no flight and no scale; the ring flash and the status text remain.
 
 ### 4.7 ⋯ sheet (bottom sheet 70% height mobile; docked right sidebar 320px on desktop)
 Tabs/sections: **Players** (all players with chips, item counts, card counts; tap to expand their collection: items with est values and category counts, from the view's public `collection`), **Collections** (mine, detailed), **Event log** (last 30), **Settings** (Sound toggle, Haptics toggle, Relaxed timing x1.5 (host-set, shown read-only to others mid-game), Theme), **Rules** (rules content inline as a tab), **Leave game** (confirm). Draggable handle, Esc/swipe-down/backdrop closes. Focus is trapped while open on mobile.
@@ -346,7 +350,7 @@ Sound-off must lose no information: every row above has a text line in the statu
 | `MoreSheet` (tabs) | players, collections, log, settings | game |
 | `StatusStrip` | event text, round pips, ⋯ | game |
 | `EventLog` | last 30 events | game |
-| `TurnBanner` / `TimerBar` | turn + countdown | game |
+| `StatusStrip` (merged HUD) | turn, event text, clock, Pass, timer bar, menu | game |
 | `BayGrid` / `Bay` | layout + bay anatomy | game |
 | `BidChip`, `TopBid` | animated number + bidder | game |
 | `SoldStamp` | slam animation | game |
@@ -385,13 +389,7 @@ Instead, the **wordmark letters d·B·a·y use our own player colors** (Red, Blu
 
 Data format and authoring rules are in 03-content.md §Sprites.
 
-**Bays you're winning go quiet.** Whenever you are the top bidder on a bay, in either mode and whether or not a card is selected, that bay renders muted:
-- opacity 0.55
-- saturate 0.5
-- no drop shadow
-- a "✓ You're winning" pill in your player color
-
-It is never a bid target. If you get outbid, it returns to full strength with the outbid flash (feedback moment 3), so the change itself draws your eye back.
+**Bays you're winning stand out (changed in the HUD polish PR; they used to be muted).** Whenever you are the top bidder on a bay, that bay renders strong, never faded: 3px border in your player color, a tint of it, a top stripe, a larger price, and a green "✓ You're winning" pill. Faded styling is reserved for bays you cannot act on (illegal or empty). If you get outbid, it switches to the outbid ring and pill (feedback moment 3).
 
 **Spacing.** The mockups are rough. The build uses the §2 spacing scale (4/8/12/16/24/32) and radii tokens exclusively. No ad-hoc pixel values.
 
@@ -430,7 +428,7 @@ The only overlay is the terminal **SOLD** state, which covers the whole tile wit
   - Empty categories are dimmed.
   - A dashed WILD row explains the Display Case.
 - **Closing:** "Back to bidding", tap outside the sheet, or swipe down.
-- **The sheet doesn't stop the game.** The turn banner and timer keep running behind it, and in Classic it closes automatically when your turn starts.
+- **The sheet doesn't stop the game.** The HUD clock keeps running behind it, and in Classic it closes automatically when your turn starts.
 - **Desktop** shows the same content docked in the right sidebar.
 
 ## 13. Theme decision 2026-10-11: WHITE is the default. This supersedes the §2 token table where they conflict.
@@ -443,7 +441,7 @@ The only overlay is the terminal **SOLD** state, which covers the whole tile wit
 |---|---|---|
 | `--bg` | #FFFFFF | page |
 | `--bg-raised` | #F3F4F6 | bays, strips, sheets |
-| `--bg-muted` | #ECEEF2 | bays you're winning |
+| `--bg-muted` | #ECEEF2 | muted surfaces (spent cards, empty areas) |
 | `--card` | #FFFFFF | bid cards (2px ink border + hard shadow) |
 | `--ink` | #0E1511 | borders, shadows |
 | `--text` | #191919 | primary text |
@@ -461,7 +459,7 @@ The only overlay is the terminal **SOLD** state, which covers the whole tile wit
 ## 14. Layout matrix: bay count is set by player count, not by mode
 | | 3 bays (3–4 players) | 4 bays (5–6 players) |
 |---|---|---|
-| **Classic** | Stacked full-width bays, 136px, 72px sprite. Turn timer in the banner only. (mockup 3) | 2×2 grid, 164px tiles, 52px sprite, no per-bay timer row. (mockup 4b) |
+| **Classic** | Stacked full-width bays, 136px, 72px sprite. Turn clock in the HUD only. (mockup 3) | 2×2 grid, 164px tiles, 52px sprite, no per-bay timer row. (mockup 4b) |
 | **Frenzy** | Stacked full-width bays, 146px, 64px sprite, with a per-bay timer row at the bottom. (mockup 4c) | 2×2 grid, 188px tiles, 44px sprite, with a per-bay timer row. (mockup 4) |
 
 - **One component.** `Bay` takes `layout: 'row' | 'tile'` and `showTimer: boolean`. Tile rows are always: status label + category, sprite + name and estimate, top bid + bidder, then the timer row (Frenzy only).
@@ -471,5 +469,5 @@ The only overlay is the terminal **SOLD** state, which covers the whole tile wit
 
 - Item details: long-press (450ms, cancelled by moving more than 10px or pointer-cancel) or right-click on a bay opens a bottom sheet with sprite, name, category, **estimated** value, flavor and the top bid (the true value is never sent). A fired long-press swallows the following click, so it never bids. Keyboard: `i` while a bay is focused; screen readers and keyboard users also get a per-bay "Item details: NAME, bay X" button (a 44px target that is invisible and click-through until focused).
 - Assertive live region (visually hidden, separate from the polite status strip) announces only: "Your turn" (Classic), "You were outbid on bay X", "Sold to you". The strip text for those events is `aria-hidden` inside the polite region so nothing is read twice.
-- Tab order is strip, banner (Pass), hand, bays, sets. DOM order is that; the visual order (bays above hand) is restored with CSS `order`.
+- Tab order is the merged HUD (log, Pass, menu), hand, bays, sets. DOM order is that; the visual order (bays above hand) is restored with CSS `order`.
 - Small screens: 4-bay tiles on 320 wide keep amount + bidder on one line; at heights under 600px (320x568) tile sprites shrink to 28px and 3-bay rows go to a two-column grid (body | bid, timer underneath). 44px targets are enforced at 360x640; at 320x568 only "no page scroll" is enforced.
