@@ -31,3 +31,12 @@ Example: "Frenzy, iPhone Safari, 21:05: bid $300 on bay B as timer hit 0 → car
 - Balance notes (constants in `packages/engine/src/config.ts`):
 - Answers to the questions above:
 - Later-list triage:
+
+### Session 2026-10-27 (AI playtest, not real players)
+- Build / commit: `main` after #28 (all of #23-#28 merged).
+- Players and devices: 4 Sonnet agents with personas: Mia (phone, host), Dev (desktop 1440), Sam (phone 412), Ray (laptop 1280). Headless Chromium; timers stretched 15x locally.
+- Games played: 1x Classic, Quick, 4 players. Mia $1,280, Dev $1,165, Sam $1,140, Ray $230. Fun 7 / 6.5 / 7 / 7.
+- Bugs: stale "YOUR TURN" after a bid (major, 3 testers); no feedback on taps on locked/spent cards (minor); Gift modal names the wrong player and never the recipient (major, check); outbid log line has no item name (minor); hotkeys re-map (minor); a "no legal bid" skip with empty bays (investigate); COLLECTIBLES badge truncated (minor).
+- Balance notes: the x2 set bonus dominates scoring; leftover cards are worthless, so "spend everything" wins; a passive player falls hopelessly behind (Ray $230).
+- Later-list triage: emoji reactions, award titles, auctioneer voice and the Appraisal card were each asked for unprompted.
+- Full write-up: [playtests/2026-10-27-ai/](playtests/2026-10-27-ai/README.md).
