@@ -30,7 +30,8 @@ jobs:
 
   # Real-server bots game (wrangler dev + next dev, all local; no secrets, no Cloudflare contact).
   e2e-real:
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest is 26.04, which our Playwright version cannot install Chromium on.
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       WRANGLER_SEND_METRICS: 'false'
@@ -70,7 +71,7 @@ jobs:
 
   # Reconnect/robustness scenarios vs the real local server (~11 min; restart scenario is Windows-only and skips here).
   e2e-robustness:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 35
     env:
       WRANGLER_SEND_METRICS: 'false'
@@ -110,7 +111,7 @@ jobs:
 
   # apps/web Playwright suite against the mock server (layout budget, game flows, reveal, a11y/axe).
   e2e-web:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       CI: 'true'
