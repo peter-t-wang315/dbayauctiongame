@@ -64,17 +64,20 @@ Wireframes are 390px wide. `[ ]` = button, `( )` = chip.
 |                                      |
 |               dBay                   |
 |   Bid. Bluff. Collect. (tagline)     |
+|   [] [] [] [] []   (lot row)         |  5 item sprites, slight tilts
+|   Bid cards on mystery items.        |  one-line pitch
+|   Best collection wins.              |
 |                                      |
 |   +--------------------------------+ |
 |   |        CREATE A ROOM           | |  primary, 56px
 |   +--------------------------------+ |
 |   [ A B C D E ]  [ JOIN ]            |  code input + button
 |                                      |
-|            How to play               |  link -> /rules
+|          [ How to play ]             |  outlined secondary button -> /rules
 +--------------------------------------+
 ```
 (Wordmark: "dBay" — lowercase d, capital B. Use our own logo; never eBay's colors, logo shapes or fonts.)
-- Elements: wordmark, Create, code input (auto-uppercase, strips spaces, 5 chars, `autocapitalize=characters`, `inputmode=text`), Join, Rules link, theme-follows-system.
+- Elements: wordmark, higher-contrast tagline, lot row (5 existing item sprites, decorative), one-line pitch ("Bid cards on mystery items. Best collection wins."), Create, code input (auto-uppercase, strips spaces, 5 chars, `autocapitalize=characters`, `inputmode=text`), Join, "How to play" (outlined secondary button to /rules), theme-follows-system.
 - States: Create loading (button spinner, disabled); Create error ("Couldn't make a room. Try again." plus retry; 429 -> "Too many rooms. Wait a bit."); bad code format (inline, no submit); join submit navigates to `/r/CODE`.
 - Host vs non-host: n/a.
 
@@ -83,6 +86,7 @@ Wireframes are 390px wide. `[ ]` = button, `( )` = chip.
 +--------------------------------------+
 |  Room  KQ4TZ                         |
 |                                      |
+|  You're invited to a dBay auction.   |
 |  Your name                           |
 |  [ Pat________ ] 16 max              |
 |                                      |
@@ -93,7 +97,7 @@ Wireframes are 390px wide. `[ ]` = button, `( )` = chip.
 |  Sound is off. Change in ⋯ later.    |
 +--------------------------------------+
 ```
-- Elements: code header, name input (prefilled from `localStorage`), note that color and shape are assigned on join, Join button (also performs Web Audio unlock, Wake Lock request, and sends `hello`).
+- Elements: code header, invite line ("You're invited to a dBay auction. Pick a name to take a seat."; host name and player count are a follow-up, they need a server room-info endpoint), name input (prefilled from `localStorage`), note that color and shape are assigned on join, Join button (also performs Web Audio unlock, Wake Lock request, and sends `hello`).
 - States: loading (skeleton while checking room), **Room not found** (full-screen card "No such room. Check the code." [Back]), **Room full** ("This room is full (6/6)." [Back]), **Game already started** ("Game in progress. Ask the host to rejoin you" shown only if no stored secret; with stored secret it silently reconnects), **Kicked** ("You were removed from this room." [Home], no retry), name taken (suffix added server-side, shown in lobby as "Pat 2"), name invalid (inline).
 - Host vs non-host: identical. A returning player with a stored secret skips this screen.
 
@@ -115,7 +119,7 @@ Wireframes are 390px wide. `[ ]` = button, `( )` = chip.
 | Waiting for Sam to start...  (others)|
 +--------------------------------------+
 ```
-- Elements: code + Copy link (copies `https://host/r/CODE`, button text flips to "Copied!" for 1.5s), player chips (tap own chip to rename), mode selector (default follows player count: 3-4 Classic, 5-6 Frenzy; host may override, 02), game length selector (Quick / Standard, 01 section 8; hint shows target minutes per mode), bid-window selector (3/5/8 s, Classic only, 01 R11), Relaxed timing, Start, ⋯ (sound, haptics, theme, rules, leave).
+- Elements: code + Copy link (copies `https://host/r/CODE`, button text flips to "Copied!" for 1.5s), player chips (tap own chip to rename), mode selector (default follows player count: 3-4 Classic, 5-6 Frenzy; host may override, 02), game length selector (Quick / Standard, 01 section 8; hint shows target minutes and varies by mode, length and, in Classic, player count (docs/02 section 5, rounded outward)), bid-window selector (3/5/8 s, Classic only, 01 R11), Relaxed timing, Start, ⋯ (sound, haptics, theme, rules, leave).
 - States: loading/connecting (skeleton chips); reconnecting overlay (3.7); under 3 seats (humans + bots): Start disabled with "Need at least 3 players"; kicked (as 3.2); empty seats shown as dashed placeholders.
 - Host only: Start, Kick (kebab on each other chip, confirm; bots get Remove), Add bot, mode, game length, bid window, Relaxed timing (all via `setOpts`). Non-hosts see these read-only. Renaming uses `rename` (lobby only). Host badge "HOST" moves on host migration with toast-free text change.
 
