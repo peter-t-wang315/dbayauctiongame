@@ -162,6 +162,21 @@ test('Frenzy 4 bays', async ({ page }) => {
   await scan(page, 'game frenzy 4 bays');
 });
 
+test('Desktop 1280x800: Classic 3 bays and Frenzy 4 bays (podiums, rail, legend)', async ({ browser }) => {
+  for (const [mode, bots, bays] of [
+    ['Classic', 2, 3],
+    ['Frenzy', 4, 4],
+  ] as const) {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    const page = await ctx.newPage();
+    await startGame(page, mode, bots);
+    await expect(page.locator('[data-fx="bay"]')).toHaveCount(bays);
+    await expect(page.locator('[data-fx="podium"]')).toHaveCount(bots + 1);
+    await scan(page, `desktop ${mode} ${bays} bays`);
+    await ctx.close();
+  }
+});
+
 test('reduced motion: no looping or long animations', async ({ browser }) => {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
   const page = await ctx.newPage();
