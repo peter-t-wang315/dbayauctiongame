@@ -14,13 +14,19 @@ Bug IDs (B1-B10) are from the "Problems" tables in [docs/playtests/2026-10-27-ai
 - **B3** Gift copy (`GiftStep.tsx` `giftTitle()` + body): holder "Pick who has to give you an item:"; victim title "{holder}'s Gift picked you!" + "Give {holder} one of your items:"; holder while waiting "{victim} is giving you an item..."; others "{victim} is giving {holder} an item..." / "{holder} is choosing who has to give them an item...". Tests in `GiftStep.test.tsx`; docs/04 3.5b updated.
 - **B6** fixed hotkeys: `cardForKey()` (`selection.ts`) maps `CARD_KEYS` to `handSlots()` positions, so a key always means the same card; spent/out cards keep their key and badge, and pressing it flashes the B2 reason. Legend reads "1-0 $10-$300". Tests: `gameUi.test.ts`, desktop e2e (badges keep 3/4 after a bid); docs/04 section 6 shortcut text updated.
 
+- **B8** category chip (`game.css`): the chip and its label may shrink (ellipsis only as a last resort, never past the bay edge); a crowded head (`:has(.g-pill, .g-hint)`) drops the chip to 10px on phones; on desktop (>=1024px) the head wraps so the chip moves to its own line at full 13px.
+- **B9** `BottomSheet.tsx`: tap-away close now requires the press to start and end outside the sheet (no accidental close from a drag that starts inside), closes on the click (no ghost tap on the game below), and the scrim has `cursor: pointer` so iOS Safari delivers the click. e2e in `game.pw.ts`.
+- **B10** `next.config.ts`: `devIndicators: false`.
+
 ## In progress
-- Nothing.
+- Machine checks.
 
 ## Next
-- B8 (category chip at 1280 and 390), B9 (menu outside-tap close), B10 (`devIndicators: false`), then machine checks (`pnpm typecheck`, `pnpm lint`, `pnpm test`, web e2e).
+- `pnpm typecheck`, `pnpm lint`, `pnpm test` from the root; web e2e (`pnpm --filter @dbay/web test:e2e`; needs ports 3100 and 8787 free, other agents' e2e runs use the same ports).
 
 ## Gotchas / decisions
 - The engine keeps `turn.player === me` through the `gap` after my bid/pass (R10), so the banner must look at `turn.phase`, not just the player.
 - tools/e2e and the playtest harness key on `[data-fx="turn-banner"][data-mine="true"]`; it now holds only during my open window, which is what they want (they act on it).
+- B9: the scrim already closed on click before this branch; the playtest harness clicked game elements covered by the sheet (force clicks land on the sheet), which reads as "doesn't close". The fix hardens the real-device path (iOS click, drag-from-inside) rather than closing on taps that land on the sheet.
+- B8: the user decided one category name everywhere (2026-10-12), so no abbreviations; the fix only shrinks/wraps.
 - Python on Windows writes CRLF; normalize edited files back to LF (`sed -i 's/\r$//'`).

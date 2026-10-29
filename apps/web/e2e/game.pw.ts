@@ -103,6 +103,14 @@ test('Classic 3 bays at 390x844: fits without scrolling, two-tap bid works', asy
   await page.getByRole('button', { name: /Your collections/ }).click();
   await expect(page.getByRole('dialog', { name: 'Your collections' })).toBeVisible();
   await page.getByRole('button', { name: 'Back to bidding' }).click();
+  // B9: the menu closes on a tap outside the sheet, not on a tap inside it
+  await page.getByRole('button', { name: /Menu: players/ }).click();
+  const menu = page.getByRole('dialog', { name: 'Menu' });
+  await expect(menu).toBeVisible();
+  await menu.getByRole('heading', { name: 'Menu' }).click();
+  await expect(menu).toBeVisible();
+  await page.mouse.click(195, 12);
+  await expect(menu).toBeHidden();
 });
 
 test('Frenzy 4 bays at 390x844: timers show, bid without waiting for a turn', async ({ page }) => {
