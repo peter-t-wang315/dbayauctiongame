@@ -13,15 +13,21 @@ Plan: [playtest-followups.md](playtest-followups.md) "Slice 2". Source: [the 202
 - docs/04 section 4.8 "First-game tips" (where, lifetime, memory, a11y, trigger/copy table).
 - e2e `apps/web/e2e/tips.pw.ts` (3 tests: first-turn tip shows, a bay tap through the toast still bids, "Got it" hides it, not shown on the next turn; `"off"` suppresses; throwing storage still shows it). `pnpm typecheck`, `pnpm lint`, `pnpm test` green.
 
+- Full web e2e (2026-10-28): 30 passed, 1 skipped (polish.pw.ts gift-step fit: the mock dealt no Gift in that run). Existing specs needed no changes.
+
 ## In progress
-- Full web e2e run (all specs) to confirm the toast doesn't break existing flows.
+- Nothing. Slice complete.
 
 ## Next
-1. If the full e2e is green: done; hand back (no PR from this agent). The pre-PR review (docs/README) happens when the PR is opened.
+1. Open the PR (`feat/first-game-tips`) after the pre-PR review (docs/README); rebase on main once slices 1 and 3 land (shared files touched: `GameScreen.tsx` +2 lines, `MenuPanel.tsx` +2 lines, `Collections.tsx` +4/-1).
+2. Re-run the AI playtest after slices 1-2 (see playtest-followups "Gotchas").
 
 ## Gotchas / decisions
 - **"First Proxy in hand"**: everyone starts with 2 Proxies (R2), so "in hand" would fire at game start on top of the first-turn tip. ASSUMED: the Proxy tip fires the first time a Proxy is on any bay, or I select a Proxy card.
 - **Outbid trigger** is state-based (a bay still holds one of my cards but someone else is top), not log-based, so it also catches outbids that happened while the tab was away.
 - **Pair trigger** is exactly 2 items of one category (Display Cases not counted; a jump straight to 3 skips the tip).
+- **ASSUMED timings:** a tip stays 9s (paused on hover/focus), then at least 3s before the next.
+- **E2E:** the toast is pointer-transparent except "Got it", so existing specs pass untouched; a spec can still suppress tips with `localStorage["dbay:tips"] = "off"` (addInitScript).
+- **Local e2e gotcha:** `next dev` (16.4.0) prints a security-advisory nudge and exits on the first launch; start it again (or run Playwright twice). Other worktrees' dev servers on :3100 get reused by `reuseExistingServer`, so check the port is yours.
 - **No tips outside `phase: playing`, `stage: bidding`** (the Gift step has its own UI).
 - Copy checked against 01: R35 (cards in hand only break ties), R16 (card on a bay is out of hand until it closes; outbid player may bid there again), R19 (returns on close), R33 (3 = every card doubled), R15/R16.4 (latest Proxy is top; only a Proxy beats a Proxy), R27-R30 (Gift scores 0; after the last sale the holder picks a player who gives them a scorable card).
