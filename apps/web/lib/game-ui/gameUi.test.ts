@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { PlayerView } from '@dbay/protocol';
-import { bayLegality, lockedReason, rejectionText, type BayView, type HandCardView } from './legal';
+import {
+  bayLegality,
+  cardTapReason,
+  lockedReason,
+  rejectionText,
+  type BayView,
+  type HandCardView,
+} from './legal';
 import { IDLE, bayForKey, cardForKey, reconcile, tapCard } from './selection';
 import { barFraction, cooldownLeft, formatClock, isDanger, nextBarTotal, remainingMs } from './timers';
 import {
@@ -86,6 +93,20 @@ describe('lockedReason', () => {
   });
 });
 
+describe('cardTapReason (B2: no silent taps)', () => {
+  const v = makeView({ myHand: [val(10), { ...val(50), onBay: 1 }, proxy] });
+  it('null for a card that can be selected', () => {
+    expect(cardTapReason(v, 'v10', 0)).toBeNull();
+  });
+  it('spent, out on a bay, locked, in flight', () => {
+    expect(cardTapReason(v, 'v300', 0)).toBe('Spent: that card already won an item');
+    expect(cardTapReason(v, 'v50', 0)).toBe('That card is on bay B until it closes');
+    const notMine = makeView({ canAct: false, turn: { player: 'pat', color: 'blue', phase: 'window' } });
+    expect(cardTapReason(notMine, 'v10', 0)).toBe('Not your turn');
+    expect(cardTapReason(v, 'v10', 0, 'v50')).toBe('Sending your bid...');
+  });
+});
+
 describe('selection', () => {
   const hand = [val(10), val(50), { ...val(100), onBay: 0 }, proxy];
   it('tap selects, tap same deselects, tap other moves', () => {
@@ -113,13 +134,19 @@ describe('selection', () => {
     const v = makeView({ canAct: false, opts: { mode: 'frenzy', relaxed: false, bidWindowMs: 5000 } });
     expect(reconcile({ card: 'v10' }, v)).toEqual({ card: 'v10' });
   });
-  it('keyboard mapping', () => {
+  it('keyboard mapping: each key is a fixed slot for the whole game (B6)', () => {
     const h = [val(10), val(25), val(50), proxy, { id: 'p2', kind: 'proxy' as const }];
     expect(cardForKey('1', h)).toBe('v10');
     expect(cardForKey('3', h)).toBe('v50');
-    expect(cardForKey('4', h)).toBeNull();
+    expect(cardForKey('0', h)).toBe('v300');
     expect(cardForKey('-', h)).toBe('p1');
     expect(cardForKey('=', h)).toBe('p2');
+    expect(cardForKey('x', h)).toBeNull();
+    // $25 spent and $10 out on a bay: $50 is still on 3, not re-mapped to 1.
+    const later = [{ ...val(10), onBay: 0 }, val(50), proxy];
+    expect(cardForKey('3', later)).toBe('v50');
+    expect(cardForKey('1', later)).toBe('v10');
+    expect(cardForKey('2', later)).toBe('v25');
     expect(bayForKey('Q')).toBe(0);
     expect(bayForKey('r')).toBe(3);
     expect(bayForKey('x')).toBeNull();
@@ -221,7 +248,7 @@ describe('view-model', () => {
     expect(e({ kind: 'turn', by: 'pat' })).toBe("▲ Pat's turn");
     expect(e({ kind: 'bid', by: 'pat', bay: 0, amount: 150 })).toBe('▲ Pat bids $150 on Wind-Up Tin Robot');
     expect(e({ kind: 'bid', by: 'pat', bay: 0, amount: 'proxy' })).toBe('▲ Pat bids a Proxy on Wind-Up Tin Robot');
-    expect(e({ kind: 'outbid', by: ME, bay: 0 })).toBe('Outbid by ▲ Pat! $150');
+    expect(e({ kind: 'outbid', by: ME, bay: 0 })).toBe('Outbid on Wind-Up Tin Robot by ▲ Pat! $150');
     expect(e({ kind: 'outbid', by: 'pat', bay: 0 })).toBeNull();
     expect(e({ kind: 'sold', by: ME, card: 'toys-tin-robot', amount: 80 })).toBe('Yours! Wind-Up Tin Robot for $80');
     expect(e({ kind: 'sold', by: 'pat', card: 'toys-tin-robot', amount: 80 })).toBe(
@@ -230,7 +257,8 @@ describe('view-model', () => {
     expect(e({ kind: 'halfway' })).toBe('Halfway there!');
     expect(e({ kind: 'lastRound' })).toBe('Last round! Everything sells.');
     expect(e({ kind: 'unsold', bay: 0, card: 'toys-tin-robot', extra: 'noBidRound' })).toMatch(/^No bids all round: .+ cleared\.$/);
-    expect(e({ kind: 'autoPass', by: 'pat' })).toBe('▲ Pat has no legal bid: skipped');
+    expect(e({ kind: 'autoPass', by: 'pat' })).toBe('▲ Pat has no bay to bid on: skipped');
+    expect(e({ kind: 'autoPass', by: ME })).toBe('No bay you can bid on: skipped');
     v.players.find((p) => p.id === 'pat')!.connected = false;
     expect(e({ kind: 'autoPass', by: 'pat' })).toBe('▲ Pat is away: auto-pass');
   });
@@ -249,5 +277,22 @@ describe('view-model', () => {
       mine: true,
     });
     expect(bannerFor(makeView({ opts: { mode: 'frenzy', relaxed: false, bidWindowMs: 5000 } })).title).toBe('FRENZY');
+  });
+  it('banner: no stale "Your turn" once my bid is sent or acked (B1)', () => {
+    const win = makeView({ turn: { player: ME, color: 'red', phase: 'window' } });
+    expect(bannerFor(win, true)).toEqual({ title: 'Bid placed, waiting...', mine: false, color: 'red' });
+    const gap = (log: PlayerView['log']) =>
+      bannerFor(makeView({ canAct: false, turn: { player: ME, color: 'red', phase: 'gap' }, log }));
+    expect(gap([{ n: 1, kind: 'turn', by: ME }, { n: 2, kind: 'bid', by: ME, bay: 0, amount: 50 }])).toMatchObject({
+      title: 'Bid placed, waiting...',
+      mine: false,
+    });
+    expect(gap([{ n: 1, kind: 'turn', by: ME }, { n: 2, kind: 'pass', by: ME }]).title).toBe('Passed');
+    expect(gap([{ n: 1, kind: 'turn', by: ME }, { n: 2, kind: 'autoPass', by: ME }]).title).toBe('Skipped');
+    // An older bid from a previous turn doesn't count.
+    expect(gap([{ n: 1, kind: 'bid', by: ME, bay: 0, amount: 50 }, { n: 2, kind: 'turn', by: ME }]).title).toBe('Waiting...');
+    expect(
+      bannerFor(makeView({ turn: { player: 'pat', color: 'blue', phase: 'gap' } })),
+    ).toMatchObject({ title: "▲ Pat's turn", mine: false });
   });
 });

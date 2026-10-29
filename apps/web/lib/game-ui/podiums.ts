@@ -21,10 +21,19 @@ export interface PodiumVM {
   wonCount: number;
 }
 
-/** Me first, then seating order. */
-export function podiumModels(view: PlayerView): PodiumVM[] {
+/**
+ * Me first, then seating order. The turn marker shows only while the called player's window is
+ * open; my own clears as soon as my bid is in flight (`pending`, playtest B1).
+ */
+export function podiumModels(view: PlayerView, pending = false): PodiumVM[] {
+  const t = view.turn;
   const turnId =
-    view.opts.mode === 'classic' && view.stage !== 'gifts' ? view.turn?.player : undefined;
+    view.opts.mode === 'classic' &&
+    view.stage !== 'gifts' &&
+    t?.phase === 'window' &&
+    !(pending && t.player === view.me)
+      ? t.player
+      : undefined;
   const ordered = [...view.players].sort(
     (a, b) => Number(b.id === view.me) - Number(a.id === view.me),
   );

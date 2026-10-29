@@ -338,6 +338,18 @@
   border: 2px solid var(--cat);
   color: var(--text);
   white-space: nowrap;
+  min-width: 0;
+}
+/* Playtest B8: a crowded head (status pill or bid hint beside the chip) shrinks the chip text;
+   the label clips with an ellipsis only as a last resort, never past the bay edge. */
+.g-cat__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.g-bay__head:has(.g-pill, .g-hint) .g-cat {
+  font-size: 10px;
+  letter-spacing: 0;
 }
 .g-cat--special {
   --cat: #ffb81c;
@@ -1113,6 +1125,11 @@
   .g-screen .g-bay .g-pill,
   .g-screen .g-bay .g-cat {
     font-size: 13px;
+  }
+  /* B8: desktop bays have height to spare, so a crowded head wraps the chip to its own line. */
+  .g-screen .g-bay .g-bay__head {
+    flex-wrap: wrap;
+    row-gap: var(--s-1);
   }
   .g-screen .g-bay .g-bay__timer {
     height: 28px;
