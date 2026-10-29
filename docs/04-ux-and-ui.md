@@ -7,7 +7,7 @@ Fixed facts: 3-6 players. Colors/shapes: Red ●, Blue ▲, Yellow ■, Green �
 ## 1. Design principles
 
 1. **Gameplay owns the screen.** Bays, hand and the active turn get space first. Anything else lives in the ⋯ sheet. Nothing needed to play is behind a tap, and the game screen never scrolls.
-2. **Feedback lives on existing elements.** Pop, flash, slide and stamp the bay/chip/card that already exist. No toasts, banners-on-banners, full-screen flashes or screen shake.
+2. **Feedback lives on existing elements.** Pop, flash, slide and stamp the bay/chip/card that already exist. No toast stacks, banners-on-banners, full-screen flashes or screen shake. One exception: the single, click-through won/lost sale toast (section 7, "Sale moment"), added after the 2026-10-27 playtest because sales read as log lines.
 3. **Playable with sound off, and with color ignored.** Every player is color + shape + name. Every event has text in the status strip. Sound and haptics are garnish.
 4. **Chunky and tactile, not form-like.** Big rounded cards, bold numerals, spring press states. Controls look like physical objects (cards, stamps, paddles), not inputs.
 5. **Calm by default, loud on the moments that matter.** Idle UI is quiet and flat. Motion is reserved for the six feedback moments.
@@ -192,7 +192,7 @@ Both are under the 780px ceiling; the leftover (84px / 140px) is slack for the i
 - **Bidder chip**: player color + shape + name; slides in on bid.
 - **Per-bay timer (Frenzy only)**: bar plus mm:ss text; the clock is a 20px display number, and only in the last 3s it turns into a `--danger` chip with a tick pulse (no pulse under reduced motion); "+3s" floats on extension. In Classic the bay has no timer; the shared clock is in the merged HUD (4.6).
 - **Winning state:** a bay you top is strong, not faded: 3px border in your player color, a tint of that color, a 6px top stripe, a green "✓ You're winning" pill (text + check, so it is not color-only) and a larger price. Faded (45%) plus stripes is only for illegal bays; empty bays are dashed.
-- **SOLD stamp**: rotated -8deg slab over the bay in the winner's color with their shape; stays 1.2s then bay refills (new item slides in). Reduced motion: stamp appears without slam.
+- **SOLD stamp**: a "SOLD!" rubber-stamp slab (tilted -6deg inside a full-bay overlay, 5px border in the winner's color, hard offset shadow; brass text when sold to you) with the winner's shape, name and price underneath. 56px on rows and 30-40px on tiles; from 600px wide 64px rows and 48px tiles. Stays 2.0s (`SALE_FX.stampHoldMs` in `lib/game-ui/sale.ts`), then the refilled bay shows. Reduced motion: stamp fades in (150ms) without the slam; the hold is the same.
 - **Legal/illegal** (when a card is selected): legal = `--ok` 3px glow border + "tap to bid"; illegal = 45% opacity plus diagonal-stripe pattern and a small reason label ("Beat $150"). Never color alone.
 - Long-press (400ms): item details sheet (name, category, est, flavor text).
 
@@ -296,8 +296,10 @@ All motion is wrapped by `MotionConfig reducedMotion="user"` for Motion, and `@m
 | 2 | Your turn (Classic): 8px frame around the whole screen edge in your color, flashing, plus the timer bar; Android vibrate | frame 1s ease-in-out infinite (opacity 1 -> 0.2, 1 flash/s, under the 3/s limit); bar depletes linear | CSS (`.g-turnframe`, `data-fx="turn-frame"`) | static frame, no flashing; bar still depletes |
 | 3 | Outbid: your chip slides off bay, edge flashes red 300ms | chip translateX 0 -> 40px + fade 250ms; edge `--danger` 300ms | CSS | chip fades out in place; 300ms edge flash kept (single, non-flashing fade) |
 | 4 | Timer: red in last 3s; "+3s" floats up | color transition 200ms at t<=3s; "+3s" translateY 0 -> -20px, fade out 700ms | CSS | color change only; "+3s" appears static for 700ms |
-| 5 | SOLD: stamp slams, card flies into winner's collection | stamp scale 2 -> 1, rotate -8deg, 220ms with overshoot, holds 1.2s; card fades/translates to strip 450ms | Motion (`m`, `AnimatePresence`, `layoutId` for card travel) | stamp fades in 150ms; card swaps without travel |
+| 5 | SOLD: stamp slams, plus the won/lost toast | stamp scale 2.2 -> 0.9 -> 1.04 -> 1 with opacity in, 360ms with overshoot, holds 2.0s; toast drops in 240ms and holds 2.8s (card travel to the collection strip is not built) | Motion `animate` on `data-fx="sold-stamp"`; CSS for the toast | stamp fades in 150ms; toast appears without movement |
 | 6 | Reveal: values flip with tags; confetti for winner | card rotateY flip 400ms, staggered 500ms apart; tag pops 200ms; confetti 2.5s | Motion; `canvas-confetti` lazy-imported | no flip (crossfade 150ms); no confetti, a gold crown badge instead |
+
+**Sale moment (playtest follow-ups slice 3).** On each new `sold` log entry: the stamp above, a gavel, and one toast under the status strip: "You won {item}!" (brass) or "{shape} {name} won {item}" with "for $X" / "with a Proxy" and "+N more sold" when several sell in one snapshot (my win is shown first). The toast is non-modal, `pointer-events: none`, never covers the hand, and is replaced by a newer one. Screen readers read each sale once: a sale to me assertively as "Sold to you: {item}" (announce.ts), another player's sale through the toast's own polite region. The strip still shows sale lines but keeps them out of its polite region (`isSaleEntry`), since it often shows "Going once...", a refill line or a local flash instead. Logic and timings: `lib/game-ui/sale.ts` (unit-tested).
 
 Rules: never block input during animations (all animate transforms/opacity only, pointer events pass through); never queue more than 3 pending animations (drop the rest to final state). Respect the `data-motion="off"` toggle from the ⋯ sheet if added.
 
@@ -308,16 +310,18 @@ Rules: never block input during animations (all animate transforms/opacity only,
 | Card select | soft tick |
 | Bid placed | wooden "tok" |
 | Bid accepted/top | rising two-note chirp |
-| Outbid | low descending "bwop" |
+| Outbid | sting: short dissonant falling stab over a low thud |
 | Rejected | dull buzz |
 | Your turn | bell ding |
 | Last 3s | clock tick each second |
 | Timer extend | small "ting" |
-| SOLD | gavel crack |
+| SOLD | gavel: two wooden knocks; sold to you adds a rising "ding-ding" |
 | Collection complete | short fanfare |
 | Halfway/last round | gong |
 | Reveal flip | paper flip per card |
 | Win | cheer jingle |
+
+When one snapshot carries more sounds than the cap (2), the most important play: sold to you, outbid sting, your turn, gavel, then the rest; the outbid sting replaces the bid tok on that bay, and repeats collapse (`pickSfx` in `lib/fx/plan.ts`). All sounds are synthesized (`lib/fx/sfx.ts`), no audio files, and honor the Sound toggle.
 
 Sound-off must lose no information: every row above has a text line in the status strip (4.5) and a visual from section 7.
 
@@ -475,6 +479,6 @@ The only overlay is the terminal **SOLD** state, which covers the whole tile wit
 ## 15. Polish decisions 2026-10-12 (WS5)
 
 - Item details: long-press (450ms, cancelled by moving more than 10px or pointer-cancel) or right-click on a bay opens a bottom sheet with sprite, name, category, **estimated** value, flavor and the top bid (the true value is never sent). A fired long-press swallows the following click, so it never bids. Keyboard: `i` while a bay is focused; screen readers and keyboard users also get a per-bay "Item details: NAME, bay X" button (a 44px target that is invisible and click-through until focused).
-- Assertive live region (visually hidden, separate from the polite status strip) announces only: "Your turn" (Classic), "You were outbid on bay X", "Sold to you". The strip text for those events is `aria-hidden` inside the polite region so nothing is read twice.
+- Assertive live region (visually hidden, separate from the polite status strip) announces only: "Your turn" (Classic), "You were outbid on bay X", "Sold to you: {item}". The strip text for those events is `aria-hidden` inside the polite region so nothing is read twice.
 - Tab order is the merged HUD (log, Pass, menu), hand, bays, sets. DOM order is that; the visual order (bays above hand) is restored with CSS `order`.
 - Small screens: 4-bay tiles on 320 wide keep amount + bidder on one line; at heights under 600px (320x568) tile sprites shrink to 28px and 3-bay rows go to a two-column grid (body | bid, timer underneath). 44px targets are enforced at 360x640; at 320x568 only "no page scroll" is enforced.
