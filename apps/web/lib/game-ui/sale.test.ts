@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { PlayerView } from '@dbay/protocol';
 import { newAnnouncements } from './announce';
-import { newSales, SALE_FX, saleNote, toastFor } from './sale';
+import { isSaleEntry, newSales, SALE_FX, saleNote, toastFor } from './sale';
 
 type Entry = PlayerView['log'][number];
 const ME = 'me';
@@ -63,18 +63,20 @@ describe('sale toast', () => {
     expect(newSales(v, r.lastN).items).toEqual([]);
   });
 
-  it("someone else's sale: silent when it is the strip's newest line, spoken when a refill follows", () => {
-    const last = makeView([log({ n: 5, kind: 'sold', by: 'kai', card: ROBOT, amount: 'proxy' })]);
-    const [a] = newSales(last, 4).items;
+  it("someone else's sale is spoken politely by the toast; the strip silences sale lines", () => {
+    const v = makeView([
+      log({ n: 5, kind: 'sold', by: 'kai', card: ROBOT, amount: 'proxy' }),
+      log({ n: 6, kind: 'refill', bay: 0, card: ROBOT }),
+    ]);
+    const [a] = newSales(v, 4).items;
     expect(a?.title).toBe('Kai won Wind-Up Tin Robot');
     expect(a?.detail).toBe('with a Proxy');
-    expect(a?.speak).toBeNull();
-
-    const followed = makeView([
-      log({ n: 5, kind: 'sold', by: 'kai', card: ROBOT, amount: 80 }),
-      log({ n: 6, kind: 'refill', bay: 0, card: 'toys-tin-robot' }),
-    ]);
-    expect(newSales(followed, 4).items[0]?.speak).toBe('Kai won Wind-Up Tin Robot for $80');
+    expect(a?.speak).toBe('Kai won Wind-Up Tin Robot with a Proxy');
+    expect(isSaleEntry(v, 5)).toBe(true);
+    expect(isSaleEntry(v, 6)).toBe(false);
+    expect(isSaleEntry(v, 99)).toBe(false);
+    // Sales to me are announced assertively (announce.ts) and are also silenced in the strip.
+    expect(newAnnouncements(v, 4).items).toEqual([]);
   });
 
   it('ignores non-sale entries and sales without a winner', () => {
@@ -84,7 +86,8 @@ describe('sale toast', () => {
       log({ n: 4, kind: 'sold', card: ROBOT }),
     ]);
     expect(newSales(v, 1).items).toEqual([]);
-    expect(saleNote(v, log({ n: 9, kind: 'bid', by: 'kai' }), null)).toBeNull();
+    expect(saleNote(v, log({ n: 9, kind: 'bid', by: 'kai' }))).toBeNull();
+    expect(isSaleEntry(v, 4)).toBe(false);
   });
 
   it('a batch shows my newest win first, counts the rest, and speaks only the unread ones', () => {
@@ -97,8 +100,8 @@ describe('sale toast', () => {
     expect(t.key).toBe(6);
     expect(t.main.mine).toBe(true);
     expect(t.more).toBe(2);
-    // n=7 is the strip's newest line and n=6 is mine: only n=5 is read here.
-    expect(t.speech).toBe('Kai won Wind-Up Tin Robot for $100');
+    // n=6 is mine (read assertively elsewhere): only the other two are read here, in order.
+    expect(t.speech).toBe('Kai won Wind-Up Tin Robot for $100. Kai won Wind-Up Tin Robot for $25');
   });
 
   it('no sales, no toast; otherwise the newest sale', () => {

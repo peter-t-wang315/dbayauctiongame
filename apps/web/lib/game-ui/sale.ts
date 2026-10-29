@@ -1,19 +1,20 @@
 // "Make the sale the moment" (playtest follow-ups, slice 3). Pure: which sales are new, what the
 // won/lost toast says, and what (if anything) it should read out. No React, DOM or clock.
 //
-// Screen-reader rule (no double reads): a sale to me is already announced assertively by
-// announce.ts ("Sold to you: {item}"), and the polite status strip reads the newest log line. So the
-// toast speaks only another player's sale that the strip is NOT showing (typically because a refill,
-// collection or special line arrived after it in the same snapshot).
+// Screen-reader rule (each sale read exactly once): a sale to me is announced assertively by
+// announce.ts ("Sold to you: {item}"); another player's sale is read by the toast's polite region.
+// The status strip keeps showing sale lines but silences them (`isSaleEntry`), because it often
+// shows something else instead ("Going once...", a refill line, a local flash) and would miss them.
 import type { PlayerView } from '@dbay/protocol';
-import { cardInfo, latestStatus, playerById, type LogEntry } from './viewModel';
+import { cardInfo, playerById, type LogEntry } from './viewModel';
 
-/** ASSUMED timings (tune here). The stamp used to hold 1.3s; the toast is a little longer. */
+/** ASSUMED timings (tune here). The stamp used to hold 1.3s; the toast is a little longer (it covers
+ * the top edge of the first bay row, so keep it short). */
 export const SALE_FX = {
   /** SOLD! stamp on the bay, from the snapshot that sold it until it is removed. */
   stampHoldMs: 2000,
   /** Won/lost toast under the status strip. */
-  toastMs: 3200,
+  toastMs: 2800,
 } as const;
 
 export interface SaleNote {
@@ -46,7 +47,7 @@ function amountText(a: LogEntry['amount']): string {
 }
 
 /** The note for one `sold` log entry, or null for any other entry. */
-export function saleNote(view: PlayerView, e: LogEntry, stripN: number | null): SaleNote | null {
+export function saleNote(view: PlayerView, e: LogEntry): SaleNote | null {
   if (e.kind !== 'sold' || !e.by) return null;
   const who = playerById(view, e.by);
   const mine = e.by === view.me;
@@ -54,7 +55,7 @@ export function saleNote(view: PlayerView, e: LogEntry, stripN: number | null): 
   const name = who?.name ?? 'Someone';
   const title = mine ? `You won ${item}!` : `${name} won ${item}`;
   const detail = amountText(e.amount);
-  const speak = mine || e.n === stripN ? null : `${title}${detail ? ` ${detail}` : ''}`;
+  const speak = mine ? null : `${title}${detail ? ` ${detail}` : ''}`;
   return { n: e.n, bay: e.bay, mine, title, detail, color: who?.color ?? null, shape: who?.shape ?? '', speak };
 }
 
@@ -68,12 +69,11 @@ export function newSales(
 ): { lastN: number; items: SaleNote[] } {
   const maxN = view.log.reduce((m, e) => Math.max(m, e.n), 0);
   if (lastN === null) return { lastN: maxN, items: [] };
-  const stripN = latestStatus(view)?.n ?? null;
   const items = view.log
     .filter((e) => e.n > lastN)
     .sort((a, b) => a.n - b.n)
     .flatMap((e) => {
-      const s = saleNote(view, e, stripN);
+      const s = saleNote(view, e);
       return s ? [s] : [];
     });
   return { lastN: Math.max(lastN, maxN), items };
@@ -89,4 +89,9 @@ export function toastFor(items: readonly SaleNote[]): SaleToast | null {
     .filter((t): t is string => !!t)
     .join('. ');
   return { key: main.n, main, more: items.length - 1, speech };
+}
+
+/** True when log entry `n` is a sale (the polite strip must not read it: the toast or announce.ts does). */
+export function isSaleEntry(view: PlayerView, n: number): boolean {
+  return view.log.some((e) => e.n === n && e.kind === 'sold' && !!e.by);
 }
