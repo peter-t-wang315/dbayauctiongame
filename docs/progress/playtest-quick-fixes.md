@@ -18,15 +18,20 @@ Bug IDs (B1-B10) are from the "Problems" tables in [docs/playtests/2026-10-27-ai
 - **B9** `BottomSheet.tsx`: tap-away close now requires the press to start and end outside the sheet (no accidental close from a drag that starts inside), closes on the click (no ghost tap on the game below), and the scrim has `cursor: pointer` so iOS Safari delivers the click. e2e in `game.pw.ts`.
 - **B10** `next.config.ts`: `devIndicators: false`.
 
+- Machine checks (2026-10-28): `pnpm typecheck`, `pnpm lint`, `pnpm test` green (engine 146, web 105, room-core 53, ...). Web Playwright e2e: 27 passed, 1 skipped (run on temporary copies with ports 3117/8797 because another agent held 8787; a11y + fx first hit "mock did not start" in the full run and passed on rerun).
+
 ## In progress
-- Machine checks.
+- Nothing. Slice 1 is done; awaiting review/PR by the user.
 
 ## Next
-- `pnpm typecheck`, `pnpm lint`, `pnpm test` from the root; web e2e (`pnpm --filter @dbay/web test:e2e`; needs ports 3100 and 8787 free, other agents' e2e runs use the same ports).
+- Pre-PR review per docs/README "Git workflow", then PR `fix/playtest-quick-fixes` -> `main`.
+- Not yet eyeballed: B8 in the exact crowded case (winning pill + COLLECTIBLES at 1280 and 390); worth a glance in the review.
 
 ## Gotchas / decisions
 - The engine keeps `turn.player === me` through the `gap` after my bid/pass (R10), so the banner must look at `turn.phase`, not just the player.
 - tools/e2e and the playtest harness key on `[data-fx="turn-banner"][data-mine="true"]`; it now holds only during my open window, which is what they want (they act on it).
 - B9: the scrim already closed on click before this branch; the playtest harness clicked game elements covered by the sheet (force clicks land on the sheet), which reads as "doesn't close". The fix hardens the real-device path (iOS click, drag-from-inside) rather than closing on taps that land on the sheet.
 - B8: the user decided one category name everywhere (2026-10-12), so no abbreviations; the fix only shrinks/wraps.
+- Playwright treats `aria-disabled="true"` as not actionable and waits; e2e taps on spent/out cards need `click({ force: true })`.
+- Next 16.4 dev prints a security-advisory nudge and exits on every other start ("retry the same command"); just rerun. The upgrade stays on its own branch (docs/README open item 6).
 - Python on Windows writes CRLF; normalize edited files back to LF (`sed -i 's/\r$//'`).
