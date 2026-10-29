@@ -16,6 +16,7 @@ import { Podiums } from './Podiums';
 import { ItemDetailsBody } from './ItemDetails';
 import { MenuPanel, MySets, type MenuTab } from './MenuPanel';
 import { RevealScreen } from '../reveal/RevealScreen';
+import { SaleToast } from './SaleToast';
 import { StatusStrip } from './StatusStrip';
 import { flyCard } from '../../lib/fx/fly';
 import { podiumModels } from '../../lib/game-ui/podiums';
@@ -356,6 +357,7 @@ function GameScreenInner() {
         <div className="sr-only" aria-live="assertive" aria-atomic="true" data-fx="assertive-live">
           {announcement && <span key={announcement.n}>{announcement.text}</span>}
         </div>
+        <SaleToast view={view} />
         {gifting && <GiftStep view={view} now={now} send={room.send} />}
       </div>
 
