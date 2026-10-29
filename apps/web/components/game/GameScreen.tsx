@@ -27,7 +27,7 @@ import {
   useServerNow,
   useSoldStamps,
 } from '../../lib/game-ui/hooks';
-import { bayLegality, lockedReason, rejectionText } from '../../lib/game-ui/legal';
+import { bayLegality, cardTapReason, lockedReason, rejectionText } from '../../lib/game-ui/legal';
 import {
   IDLE,
   bayForKey,
@@ -113,14 +113,24 @@ function GameScreenInner() {
   const onCard = useCallback(
     (id: string) => {
       if (!view) return;
+      // B2: a tap that can't select says why (spent, out on a bay, not my turn, cooling down).
+      const why = view.phase === 'playing' ? cardTapReason(view, id, cooldown, pending?.card ?? null) : null;
+      if (why) showFlash(why);
       setSel((s) => tapCard(s, id, view.myHand, canSelect));
     },
-    [view, canSelect],
+    [view, canSelect, cooldown, pending, showFlash],
   );
 
   const onBay = useCallback(
     async (idx: number) => {
-      if (!view || !sel.card || pending) return;
+      if (!view || pending) return;
+      if (!sel.card) {
+        // B2: no silent bay taps either.
+        if (view.phase !== 'playing') return;
+        const why = lockedReason(view, cooldown);
+        showFlash(why ?? (view.bays[idx]?.card ? 'Pick a card first, then tap a bay' : 'Empty bay'));
+        return;
+      }
       const card = view.myHand.find((c) => c.id === sel.card);
       const bay = view.bays[idx];
       if (!card || !bay) return;
@@ -154,7 +164,7 @@ function GameScreenInner() {
         );
       }
     },
-    [view, sel.card, pending, room, showFlash],
+    [view, sel.card, pending, cooldown, room, showFlash],
   );
 
   // Desktop keyboard flow (04 section 6). Never steal keys from inputs.
@@ -228,7 +238,7 @@ function GameScreenInner() {
     pending && pending.card === s.id ? { ...s, onBay: pending.bay } : s,
   );
   const selectedCard = sel.card ? view.myHand.find((c) => c.id === sel.card) : undefined;
-  const banner = bannerFor(view);
+  const banner = bannerFor(view, pending !== null);
   const progress = progressOf(view);
   const status = latestStatus(view);
   const going =
@@ -299,7 +309,7 @@ function GameScreenInner() {
             setMenuOpen(true);
           }}
         />
-        {desktop && <Podiums players={podiumModels(view)} />}
+        {desktop && <Podiums players={podiumModels(view, pending !== null)} />}
         <Hand
           slots={slots}
           selected={sel.card}

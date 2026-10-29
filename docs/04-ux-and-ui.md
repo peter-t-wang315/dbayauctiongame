@@ -219,12 +219,14 @@ Left: event text (one line, ellipsis, crossfade 150ms). Middle: round pips (ASSU
 | Classic: other's turn | "{name}'s turn" |
 | Classic: turn passed | "{name} passes" |
 | Auto-pass (disconnected) | "{name} is away: auto-pass" |
+| Auto-pass (no legal bid, R13) | "{name} has no bay to bid on: skipped" / you: "No bay you can bid on: skipped" |
 | Frenzy start | "Frenzy! Bid any time." |
 | New bid | "{name} bids ${amount} on {item}" |
-| Outbid (you) | "Outbid by {name}! ${amount}" |
+| Outbid (you) | "Outbid on {item} by {name}! ${amount}" |
 | Your bid is top | "You lead {item} at ${amount}" |
 | Your bid accepted (local, 2.6s) | "Bid sent: ${amount} on {bay letter}" ("Proxy" for a Proxy card) |
 | Bid rejected | "Can't bid that. Beat ${top}." |
+| Tap that can't act (local, 2.6s) | Spent: "Spent: that card already won an item"; out: "That card is on bay {letter} until it closes"; locked: "Not your turn" / "Cooling down" / "Gift time"; bay with no card picked: "Pick a card first, then tap a bay" |
 | Timer extended (Frenzy) | "Late bid! +3s on {item}" |
 | Last 3 seconds | "Going once... going twice..." |
 | Sold | "SOLD! {item} to {name} for ${amount}" |
@@ -241,7 +243,7 @@ Left: event text (one line, ellipsis, crossfade 150ms). Middle: round pips (ASSU
 | Reconnected | "Back in the room" |
 
 ### 4.6 Merged HUD: turn + clock (one ~94px bar with 4.5)
-There is no separate banner. One navy bar has a left accent border in the turn player's color. Row 1 (44px): tap area (opens the log) with the turn title on line 1 ("Your turn" as a pill in your color, or "{shape} {name}'s turn") and the status text on line 2 (plus the game-progress bar); then the clock, Pass (Classic, my turn) and the ⋯ button. A thin 8px timer bar sits along the bottom. The event text is exposed once, as a separate sr-only polite live region.
+There is no separate banner. One navy bar has a left accent border in the turn player's color. Row 1 (44px): tap area (opens the log) with the turn title on line 1 ("Your turn" as a pill in your color, or "{shape} {name}'s turn"; once my bid is sent, through the gap after my call: "Bid placed, waiting..." / "Passed" / "Skipped", not a pill) and the status text on line 2 (plus the game-progress bar); then the clock, Pass (Classic, my turn) and the ⋯ button. A thin 8px timer bar sits along the bottom. The event text is exposed once, as a separate sr-only polite live region.
 - **Classic clock:** a large (30px) dark-on-white number. Urgency (coral chip + tick pulse) starts only in the last 3s; no pulse under reduced motion.
 - **Frenzy:** the title reads "FRENZY" and there is no global number; the bottom bar (3px, quiet) shows the soonest-ending bay. The per-bay clocks (4.2) carry the timing.
 - **Bid feedback (sound off included):** on tapping a legal bay a ghost card flies from the hand card to the bay (260ms, transform only); when the snapshot arrives the bay pops (scale 1.04, 1.02 for others' bids) and flashes a 6px ring (green for my bid), and the status says "Bid sent: ${amount} on {bay}". Reduced motion: no flight and no scale; the ring flash and the status text remain.

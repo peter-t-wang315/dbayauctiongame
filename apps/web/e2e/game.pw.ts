@@ -91,6 +91,14 @@ test('Classic 3 bays at 390x844: fits without scrolling, two-tap bid works', asy
   // after my bid the turn ends: hand locked
   await expect(page.locator('[data-fx="hand-card"][data-state="locked"]').first()).toBeVisible();
   await expect(page.locator('[data-fx="turn-frame"]')).toHaveCount(0);
+  // B1: no stale "Your turn" once the bid is in (the call stays on me through the gap)
+  await expect(page.locator('[data-fx="turn-banner"][data-mine="true"]')).toHaveCount(0);
+  await expect(page.locator('[data-fx="turn-banner"]')).not.toContainText('Your turn');
+  // B2: tapping the card that is out on a bay says why instead of doing nothing
+  if ((await page.locator('[data-card="v50"]').getAttribute('data-state')) === 'out') {
+    await page.locator('[data-card="v50"]').click();
+    await expect(page.locator('[data-fx="status-text"]')).toContainText(/on bay [A-D] until it closes/);
+  }
   // the collection sheet opens and closes
   await page.getByRole('button', { name: /Your collections/ }).click();
   await expect(page.getByRole('dialog', { name: 'Your collections' })).toBeVisible();

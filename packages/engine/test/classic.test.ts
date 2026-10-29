@@ -193,6 +193,36 @@ describe('R13 auto-skip', () => {
     expect(kinds(r.events)).toEqual(expect.arrayContaining(['turn', 'autoPass']));
     expect(r.state.callsDone).toBe(2);
   });
+  // Playtest B7 (2026-10-27): skipped "with cards in hand while bays looked empty". Confirms that
+  // is R13 working: once the deck runs dry, empty bays take no bids, so a player whose only
+  // non-empty bays they already top (or cannot beat) has no legal bid and is skipped.
+  it('R13: deck dry, other bays empty, the only item is already mine -> skipped with a full hand', () => {
+    const g = newGame(3);
+    const s = clone(g.state);
+    s.deck = [];
+    s.bays[0]!.card = null;
+    s.bays[1]!.card = null;
+    stackOn(s, 2, [['p1', v(10)]], { first: 1, last: 999 });
+    s.colorBag = ['p1'];
+    expect(player(s, 'p1').hand.length).toBe(11);
+    const gap = expire(s).state;
+    const r = engine.tick(gap, gap.call!.endsAt!);
+    expect(kinds(r.events)).toEqual(expect.arrayContaining(['turn', 'autoPass']));
+    expect(r.events.find((e) => e.kind === 'autoPass')?.by).toBe('p1');
+  });
+  it('R13: deck dry, the only item is topped by a Proxy and I hold no Proxy -> skipped', () => {
+    const g = newGame(3);
+    const s = clone(g.state);
+    s.deck = [];
+    s.bays[0]!.card = null;
+    s.bays[1]!.card = null;
+    stackOn(s, 2, [['p0', px(1)]], { first: 1, last: 999 });
+    player(s, 'p1').hand = player(s, 'p1').hand.filter((c) => c.kind === 'value');
+    s.colorBag = ['p1'];
+    const gap = expire(s).state;
+    const r = engine.tick(gap, gap.call!.endsAt!);
+    expect(r.events.find((e) => e.kind === 'autoPass')?.by).toBe('p1');
+  });
 });
 
 describe('R14 one action', () => {
