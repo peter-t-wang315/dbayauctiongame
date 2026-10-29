@@ -148,9 +148,9 @@ Wireframes are 390px wide. `[ ]` = button, `( )` = chip.
 - Host only: Rematch (returns everyone to lobby). Others see "Waiting for host to rematch" and Leave.
 
 ### 3.5b Gift step (phase `playing`, stage `gifts`; same route as the game)
-Shown as a centered card over the dimmed bays, one Gift at a time (owner: WS6, mounted by the game route). Text: "{holder} opened a Gift!" Then:
-- **Holder** (stage `pickTarget`): list of eligible players (chip + item count) and a countdown (`gift.endsAt`). Others see "{holder} is choosing...".
-- **Victim** (stage `pickItem`): own scorable cards (items and Display Cases, never Gifts) as tappable tokens with est values; countdown; the pick sends `giftGive`. Others see "{victim} must give up something...".
+Shown as a centered card over the dimmed bays, one Gift at a time (owner: WS6, mounted by the game route). Text: "{holder} opened a Gift!" ("You opened a Gift!" for the holder; the victim sees "{holder}'s Gift picked you!" instead, playtest B3). Then:
+- **Holder** (stage `pickTarget`): "Pick who has to give you an item:" over a list of eligible players (chip + item count) and a countdown (`gift.endsAt`). Others see "{holder} is choosing who has to give them an item...".
+- **Victim** (stage `pickItem`): "Give {holder} one of your items:" over own scorable cards (items and Display Cases, never Gifts) as tappable tokens with est values; countdown; the pick sends `giftGive`. The holder sees "{victim} is giving you an item..."; others see "{victim} is giving {holder} an item...".
 - Fizzle or timeout default shows as a status-strip line ("{name} gave up {item}"). Values stay hidden until `reveal`.
 
 ### 3.6 Rules `/rules` and sheet
@@ -284,7 +284,7 @@ Keep the default flow tap-friendly: no drag required (drag from card to bay is a
 - **Right rail:** "Your sets" (6 categories with pips, "One more = x2!", WILD/GIFT rows) and the **event log**, open by default; `L` or the LOG header collapses and expands it. Rules and Settings buttons open the existing menu sheet at that tab (`?` also opens Rules). Clicking the status strip text expands the log.
 - Desktop-only pieces (`Podiums`, `DesktopRail`, `KeyLegend`) mount only at >=1024px via `useDesktop()`, so phone and tablet DOM and layout are unchanged (the mobile SETS strip is not mounted on desktop). Same view models as mobile plus `lib/game-ui/podiums.ts`. The reveal/results screen is not yet adapted for desktop (waits on the results rework). Screenshots: `docs/mockups/desktop/after-*.png`.
 
-**Keyboard shortcuts:** `1`-`9` pick cards 1-9 (in ascending order of unspent cards), `0` picks the 10th, `-` / `=` picks the Proxies; `Q W E R` bid the selected card on bays 1-4; `Esc` cancels selection or closes sheet; `L` collapses or expands the desktop log; `?` opens rules; `M` toggles sound; `Tab` order: strip, hand, bays. Shortcut hints appear as small badges on cards/bays, desktop only. Don't steal keys while focus is in a text input.
+**Keyboard shortcuts:** `1`-`9` and `0` pick the value-card slots $10-$300 and `-` / `=` the two Proxies, fixed for the whole game (a spent or out card keeps its key; pressing it says why it can't be picked, playtest B6); `Q W E R` bid the selected card on bays 1-4; `Esc` cancels selection or closes sheet; `L` collapses or expands the desktop log; `?` opens rules; `M` toggles sound; `Tab` order: strip, hand, bays. Shortcut hints appear as small badges on cards/bays, desktop only. Don't steal keys while focus is in a text input.
 
 **Tablet (600-1023px):** use the mobile layout scaled up in a centered 560px column with larger cards (hand 6x2, 72px cards), bays 2x2 even for 3 bays only if the screen is landscape. Sheet stays a bottom sheet. Landscape phones (height under 500px): bays left (2x2 or 3 in row), hand right in a 4x3 grid, strip on top; if too cramped, show a "Rotate to portrait" nudge (not a block).
 

@@ -164,12 +164,15 @@ test('Desktop 1280x800: podiums, big bays, card rack, persistent rail, keyboard 
   await expect(page.locator('#g-rail-log')).toBeVisible();
   await page.screenshot({ path: 'test-results/ws5-desktop.png' });
   await expect(page.getByText(/Your turn, Sam/).first()).toBeVisible({ timeout: 40_000 });
-  await page.keyboard.press('3'); // third unspent value card ($50)
+  await page.keyboard.press('3'); // slot 3 is always $50
   await expect(page.locator('[data-card="v50"]')).toHaveAttribute('data-state', 'selected');
   await page.keyboard.press('q');
   await expect(page.locator('[data-card="v50"]')).toHaveAttribute('data-state', /out|spent/, {
     timeout: 5000,
   });
+  // B6: keys stay on their slot after a card is played ($75 keeps 4; $50 keeps 3).
+  await expect(page.locator('[data-card="v75"] .g-kbd')).toHaveText('4');
+  await expect(page.locator('[data-card="v50"] .g-kbd')).toHaveText('3');
   await ctx.close();
 });
 

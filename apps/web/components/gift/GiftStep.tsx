@@ -17,6 +17,19 @@ export function scorableCards(collection: readonly string[]) {
   return collection.map(cardInfo).filter((c) => c !== null && c.special !== 'gift').map((c) => c!);
 }
 
+/**
+ * R29-R30: the holder picks a target; the target gives one scorable card TO the holder. The title
+ * names the holder from each seat's point of view, so the target knows whose Gift it is (B3).
+ */
+export function giftTitle(gift: Gift, view: PlayerView): string {
+  const holder = playerById(view, gift.holder);
+  if (!holder) return 'A Gift was opened!';
+  if (holder.id === view.me) return `${holder.shape} You opened a Gift!`;
+  if (gift.stage === 'pickItem' && gift.victim === view.me)
+    return `${holder.shape} ${holder.name}'s Gift picked you!`;
+  return `${holder.shape} ${holder.name} opened a Gift!`;
+}
+
 export function GiftStep({
   view,
   now,
@@ -30,7 +43,6 @@ export function GiftStep({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   if (!gift) return null;
-  const holder = playerById(view, gift.holder);
   const left = remainingMs(gift.endsAt, now);
 
   const act = async (a: GiftAction) => {
@@ -44,9 +56,7 @@ export function GiftStep({
   return (
     <div className="g-gift-scrim" data-fx="gift-step" data-state={gift.stage}>
       <section className="g-gift" role="dialog" aria-modal="false" aria-labelledby="g-gift-title">
-        <h2 id="g-gift-title">
-          {holder ? `${holder.shape} ${holder.id === view.me ? 'You' : holder.name} opened a Gift!` : 'A Gift was opened!'}
-        </h2>
+        <h2 id="g-gift-title">{giftTitle(gift, view)}</h2>
         {left !== null && (
           <p className="g-gift__clock" aria-label={`${Math.ceil(left / 1000)} seconds left`}>
             {formatClock(left)}
@@ -66,14 +76,15 @@ export function GiftStep({
 
 function GiftBody({ gift, view, busy, onAct }: { gift: Gift; view: PlayerView; busy: boolean; onAct: (a: GiftAction) => void }) {
   const me = view.me;
+  const h = playerById(view, gift.holder);
+  const holderChip = h ? <PlayerChip color={h.color} shape={h.shape} name={h.name} /> : 'The holder';
   if (gift.stage === 'pickTarget') {
     if (gift.holder !== me) {
-      const h = playerById(view, gift.holder);
-      return <p>{h ? <PlayerChip color={h.color} shape={h.shape} name={h.name} /> : 'The holder'} is choosing...</p>;
+      return <p>{holderChip} is choosing who has to give them an item...</p>;
     }
     return (
       <>
-        <p>Pick a player to take an item from:</p>
+        <p>Pick who has to give you an item:</p>
         <ul className="g-gift__list">
           {view.players
             .filter((p) => p.id !== me)
@@ -99,12 +110,19 @@ function GiftBody({ gift, view, busy, onAct }: { gift: Gift; view: PlayerView; b
   }
   if (gift.victim !== me) {
     const v = playerById(view, gift.victim);
-    return <p>{v ? <PlayerChip color={v.color} shape={v.shape} name={v.name} /> : 'Someone'} must give up something...</p>;
+    const victimChip = v ? <PlayerChip color={v.color} shape={v.shape} name={v.name} /> : 'Someone';
+    return gift.holder === me ? (
+      <p>{victimChip} is giving you an item...</p>
+    ) : (
+      <p>
+        {victimChip} is giving {holderChip} an item...
+      </p>
+    );
   }
   const mine = scorableCards(playerById(view, me)?.collection ?? []);
   return (
     <>
-      <p>Choose an item to give away:</p>
+      <p>Give {holderChip} one of your items:</p>
       <ul className="g-gift__list">
         {mine.map((c) => (
           <li key={c.id}>

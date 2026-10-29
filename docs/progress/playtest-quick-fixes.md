@@ -11,12 +11,14 @@ Bug IDs (B1-B10) are from the "Problems" tables in [docs/playtests/2026-10-27-ai
 - **B4** outbid line: "Outbid on {item} by {name}! $X".
 - **B7** confirmed with two engine tests (`packages/engine/test/classic.test.ts`, R13 block): deck dry + other bays empty + the only item already topped by me (or by a Proxy when I hold none) -> autoPass with a full hand. Copy: "{name} has no bay to bid on: skipped" / mine "No bay you can bid on: skipped".
 - docs/04 section 4.5 table + 4.6 updated with the new strings.
+- **B3** Gift copy (`GiftStep.tsx` `giftTitle()` + body): holder "Pick who has to give you an item:"; victim title "{holder}'s Gift picked you!" + "Give {holder} one of your items:"; holder while waiting "{victim} is giving you an item..."; others "{victim} is giving {holder} an item..." / "{holder} is choosing who has to give them an item...". Tests in `GiftStep.test.tsx`; docs/04 3.5b updated.
+- **B6** fixed hotkeys: `cardForKey()` (`selection.ts`) maps `CARD_KEYS` to `handSlots()` positions, so a key always means the same card; spent/out cards keep their key and badge, and pressing it flashes the B2 reason. Legend reads "1-0 $10-$300". Tests: `gameUi.test.ts`, desktop e2e (badges keep 3/4 after a bid); docs/04 section 6 shortcut text updated.
 
 ## In progress
 - Nothing.
 
 ## Next
-- B3 Gift copy (`GiftStep.tsx`, `GiftStep.test.tsx`, docs/04 3.5b), then B6, B8, B9, B10, then machine checks (`pnpm typecheck`, `pnpm lint`, `pnpm test`, web e2e).
+- B8 (category chip at 1280 and 390), B9 (menu outside-tap close), B10 (`devIndicators: false`), then machine checks (`pnpm typecheck`, `pnpm lint`, `pnpm test`, web e2e).
 
 ## Gotchas / decisions
 - The engine keeps `turn.player === me` through the `gap` after my bid/pass (R10), so the banner must look at `turn.phase`, not just the player.

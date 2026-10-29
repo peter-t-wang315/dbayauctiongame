@@ -31,6 +31,7 @@ import { bayLegality, cardTapReason, lockedReason, rejectionText } from '../../l
 import {
   IDLE,
   bayForKey,
+  CARD_KEYS,
   cardForKey,
   reconcile,
   tapCard,
@@ -53,7 +54,6 @@ import {
 import './game.css';
 
 const FLASH_MS = 2600;
-const KEY_CARDS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='];
 
 export function GameScreen() {
   const room = useRoom();
@@ -257,7 +257,7 @@ function GameScreenInner() {
       : (status?.text ?? (frenzy ? 'Frenzy! Bid any time.' : 'Doors open! First bays are up.')));
   const summary = summarizeCollection(me?.collection ?? [], me?.gifts ?? 0);
   const keyHints: Record<string, string> = {};
-  for (const k of KEY_CARDS) {
+  for (const k of CARD_KEYS) {
     const id = cardForKey(k, view.myHand);
     if (id) keyHints[id] = k;
   }

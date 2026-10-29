@@ -134,13 +134,19 @@ describe('selection', () => {
     const v = makeView({ canAct: false, opts: { mode: 'frenzy', relaxed: false, bidWindowMs: 5000 } });
     expect(reconcile({ card: 'v10' }, v)).toEqual({ card: 'v10' });
   });
-  it('keyboard mapping', () => {
+  it('keyboard mapping: each key is a fixed slot for the whole game (B6)', () => {
     const h = [val(10), val(25), val(50), proxy, { id: 'p2', kind: 'proxy' as const }];
     expect(cardForKey('1', h)).toBe('v10');
     expect(cardForKey('3', h)).toBe('v50');
-    expect(cardForKey('4', h)).toBeNull();
+    expect(cardForKey('0', h)).toBe('v300');
     expect(cardForKey('-', h)).toBe('p1');
     expect(cardForKey('=', h)).toBe('p2');
+    expect(cardForKey('x', h)).toBeNull();
+    // $25 spent and $10 out on a bay: $50 is still on 3, not re-mapped to 1.
+    const later = [{ ...val(10), onBay: 0 }, val(50), proxy];
+    expect(cardForKey('3', later)).toBe('v50');
+    expect(cardForKey('1', later)).toBe('v10');
+    expect(cardForKey('2', later)).toBe('v25');
     expect(bayForKey('Q')).toBe(0);
     expect(bayForKey('r')).toBe(3);
     expect(bayForKey('x')).toBeNull();
