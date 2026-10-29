@@ -17,6 +17,7 @@ import { ItemDetailsBody } from './ItemDetails';
 import { MenuPanel, MySets, type MenuTab } from './MenuPanel';
 import { RevealScreen } from '../reveal/RevealScreen';
 import { StatusStrip } from './StatusStrip';
+import { TipToast } from './TipToast';
 import { flyCard } from '../../lib/fx/fly';
 import { podiumModels } from '../../lib/game-ui/podiums';
 import { useDesktop } from '../../lib/game-ui/useDesktop';
@@ -299,6 +300,7 @@ function GameScreenInner() {
             setMenuOpen(true);
           }}
         />
+        <TipToast view={view} selectedProxy={selectedCard?.kind === 'proxy'} />
         {desktop && <Podiums players={podiumModels(view)} />}
         <Hand
           slots={slots}

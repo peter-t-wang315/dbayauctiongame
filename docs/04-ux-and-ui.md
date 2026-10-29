@@ -249,6 +249,25 @@ There is no separate banner. One navy bar has a left accent border in the turn p
 ### 4.7 ⋯ sheet (bottom sheet 70% height mobile; docked right sidebar 320px on desktop)
 Tabs/sections: **Players** (all players with chips, item counts, card counts; tap to expand their collection: items with est values and category counts, from the view's public `collection`), **Collections** (mine, detailed), **Event log** (last 30), **Settings** (Sound toggle, Haptics toggle, Relaxed timing x1.5 (host-set, shown read-only to others mid-game), Theme), **Rules** (rules content inline as a tab), **Leave game** (confirm). Draggable handle, Esc/swipe-down/backdrop closes. Focus is trapped while open on mobile.
 
+### 4.8 First-game tips (added 2026-10-28, after the AI playtest)
+All four playtesters learned the rules that decide the game too late (docs/playtests/2026-10-27-ai "Clarity"). One-time contextual tips teach each rule the first time it matters. No rule changes.
+- **Where:** a small non-modal toast hanging just under the status strip, over the top of the bays (desktop: right-aligned, max 520px). Never a modal. It is pointer-transparent except its "Got it" button (44px), so a tap on the bay underneath still bids. One tip at a time.
+- **Lifetime:** marked seen the moment it shows (once per device), hides on "Got it" or after 9s (ASSUMED), paused while hovered or focused; at least 3s (ASSUMED) between tips. Only in `phase: playing`, `stage: bidding`.
+- **Memory:** `localStorage["dbay:tips"]` = JSON array of seen tip ids; the value `"off"` means all seen (e2e uses it to keep tips out of the way). Every access is in try/catch: if storage throws, tips still show once per session. Settings has "Show first-game tips again" (clears the key).
+- **Accessibility:** its own sr-only `role="status"` / `aria-live="polite"` region reads "Tip: {text}" (the status strip's region is untouched); the visible copy is `aria-hidden`. The 180ms slide-in runs only under `prefers-reduced-motion: no-preference`.
+- **Triggers** (pure, `apps/web/lib/game-ui/tips.ts`, evaluated on every snapshot; when several fire, this order):
+
+| Tip | Fires when | Text | Rules |
+|---|---|---|---|
+| First turn | Classic: my call with the window open. Frenzy: I can bid | "Bid cards don't score: only the items you win do. Spend them!" | R35 (cards in hand only break ties) |
+| First outbid | a bay still holds one of my cards but someone else is top | "Outbid! Your card is stuck on bay {letter} until it closes, then comes back. You can still bid there with another card." | R16, R19 |
+| First pair | I own exactly 2 items of one category | "2 {category} so far! Get a 3rd and every {category} item scores x2." | R33 |
+| First Gift | a Gift is on a bay | "Gift: scores nothing itself. After the last sale, whoever won it picks a player, and that player must give them an item." | R27-R30 |
+| First Proxy | a Proxy is on any bay, or I select a Proxy card | "Proxy: beats any $ bid. Only a later Proxy can beat it." | R15, R16.4 |
+
+  "First Proxy in hand" is read as "first selected": everyone holds 2 Proxies from the start (R2), so a hand-based trigger would fire at once.
+- **Sets reminder:** the SETS strip (4.4) always shows a small "3 = x2" after its title (its aria-label adds "3 of a kind scores x2."); the Collections view keeps "3 of a kind = x2 value" and "One more = x2!".
+
 ## 5. Bid interaction spec
 
 Two taps: card, then bay.
