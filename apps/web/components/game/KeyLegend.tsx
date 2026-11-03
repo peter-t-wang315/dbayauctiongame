@@ -6,7 +6,7 @@ export function KeyLegend({ bays }: { bays: number }) {
   return (
     <div className="g-legend" aria-hidden="true" data-fx="key-legend">
       <span>
-        <kbd>1</kbd>-<kbd>0</kbd> pick card
+        <kbd>1</kbd>-<kbd>0</kbd> $10-$300
       </span>
       <span>
         <kbd>-</kbd> <kbd>=</kbd> Proxy

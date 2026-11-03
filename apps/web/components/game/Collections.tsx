@@ -19,9 +19,12 @@ export function CollectionStrip({ summary, onOpen }: { summary: CollectionSummar
     owned.length === 0 && summary.displayCases === 0 && summary.gifts === 0
       ? 'Your collections: nothing yet.'
       : `Your collections: ${owned.map((r) => `${r.name} ${Math.min(r.count, 3)} of 3`).join(', ')}.`;
+  // "3 = x2" stays visible from the first item on (first-game tips, 04 section 4.8).
+  const rule = '3 of a kind scores x2.';
   return (
-    <button type="button" className="g-sets" data-fx="collection-strip" aria-label={`${label} Tap for details.`} onClick={onOpen}>
+    <button type="button" className="g-sets" data-fx="collection-strip" aria-label={`${label} ${rule} Tap for details.`} onClick={onOpen}>
       <span className="g-sets__title">SETS</span>
+      <span className="g-sets__rule" aria-hidden="true">3 = x2</span>
       <span className="g-sets__list">
         {owned.length === 0 && summary.displayCases === 0 && summary.gifts === 0 && (
           <span className="g-sets__none">Win items to start sets</span>

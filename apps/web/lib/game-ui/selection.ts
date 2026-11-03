@@ -1,5 +1,6 @@
 // Selection state for the two-tap bid flow (04 section 5). Pure functions over a small state.
 import type { PlayerView } from '@dbay/protocol';
+import { handSlots } from './viewModel';
 
 export interface Selection {
   /** The currently selected hand card id, or null (Idle). */
@@ -31,17 +32,16 @@ export function reconcile(sel: Selection, view: PlayerView): Selection {
   return c && c.onBay === undefined ? sel : IDLE;
 }
 
-/** Keyboard card targets: 1-9 and 0 for value cards ascending, - and = for the Proxies. */
+/** One key per fixed hand slot (handSlots order): 1-9 and 0 for $10..$300, - and = for the Proxies. */
+export const CARD_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='] as const;
+
+/**
+ * Keyboard card target: the card in that key's fixed slot for the whole game, even when it is
+ * spent or out on a bay (the tap then says why), so keys never re-map as cards are played (B6).
+ */
 export function cardForKey(key: string, hand: Hand): string | null {
-  const values = hand
-    .filter((c) => c.kind === 'value' && c.onBay === undefined)
-    .sort((a, b) => (a.value ?? 0) - (b.value ?? 0));
-  const proxies = hand.filter((c) => c.kind === 'proxy' && c.onBay === undefined);
-  if (key >= '1' && key <= '9') return values[Number(key) - 1]?.id ?? null;
-  if (key === '0') return values[9]?.id ?? null;
-  if (key === '-') return proxies[0]?.id ?? null;
-  if (key === '=') return proxies[1]?.id ?? null;
-  return null;
+  const i = CARD_KEYS.indexOf(key as (typeof CARD_KEYS)[number]);
+  return i < 0 ? null : (handSlots(hand)[i]?.id ?? null);
 }
 
 export const BAY_KEYS = ['q', 'w', 'e', 'r'] as const;
