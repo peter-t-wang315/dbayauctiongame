@@ -40,7 +40,7 @@ export function Podiums({ players }: { players: PodiumVM[] }) {
                 <span className="sr-only">
                   {p.wonCount === 0
                     ? 'No items won'
-                    : `${p.wonCount} items won: ${p.won.map((w) => w.name).join(', ')}`}
+                    : `${p.wonCount} ${p.wonCount === 1 ? 'item' : 'items'} won: ${p.won.map((w) => w.name).join(', ')}`}
                 </span>
                 <span className="g-pod__row" aria-hidden="true">
                   {shown.length === 0 && <span className="g-pod__small">No items yet</span>}
