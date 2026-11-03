@@ -6,6 +6,30 @@ import { patternFor } from './haptics';
 import { pickSfx, sfxFor } from './plan';
 import { SFX } from './sfx';
 import { centre, flyCard } from './fly';
+import { bumpSteps } from './bump';
+
+describe('bumpSteps (FxController bid bump)', () => {
+  it('pops the price chip and the bay, with a green ring for my bid and a stronger bay pop', () => {
+    const mine = bumpSteps(true, false);
+    expect(mine.map((s) => s.target)).toEqual(['top-bid', 'bay']);
+    expect(mine[0]?.keyframes).toEqual({ scale: [1, 1.25, 1] });
+    expect(mine[1]?.keyframes.scale).toEqual([1, 1.04, 1]);
+    expect(JSON.stringify(mine[1]?.keyframes.boxShadow)).toContain('var(--ok)');
+    expect(mine.every((s) => s.overshoot)).toBe(true);
+  });
+  it("someone else's bid is softer: smaller pop, ink ring", () => {
+    const other = bumpSteps(false, false);
+    expect(other[1]?.keyframes.scale).toEqual([1, 1.02, 1]);
+    expect(JSON.stringify(other[1]?.keyframes.boxShadow)).toContain('var(--ink)');
+  });
+  it('reduced motion: no scale, a short fade plus the ring flash only', () => {
+    const rm = bumpSteps(true, true);
+    expect(rm).toHaveLength(2);
+    expect(rm[0]).toMatchObject({ target: 'top-bid', keyframes: { opacity: [0.4, 1] }, duration: 0.15, overshoot: false });
+    expect(rm.some((s) => 'scale' in s.keyframes)).toBe(false);
+    expect(rm[1]?.keyframes.boxShadow).toBeDefined();
+  });
+});
 
 describe('flyCard', () => {
   it('centres a rect and is a no-op without elements', () => {

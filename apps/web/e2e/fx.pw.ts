@@ -47,8 +47,11 @@ test('M toggles sound, persisted; reduced motion game still plays', async ({ pag
   expect(JSON.parse((await stored())!).sound).toBe(false);
 
   // Bid by tapping a card then a bay (effects run in the background of a normal bid).
-  await page.locator('[data-fx="hand-card"]').first().click();
+  // Highest card, so the bid beats whatever a bot has already opened with.
+  await page.locator('[data-fx="hand-card"]').last().click();
   await page.locator('[data-fx="bay"]').first().click();
+  // The accepted bid flashes "Bid sent: <face> on <bay>" in the status line (and the bump runs).
+  await expect(page.locator('[data-fx="status-text"]')).toHaveText(/^Bid sent: (\$\d+|Proxy) on [A-D]$/);
   await page.waitForTimeout(500);
   expect(errors).toEqual([]);
 });

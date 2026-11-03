@@ -29,7 +29,7 @@ import {
   useServerNow,
   useSoldStamps,
 } from '../../lib/game-ui/hooks';
-import { bayLegality, lockedReason, rejectionText } from '../../lib/game-ui/legal';
+import { bayLegality, bidSentText, lockedReason, rejectionText } from '../../lib/game-ui/legal';
 import {
   IDLE,
   bayForKey,
@@ -45,7 +45,6 @@ import {
   bannerFor,
   bayLayout,
   bayViewModels,
-  BAY_LETTERS,
   handSlots,
   latestStatus,
   playerById,
@@ -144,7 +143,7 @@ function GameScreenInner() {
       setPending(null);
       if (r.ok) {
         setSel(IDLE);
-        showFlash(`Bid sent: ${face} on ${BAY_LETTERS[idx] ?? idx + 1}`);
+        showFlash(bidSentText(card, idx));
       } else {
         setSel(IDLE);
         setShake(card.id);

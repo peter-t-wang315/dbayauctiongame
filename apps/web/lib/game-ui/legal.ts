@@ -1,6 +1,7 @@
 // Client mirror of the bid legality rule (01 R16; the server decides). Used only for hints:
 // legal-bay glow, dimmed illegal bays with a reason label, and the rejection message.
 import type { PlayerView } from '@dbay/protocol';
+import { BAY_LETTERS } from './viewModel';
 
 export type HandCardView = PlayerView['myHand'][number];
 export type BayView = PlayerView['bays'][number];
@@ -41,4 +42,10 @@ export function lockedReason(view: PlayerView, cooldownMs: number): string | nul
   const t = view.turn;
   if (t && t.player !== view.me) return 'Not your turn';
   return 'Wait for your color';
+}
+
+/** Confirmation flash after the server accepts my bid, e.g. "Bid sent: $50 on B". */
+export function bidSentText(card: Pick<HandCardView, 'kind' | 'value'>, bayIdx: number): string {
+  const face = card.kind === 'proxy' ? 'Proxy' : `$${card.value}`;
+  return `Bid sent: ${face} on ${BAY_LETTERS[bayIdx] ?? bayIdx + 1}`;
 }

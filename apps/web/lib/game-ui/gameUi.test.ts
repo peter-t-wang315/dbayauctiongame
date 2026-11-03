@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PlayerView } from '@dbay/protocol';
-import { bayLegality, lockedReason, rejectionText, type BayView, type HandCardView } from './legal';
+import { bayLegality, bidSentText, lockedReason, rejectionText, type BayView, type HandCardView } from './legal';
 import { IDLE, bayForKey, cardForKey, reconcile, tapCard } from './selection';
 import { barFraction, cooldownLeft, formatClock, isDanger, nextBarTotal, remainingMs } from './timers';
 import {
@@ -69,6 +69,17 @@ describe('bayLegality (01 R16 mirror)', () => {
   it('rejection text names the amount to beat', () => {
     expect(rejectionText(bay({ by: 'pat', kind: 'value', value: 150 }))).toBe("Can't bid that. Beat $150.");
     expect(rejectionText(undefined)).toBe("Can't bid that.");
+  });
+});
+
+describe('bidSentText ("Bid sent" flash)', () => {
+  it('names the card face and the bay letter', () => {
+    expect(bidSentText({ kind: 'value', value: 50 }, 0)).toBe('Bid sent: $50 on A');
+    expect(bidSentText({ kind: 'value', value: 300 }, 3)).toBe('Bid sent: $300 on D');
+    expect(bidSentText({ kind: 'proxy' }, 1)).toBe('Bid sent: Proxy on B');
+  });
+  it('falls back to a number for a bay past D', () => {
+    expect(bidSentText({ kind: 'value', value: 10 }, 5)).toBe('Bid sent: $10 on 6');
   });
 });
 

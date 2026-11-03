@@ -10,6 +10,7 @@ import { crossedSecond, deriveFx, type FxEvent } from '../../lib/fx/events';
 import { playSfx } from '../../lib/fx/audio';
 import { fireConfetti } from '../../lib/fx/confetti';
 import { PATTERNS, patternFor, vibrate } from '../../lib/fx/haptics';
+import { bumpSteps } from '../../lib/fx/bump';
 import { pickSfx } from '../../lib/fx/plan';
 import { getSettings } from '../../lib/fx/settings';
 import '../../styles/fx.css';
@@ -49,17 +50,10 @@ const q = (sel: string) => document.querySelector(sel);
 function visual(e: FxEvent): void {
   const rm = reduced();
   if (e.t === 'bump') {
-    const el = q(`[data-fx="bay"][data-bay="${e.bay}"] [data-fx="top-bid"]`);
-    const bay = q(`[data-fx="bay"][data-bay="${e.bay}"]`);
     // The bay that took the bid pops and flashes a ring (mine: green, strong; others: soft).
-    const ring = e.mine ? 'var(--ok)' : 'var(--ink)';
-    const flash = ['0 0 0 0 transparent', `0 0 0 6px ${ring}`, '0 0 0 0 transparent'];
-    if (rm) {
-      run(el, { opacity: [0.4, 1] }, 0.15);
-      run(bay, { boxShadow: flash }, 0.3);
-    } else {
-      run(el, { scale: [1, 1.25, 1] }, 0.28, EASE);
-      run(bay, { scale: [1, e.mine ? 1.04 : 1.02, 1], boxShadow: flash }, 0.32, EASE);
+    const sel = `[data-fx="bay"][data-bay="${e.bay}"]`;
+    for (const s of bumpSteps(e.mine, rm)) {
+      run(q(s.target === 'bay' ? sel : `${sel} [data-fx="top-bid"]`), s.keyframes, s.duration, s.overshoot ? EASE : 'easeOut');
     }
   } else if (e.t === 'outbid') {
     // Single 300ms edge flash (kept under reduced motion: one pulse, not a flicker).
