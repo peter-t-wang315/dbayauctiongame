@@ -15,10 +15,13 @@ export function JoinForm() {
   const [name, setName] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
   const [info, setInfo] = useState<RoomInfo | null>(null);
+  // True once the user edits the name; then a blocking room state shows inline, not as a card.
+  const [typed, setTyped] = useState(false);
 
   // Pre-join room summary; any failure leaves `info` null and the form behaves as before.
   useEffect(() => {
     const ctl = new AbortController();
+    setInfo(null);
     void fetchRoomInfo(room.code, undefined, ctl.signal).then((i) => {
       if (!ctl.signal.aborted) setInfo(i);
     });
@@ -46,8 +49,12 @@ export function JoinForm() {
     room.join(parsed.data);
   };
 
-  if (joinInfo.kind === 'notfound' || joinInfo.kind === 'started' || joinInfo.kind === 'full') {
-    const copy = FATAL_COPY[joinInfo.kind];
+  const blocked =
+    joinInfo.kind === 'notfound' || joinInfo.kind === 'started' || joinInfo.kind === 'full'
+      ? FATAL_COPY[joinInfo.kind]
+      : null;
+  if (blocked && !typed) {
+    const copy = blocked;
     return (
       <MessageCard
         title={copy.title}
@@ -70,12 +77,24 @@ export function JoinForm() {
       <p className="hint" style={{ margin: 0 }}>
         You&apos;re invited to a dBay auction. Pick a name to take a seat.
       </p>
-      {joinInfo.kind === 'ok' && (
-        <p className="hint" data-testid="room-info" style={{ margin: 0 }}>
-          {joinInfo.line}
-        </p>
-      )}
-      <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }} noValidate>
+      {/* Fixed two-line slot so the name input never moves when the info arrives. */}
+      <div style={{ minHeight: '2.8em' }}>
+        {joinInfo.kind === 'ok' && (
+          <p className="hint" data-testid="room-info" style={{ margin: 0 }}>
+            {joinInfo.line}
+          </p>
+        )}
+        {blocked && (
+          <p className="error-text" role="alert" style={{ margin: 0 }}>
+            {blocked.title}. {blocked.body}
+          </p>
+        )}
+      </div>
+      <form
+        onSubmit={submit}
+        style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
+        noValidate
+      >
         {staleSeat && (
           <p className="hint" role="status">
             Your old seat is no longer valid. Join again to get a new one.
@@ -89,6 +108,7 @@ export function JoinForm() {
             value={name}
             onChange={(e) => {
               setName(e.target.value);
+              setTyped(true);
               setLocalError(null);
             }}
             maxLength={16}
@@ -110,7 +130,7 @@ export function JoinForm() {
         <button
           type="submit"
           className="btn btn--primary"
-          disabled={room.joining || room.status !== 'open'}
+          disabled={room.joining || room.status !== 'open' || !!blocked}
         >
           {room.joining ? 'JOINING...' : 'JOIN THE ROOM'}
         </button>

@@ -11,4 +11,6 @@ export interface Env {
   CREATE_LIMIT_PER_HOUR?: string;
   /** WebSocket upgrades per IP per minute (default 60). */
   JOIN_LIMIT_PER_MIN?: string;
+  /** Room-info lookups per IP per minute (default 20). */
+  INFO_LIMIT_PER_MIN?: string;
 }

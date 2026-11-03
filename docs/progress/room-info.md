@@ -10,12 +10,13 @@
 - Docs: README item (4), 04 section 3.2.
 
 ## In progress
-- Pre-PR review.
+- Nothing; PR #40 awaits merge.
 
 ## Next
-- Merge once CI is green and review passes.
+- Merge once CI is green.
 
 ## Gotchas / decisions
 - Path is `/api/rooms/:code/info` (matches existing `/api/rooms` prefix).
 - `players` counts bots (they take seats and count toward ROOM_FULL).
 - e2e was run on temp ports 3200/8887 because 3100/8787 were in use (temp config not committed).
+- Pre-PR review (1 round) follow-ups applied: safe URI decoding on info + /parties routes, separate info rate limit (INFO_LIMIT_PER_MIN, default 20), no-store on all info responses, reserved info slot + inline message once the user typed, room-core roomInfo tests.

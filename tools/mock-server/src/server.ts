@@ -66,8 +66,14 @@ export function startMockServer(port = 8787, log = console.log): Promise<MockSer
     }
     const info = /^\/api\/rooms\/([^/?]+)\/info$/.exec(req.url?.split('?')[0] ?? '');
     if (req.method === 'GET' && info) {
-      const code = normalizeRoomCode(decodeURIComponent(info[1]!));
+      let code: string | null = null;
+      try {
+        code = normalizeRoomCode(decodeURIComponent(info[1]!));
+      } catch {
+        /* malformed percent-encoding: treated as unknown */
+      }
       const room = code ? rooms.get(code) : undefined;
+      const host = room?.players.find((p) => p.id === room.hostId);
       const body: RoomInfo = room
         ? {
             exists: true,
@@ -75,13 +81,14 @@ export function startMockServer(port = 8787, log = console.log): Promise<MockSer
             players: room.players.length,
             maxPlayers: MAX_PLAYERS,
             mode: room.opts.mode,
-            ...(room.players.find((p) => p.id === room.hostId)
-              ? { hostName: room.players.find((p) => p.id === room.hostId)!.name }
-              : {}),
+            ...(host ? { hostName: host.name } : {}),
           }
         : { exists: false };
       return void res
-        .writeHead(room ? 200 : 404, { 'content-type': 'application/json', 'cache-control': 'no-store' })
+        .writeHead(room ? 200 : 404, {
+          'content-type': 'application/json',
+          'cache-control': 'no-store',
+        })
         .end(JSON.stringify(body));
     }
     res.writeHead(404).end();
