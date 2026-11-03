@@ -49,3 +49,21 @@ export function bidSentText(card: Pick<HandCardView, 'kind' | 'value'>, bayIdx: 
   const face = card.kind === 'proxy' ? 'Proxy' : `$${card.value}`;
   return `Bid sent: ${face} on ${BAY_LETTERS[bayIdx] ?? bayIdx + 1}`;
 }
+
+/**
+ * Why tapping this hand card does nothing, or null when it selects (playtest B2: silent taps).
+ * Shown as a short flash in the status text. `pendingCard` is the card whose bid is in flight.
+ */
+export function cardTapReason(
+  view: PlayerView,
+  cardId: string,
+  cooldownMs: number,
+  pendingCard: string | null = null,
+): string | null {
+  if (pendingCard !== null) return 'Sending your bid...';
+  const c = view.myHand.find((h) => h.id === cardId);
+  if (!c) return 'Spent: that card already won an item';
+  if (c.onBay !== undefined)
+    return `That card is on bay ${BAY_LETTERS[c.onBay] ?? c.onBay + 1} until it closes`;
+  return lockedReason(view, cooldownMs);
+}

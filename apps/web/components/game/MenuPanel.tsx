@@ -7,6 +7,7 @@ import { PlayerChip } from '../shell/PlayerChip';
 import { RulesContent } from '../rules/RulesContent';
 import { SoundHapticsToggles } from '../fx/SoundHapticsToggles';
 import { CollectionsView } from './Collections';
+import { TipsAgain } from './TipToast';
 import { logLines, summarizeCollection } from '../../lib/game-ui/viewModel';
 
 export type MenuTab = 'players' | 'sets' | 'log' | 'rules' | 'settings';
@@ -146,6 +147,7 @@ function Settings({ view, onLeave }: { view: PlayerView; onLeave: () => void }) 
         </div>
       </div>
       <SoundHapticsToggles />
+      <TipsAgain />
       <p className="hint">
         Mode: {view.opts.mode === 'frenzy' ? 'Frenzy' : 'Classic'}
         {view.opts.relaxed ? ', relaxed timing x1.5' : ''}
