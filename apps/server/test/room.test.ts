@@ -77,6 +77,52 @@ describe('room server', () => {
     expect((await exports.default.fetch('https://x/')).status).toBe(200);
   });
 
+  it('GET /api/rooms/:code/info: public summary, no secrets; 404 for unknown/malformed; origin checked', async () => {
+    const info = (code: string, origin: string | null = ORIGIN) =>
+      exports.default.fetch(`https://x/api/rooms/${code}/info`, {
+        headers: origin ? { Origin: origin } : {},
+      });
+    const code = await createRoomCode();
+    const fresh = await info(code);
+    expect(fresh.status).toBe(200);
+    expect(fresh.headers.get('Access-Control-Allow-Origin')).toBe(ORIGIN);
+    expect(await fresh.json()).toEqual({
+      exists: true,
+      phase: 'lobby',
+      players: 0,
+      maxPlayers: 6,
+      mode: 'classic',
+    });
+
+    const c = await client(code);
+    c.send({ t: 'join', v: PROTOCOL_VERSION, name: 'Sam' });
+    const w = await c.waitFor(isWelcome);
+    const res = await info(code);
+    const text = await res.text();
+    expect(JSON.parse(text)).toEqual({
+      exists: true,
+      phase: 'lobby',
+      players: 1,
+      maxPlayers: 6,
+      mode: 'classic',
+      hostName: 'Sam',
+    });
+    expect(text).not.toContain(w.secret);
+    expect(text).not.toContain(w.playerId);
+
+    const unknown = await info('ZZZZZ');
+    expect(unknown.status).toBe(404);
+    expect(await unknown.json()).toEqual({ exists: false });
+    expect((await info('abc')).status).toBe(404);
+    expect((await info(code, 'http://evil.example')).status).toBe(403);
+    expect((await info(code, null)).status).toBe(403);
+    const post = await exports.default.fetch(`https://x/api/rooms/${code}/info`, {
+      method: 'POST',
+      headers: { Origin: ORIGIN },
+    });
+    expect(post.status).toBe(405);
+  });
+
   it('oversized and malformed frames are rejected with BAD_MESSAGE', async () => {
     const code = await createRoomCode();
     const c = await client(code);

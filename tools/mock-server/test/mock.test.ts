@@ -117,3 +117,15 @@ describe('mock server', () => {
     await expect(c.open()).rejects.toThrow();
   });
 });
+
+describe('GET /api/rooms/:code/info', () => {
+  it('reports the demo room and 404s for unknown or malformed codes', async () => {
+    const ok = await fetch(`http://localhost:${server.port}/api/rooms/${DEMO_CODE}/info`);
+    expect(ok.status).toBe(200);
+    expect(await ok.json()).toMatchObject({ exists: true, phase: 'lobby', maxPlayers: 6 });
+    const missing = await fetch(`http://localhost:${server.port}/api/rooms/ZZZZZ/info`);
+    expect(missing.status).toBe(404);
+    expect(await missing.json()).toEqual({ exists: false });
+    expect((await fetch(`http://localhost:${server.port}/api/rooms/abc/info`)).status).toBe(404);
+  });
+});

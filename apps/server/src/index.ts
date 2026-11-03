@@ -50,6 +50,17 @@ async function createRoom(request: Request, env: Env, cors: Headers): Promise<Re
   return json({ error: 'INTERNAL' }, 500, cors);
 }
 
+async function roomInfo(request: Request, env: Env, code: string, cors: Headers): Promise<Response> {
+  if (!(await allow(env, `info:${clientIp(request)}`, num(env.JOIN_LIMIT_PER_MIN, 60), 60_000)))
+    return json({ error: 'RATE_LIMITED' }, 429, cors);
+  const stub = await getServerByName(env.Room, code);
+  const res = await stub.fetch(new Request('https://room.internal/__info'));
+  const info = (await res.json()) as { exists: boolean };
+  const h = new Headers(cors);
+  h.set('Cache-Control', 'no-store');
+  return json(info, info.exists ? 200 : 404, h);
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -65,6 +76,21 @@ export default {
       if (request.method !== 'POST') return json({ error: 'METHOD' }, 405, cors);
       if (!originAllowed(origin, env.ALLOWED_ORIGINS)) return json({ error: 'FORBIDDEN' }, 403);
       return createRoom(request, env, cors);
+    }
+
+    // GET /api/rooms/:code/info: public, secret-free room summary for the join screen.
+    const infoMatch = /^\/api\/rooms\/([^/]+)\/info$/.exec(url.pathname);
+    if (infoMatch) {
+      if (request.method === 'OPTIONS') {
+        return originAllowed(origin, env.ALLOWED_ORIGINS)
+          ? new Response(null, { status: 204, headers: cors })
+          : new Response('Forbidden', { status: 403 });
+      }
+      if (request.method !== 'GET') return json({ error: 'METHOD' }, 405, cors);
+      if (!originAllowed(origin, env.ALLOWED_ORIGINS)) return json({ error: 'FORBIDDEN' }, 403);
+      const raw = decodeURIComponent(infoMatch[1]!);
+      if (normalizeRoomCode(raw) !== raw) return json({ exists: false }, 404, cors);
+      return roomInfo(request, env, raw, cors);
     }
 
     if (url.pathname.startsWith('/parties/')) {
