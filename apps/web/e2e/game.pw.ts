@@ -180,6 +180,12 @@ test('Desktop 1280x800: podiums, big bays, card rack, persistent rail, keyboard 
   await expect(page.locator('[data-card="v50"]')).toHaveAttribute('data-state', /out|spent/, {
     timeout: 5000,
   });
+  // P2: a card key on a card that is out says why (same text as a tap); P4: the card says "on B".
+  if ((await page.locator('[data-card="v50"]').getAttribute('data-state')) === 'out') {
+    await expect(page.locator('[data-card="v50"] .g-card__state')).toHaveText(/^on [A-D]$/i);
+    await page.keyboard.press('3');
+    await expect(page.locator('[data-fx="status-text"]')).toContainText(/on bay [A-D] until it closes/);
+  }
   // B6: keys stay on their slot after a card is played ($75 keeps 4; $50 keeps 3).
   await expect(page.locator('[data-card="v75"] .g-kbd')).toHaveText('4');
   await expect(page.locator('[data-card="v50"] .g-kbd')).toHaveText('3');

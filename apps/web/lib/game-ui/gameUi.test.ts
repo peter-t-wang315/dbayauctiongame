@@ -119,6 +119,29 @@ describe('cardTapReason (B2: no silent taps)', () => {
   });
 });
 
+describe('P3: Proxy on top tells you what to do', () => {
+  it('short label plus an instruction; rejection text matches', () => {
+    const l = bayLegality(val(300), bay({ by: 'pat', kind: 'proxy' }), ME);
+    expect(l).toEqual({
+      legal: false,
+      reason: 'Proxy on top',
+      detail: 'A Proxy is on top: only a Proxy can beat it',
+    });
+    expect(rejectionText(bay({ by: 'pat', kind: 'proxy' }))).toBe(
+      "Can't bid that. A Proxy is on top: only a Proxy can beat it.",
+    );
+  });
+});
+
+describe('P2: card keys on spent/out slots give the tap reason', () => {
+  const v = makeView({ myHand: [val(10), { ...val(50), onBay: 1 }, proxy] });
+  it('the key still resolves to the slot, and the slot has a reason', () => {
+    expect(cardTapReason(v, cardForKey('2', v.myHand)!, 0)).toBe('Spent: that card already won an item');
+    expect(cardTapReason(v, cardForKey('3', v.myHand)!, 0)).toBe('That card is on bay B until it closes');
+    expect(cardTapReason(v, cardForKey('1', v.myHand)!, 0)).toBeNull();
+  });
+});
+
 describe('selection', () => {
   const hand = [val(10), val(50), { ...val(100), onBay: 0 }, proxy];
   it('tap selects, tap same deselects, tap other moves', () => {
