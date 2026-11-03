@@ -110,7 +110,7 @@ An agent cannot tell when the usage limit is about to hit. Requests just start f
 3. Then M3: WS3b → WS6 → WS7.
 4. Then WS8.
 
-**Running the web e2e locally:** `pnpm --filter @dbay/web test:e2e` runs the whole suite in one go (specs start/stop their own mock; Playwright starts `next dev`). Ports default to web 3100 and mock 8787; override with `E2E_WEB_PORT` / `E2E_MOCK_PORT` (read once in `apps/web/e2e/ports.ts`). The config blanks coding-agent env markers for the dev server because Next 16.4.0 exits with an upgrade nudge when it detects an agent (see `docs/progress/e2e-ports.md`).
+**Running the web e2e locally:** `pnpm --filter @dbay/web test:e2e` runs the whole suite in one go (specs start/stop their own mock; Playwright starts `next dev`). Ports default to web 3100 and mock 8787; override with `E2E_WEB_PORT` / `E2E_MOCK_PORT` (read once in `apps/web/e2e/ports.ts`). Needs Next >= 16.4.1: 16.4.0's dev server exits with a security-upgrade nudge when it detects a coding agent, which killed full-suite runs (see `docs/progress/e2e-ports.md`).
 
 ## Git workflow for sessions and agents
 Use your judgement here. Don't wait to be asked for routine git hygiene. The detailed branch and PR naming per workstream is in [06-workstreams.md](06-workstreams.md).

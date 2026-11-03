@@ -1,5 +1,5 @@
 import { defineConfig } from '@playwright/test';
-import { AGENT_ENV_OFF, MOCK_PORT, WEB_PORT } from './e2e/ports';
+import { MOCK_PORT, WEB_PORT } from './e2e/ports';
 
 // Smoke test against the mock server (docs/06 WS4). The spec starts/stops the mock itself so it can
 // restart it; only the Next dev server is managed here. Run: pnpm --filter @dbay/web test:e2e
@@ -16,6 +16,6 @@ export default defineConfig({
     url: `http://localhost:${WEB_PORT}`,
     reuseExistingServer: true,
     timeout: 120_000,
-    env: { ...AGENT_ENV_OFF, NEXT_PUBLIC_GAME_HOST: `localhost:${MOCK_PORT}` },
+    env: { NEXT_PUBLIC_GAME_HOST: `localhost:${MOCK_PORT}` },
   },
 });
