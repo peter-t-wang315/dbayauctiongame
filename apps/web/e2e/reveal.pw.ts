@@ -119,6 +119,15 @@ test('Desktop reveal 1280x800 and 1440x900: grid, progress rail, keys, standings
   await page.waitForTimeout(300);
   if (shot) await page.screenshot({ path: `${shot}/reveal-${tag}-results-1440.png` });
   if (tag === 'after') {
+    // 3 columns at 1440
+    const tops1440 = await page.locator('.rv-player').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
+    expect(tops1440.filter((t) => t === tops1440[0]).length).toBe(3);
+    // keys never fire from a focused control
+    await page.locator('.rv-rail').getByRole('button', { name: 'Leave' }).focus();
+    await page.keyboard.press('r');
+    await page.waitForTimeout(500);
+    await expect(reveal).toHaveAttribute('data-state', 'done');
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
     await page.keyboard.press('r');
     await expect(page.getByRole('button', { name: 'START GAME' })).toBeVisible();
   }
