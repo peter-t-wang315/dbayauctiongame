@@ -1002,6 +1002,19 @@
     border-radius: var(--r-pill);
     background: var(--card);
   }
+  /* crowded rows (5-6 podiums): tighter header so typical names stay readable */
+  .g-pods[data-count='5'] .g-pod__head,
+  .g-pods[data-count='6'] .g-pod__head {
+    gap: 4px;
+    padding: 4px var(--s-2);
+    font-size: 16px;
+  }
+  .g-pods[data-count='5'] .g-pod__head .tag,
+  .g-pods[data-count='6'] .g-pod__head .tag {
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    padding: 2px 4px;
+  }
   .g-pod__body {
     display: flex;
     flex-direction: column;

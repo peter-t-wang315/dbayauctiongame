@@ -26,7 +26,9 @@ export function Podiums({ players }: { players: PodiumVM[] }) {
                 {p.shape}
               </span>
               <span className="sr-only">{p.color} </span>
-              <span className="g-pod__name">{p.name}</span>
+              <span className="g-pod__name" title={p.name}>
+                {p.name}
+              </span>
               {p.me && <span className="tag">YOU</span>}
               {p.isBot && <span className="tag">BOT</span>}
               {p.away && <span className="tag">AWAY</span>}
