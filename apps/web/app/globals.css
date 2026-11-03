@@ -238,6 +238,11 @@ a {
 .scrim--bottom {
   align-items: flex-end;
   padding: 0;
+  /* tap-away closes the sheet (BottomSheet.tsx); iOS Safari only sends clicks to "clickable" divs */
+  cursor: pointer;
+}
+.scrim--bottom > .sheet {
+  cursor: auto;
 }
 .sheet {
   width: 100%;
