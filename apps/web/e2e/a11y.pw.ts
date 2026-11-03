@@ -1,6 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import path from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
+import { MOCK_PORT } from './ports';
 import { expect, test, type Page } from '@playwright/test';
 
 // Accessibility audit (04 section 8): axe (wcag2a + wcag2aa) on every screen at 390x844, light and dark,
@@ -12,7 +13,7 @@ let mock: ChildProcess | null = null;
 test.beforeAll(async () => {
   mock = spawn(process.execPath, ['--import', 'tsx', 'src/main.ts'], {
     cwd: MOCK_DIR,
-    env: { ...process.env, PORT: '8787' },
+    env: { ...process.env, PORT: MOCK_PORT },
     stdio: 'pipe',
   });
   await new Promise<void>((resolve, reject) => {

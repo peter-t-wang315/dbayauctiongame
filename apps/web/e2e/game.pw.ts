@@ -1,5 +1,6 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import path from 'node:path';
+import { MOCK_PORT } from './ports';
 import { expect, test, type Page } from '@playwright/test';
 
 // WS5 smoke vs the mock server: Classic two-tap bid, Frenzy timers, 390px layout budget.
@@ -9,7 +10,7 @@ let mock: ChildProcess | null = null;
 test.beforeAll(async () => {
   mock = spawn(process.execPath, ['--import', 'tsx', 'src/main.ts'], {
     cwd: MOCK_DIR,
-    env: { ...process.env, PORT: '8787' },
+    env: { ...process.env, PORT: MOCK_PORT },
     stdio: 'pipe',
   });
   await new Promise<void>((resolve, reject) => {
