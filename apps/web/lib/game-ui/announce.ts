@@ -43,6 +43,17 @@ export function newAnnouncements(
   return { lastN: Math.max(lastN, maxN), items };
 }
 
+/**
+ * Merge every urgent item from one snapshot into a single assertive message, in log order (the
+ * order things happened), so winning one bay and being outbid on another in the same snapshot
+ * reads both. The merged item keeps the highest `n` so the hook's clear-timer and re-read key work.
+ */
+export function combineAnnouncements(items: { n: number; text: string }[]): { n: number; text: string } | null {
+  const last = items[items.length - 1];
+  if (!last) return null;
+  return { n: last.n, text: items.map((i) => i.text).join('. ') };
+}
+
 /** True when log entry `n` is announced assertively (so the polite strip must not read it again). */
 export function isUrgentEntry(view: PlayerView, n: number): boolean {
   const e = view.log.find((x) => x.n === n);

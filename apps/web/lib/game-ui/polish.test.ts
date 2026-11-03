@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { PlayerView } from '@dbay/protocol';
-import { isUrgentEntry, newAnnouncements } from './announce';
+import { combineAnnouncements, isUrgentEntry, newAnnouncements } from './announce';
 import { itemDetails } from './itemDetails';
 import { createLongPress } from './longPress';
 
@@ -77,6 +77,34 @@ describe('assertive announcements', () => {
       'Sold to you',
     ]);
     expect(newAnnouncements(v, r.lastN).items).toEqual([]);
+  });
+  it('win + outbid in one snapshot: both are announced, in log order, as one message', () => {
+    const v = makeView({
+      log: [
+        log({ n: 5, kind: 'sold', by: ME, bay: 0, amount: 50, card: 'toys-tin-robot' }),
+        log({ n: 6, kind: 'outbid', by: ME, bay: 1 }),
+      ],
+    });
+    const r = newAnnouncements(v, 4);
+    expect(r.items).toHaveLength(2);
+    const msg = combineAnnouncements(r.items);
+    expect(msg?.n).toBe(6);
+    expect(msg?.text).toMatch(/^Sold to you.*\. You were outbid on bay B$/);
+    // reverse order in the log reads outbid first
+    const rev = makeView({
+      log: [log({ n: 5, kind: 'outbid', by: ME, bay: 1 }), log({ n: 6, kind: 'sold', by: ME, bay: 0 })],
+    });
+    expect(combineAnnouncements(newAnnouncements(rev, 4).items)?.text).toBe('You were outbid on bay B. Sold to you');
+  });
+  it('combineAnnouncements: null for none, passthrough for one', () => {
+    expect(combineAnnouncements([])).toBeNull();
+    expect(combineAnnouncements([{ n: 3, text: 'Your turn' }])).toEqual({ n: 3, text: 'Your turn' });
+  });
+  it("others' sales are not announced (the polite sale toast reads those)", () => {
+    const v = makeView({
+      log: [log({ n: 5, kind: 'sold', by: 'pat', bay: 0 }), log({ n: 6, kind: 'outbid', by: ME, bay: 1 })],
+    });
+    expect(combineAnnouncements(newAnnouncements(v, 4).items)?.text).toBe('You were outbid on bay B');
   });
   it('ignores other players, non-urgent kinds, and Frenzy turns', () => {
     const v = makeView({
