@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [
     cloudflareTest({
       wrangler: { configPath: './wrangler.jsonc' },
-      miniflare: { bindings: { ALLOWED_ORIGINS: 'http://localhost:3000' } },
+      miniflare: { bindings: { ALLOWED_ORIGINS: 'http://localhost:3000', LOG_LEVEL: 'silent' } },
     }),
   ],
   test: { include: ['test/**/*.test.ts'], testTimeout: 30_000 },
