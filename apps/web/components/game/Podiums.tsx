@@ -10,17 +10,9 @@ export function Podiums({ players }: { players: PodiumVM[] }) {
   return (
     <ul className="g-pods" aria-label="Players" data-count={players.length}>
       {players.map((p) => {
-        // 5-6 podiums: the YOU/BOT/AWAY tags move from the header to the cards line so names fit.
         const split = podiumSplit(p.wonCount, players.length);
         const shown = p.won.slice(0, split.shown);
         const more = split.more;
-        const tags = (
-          <>
-            {p.me && <span className="tag">YOU</span>}
-            {p.isBot && <span className="tag">BOT</span>}
-            {p.away && <span className="tag">AWAY</span>}
-          </>
-        );
         return (
           <li
             key={p.id}
@@ -38,13 +30,15 @@ export function Podiums({ players }: { players: PodiumVM[] }) {
               <span className="g-pod__name" title={p.name}>
                 {p.name}
               </span>
-              {!crowded && tags}
+              {p.me && <span className="tag">YOU</span>}
+              {/* 5-6 podiums: bot names already start with "Bot", so the tag is dropped to let names fit */}
+              {p.isBot && !crowded && <span className="tag">BOT</span>}
+              {p.away && <span className="tag">AWAY</span>}
             </span>
             <span className="g-pod__body">
               <span className="g-pod__cards">
                 <span className="g-pod__big">{p.cardsLeft}</span>
                 <span className="g-pod__small">cards left</span>
-                {crowded && tags}
               </span>
               <span className="g-pod__won">
                 <span className="sr-only">
