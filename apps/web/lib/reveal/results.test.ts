@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PlayerView } from '@dbay/protocol';
-import { flipCount, giftLines, rankedRows, revealGroups, revealOrder, standings, type RevealRow } from './results';
+import { flipCount, giftLines, progressRows, rankedRows, revealGroups, revealOrder, standings, type RevealRow } from './results';
 
 const player = (id: string, name: string) => ({
   id,
@@ -136,6 +136,18 @@ describe('order, flips and gift lines', () => {
       { card: 'special-gift-1', est: 0, actual: 0, tag: null },
     ];
     expect(flipCount(view([row('a', 0, 1, 0, { items }), row('b', 0, 1, 0, { items })]))).toBe(2);
+  });
+
+  it('progressRows shows a total only after that player has fully flipped', () => {
+    const items = [
+      { card: 'toys-tin-robot', est: 60, actual: 20, tag: null },
+      { card: 'toys-tin-robot', est: 60, actual: 20, tag: null },
+    ];
+    const v = view([row('a', 100, 1, 0, { items }), row('b', 50, 2, 0, { items })]);
+    expect(progressRows(v, 0).map((r) => r.total)).toEqual([null, null]);
+    expect(progressRows(v, 1).map((r) => [r.flipped, r.total])).toEqual([[1, null], [0, null]]);
+    expect(progressRows(v, 2).map((r) => r.total)).toEqual([100, null]);
+    expect(progressRows(v, 99).map((r) => [r.flipped, r.total])).toEqual([[2, 100], [2, 50]]);
   });
 
   it('describes gift outcomes', () => {
