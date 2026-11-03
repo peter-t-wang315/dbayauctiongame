@@ -84,8 +84,8 @@ test('Desktop reveal 1280x800 and 1440x900: grid, progress rail, keys, standings
     await page.waitForTimeout(500);
   }
   await expect(page.locator('.rv-player')).toHaveCount(6);
-  await expect(page.locator('[data-fx="key-legend"]')).toBeVisible();
   if (tag === 'after') {
+    await expect(page.locator('[data-fx="key-legend"]')).toBeVisible();
     await expect(page.locator('[data-fx="reveal-progress"] .rv-board__row')).toHaveCount(6);
     // grid: more than one player card on the first row; rail beside the list, not below it
     const tops = await page.locator('.rv-player').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
@@ -110,11 +110,13 @@ test('Desktop reveal 1280x800 and 1440x900: grid, progress rail, keys, standings
     // rail stays in view after scrolling the list
     await page.mouse.wheel(0, 2000);
     await expect(page.locator('.rv-rail').getByRole('button', { name: 'REMATCH' })).toBeInViewport();
-    await page.mouse.wheel(0, -2000);
+    await page.evaluate(() => window.scrollTo(0, 0));
   }
+  await page.waitForTimeout(500); // let the last flip/tag animations settle
   if (shot) await page.screenshot({ path: `${shot}/reveal-${tag}-results-1280.png` });
   await page.setViewportSize({ width: 1440, height: 900 });
   await expect(page.locator('.rv-card[data-state="hidden"]')).toHaveCount(0);
+  await page.waitForTimeout(300);
   if (shot) await page.screenshot({ path: `${shot}/reveal-${tag}-results-1440.png` });
   if (tag === 'after') {
     await page.keyboard.press('r');

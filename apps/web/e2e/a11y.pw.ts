@@ -217,3 +217,25 @@ test('gift step and reveal/results', async ({ page }) => {
   await expect(page.locator('[data-fx="reveal"]')).toHaveAttribute('data-state', 'done');
   await scan(page, 'results');
 });
+
+test('Desktop 1280x800: reveal (progress rail) and results (standings rail)', async ({ browser }) => {
+  test.setTimeout(240_000);
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const page = await ctx.newPage();
+  await startGame(page, 'Frenzy', 2);
+  const reveal = page.locator('[data-fx="reveal"]');
+  const deadline = Date.now() + 200_000;
+  while (!(await reveal.isVisible())) {
+    expect(Date.now(), 'reached the reveal').toBeLessThan(deadline);
+    const pick = page.locator('.g-gift__pick:not([disabled])').first();
+    if (await pick.isVisible().catch(() => false)) await pick.click().catch(() => {});
+    await page.waitForTimeout(500);
+  }
+  await expect(page.locator('[data-fx="reveal-progress"]')).toBeVisible();
+  await scan(page, 'desktop reveal');
+  await page.getByRole('button', { name: 'Skip' }).click();
+  await expect(reveal).toHaveAttribute('data-state', 'done');
+  await expect(page.locator('.rv-rail [data-fx="scoreboard"]')).toBeVisible();
+  await scan(page, 'desktop results');
+  await ctx.close();
+});
