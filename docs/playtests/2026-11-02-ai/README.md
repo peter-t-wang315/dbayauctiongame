@@ -31,7 +31,7 @@ Average fun: 6.25, down from 6.9. With 4 LLM players and one game each, that is 
 | # | Problem | Who | Notes / likely fix |
 |---|---|---|---|
 | P1 | **Winning an item doesn't feel like a moment.** It reads as a log line ("Yours! ..."). | all 4 | The toast and stamp exist (#34) but are brief. Add a *persistent* cue: the won item flies to / pulses in the SETS strip or podium, and the next status line says "You won {item}!" until you act. Haptic on phones. |
-| P2 | **Number keys on a spent or out card do nothing**, then the bay key says "Pick a card first". | Dev, Ray | B2 (#33) added reasons for *taps*; the keyboard path still fails silently: `cardForKey` returns null for a spent slot, so the key falls through with no message (`GameScreen.tsx` key handler). Reuse `cardTapReason` for key presses (shots/Dev-032.png). |
+| P2 | **Number keys on a spent or out card seemed to do nothing**, then the bay key said "Pick a card first". | Dev, Ray | Not a code bug: since B6 a key on a spent/out slot flashes the same reason as a tap ("That card is on bay B until it closes"), verified by a test in #48. The flash lasts ~2.6s, so snapshot players missed it. Fix with the persistent labels from P4/P5 (shots/Dev-032.png). |
 | P3 | **Proxy is unexplained**, and the bay reason "Proxy tops" doesn't say how to answer it. | Dev, Sam, Ray (Mia got the Proxy tip) | The Proxy tip only fires on selecting a Proxy. Make the illegal-bay reason say what to do: "A Proxy is on top: only a Proxy can beat it" (R15, R16 step 4). |
 | P4 | **Outbid cards stay on the bay until it closes** surprised players; some thought outbid cards return at once. | Dev (+ Mia, Sam unclear) | There is an "outbid" tip, but it is one-time and brief. Make the hand card's "out on B" state self-explanatory (shots/Dev-035.png), e.g. "on B · back when it sells". |
 | P5 | **Spent vs out** (a winning card is gone; an outbid card comes back later) isn't explained. | Mia, Ray | Pair this with P4: one short line in the hand legend or a tip on the first spent card. |
@@ -42,7 +42,7 @@ Average fun: 6.25, down from 6.9. With 4 LLM players and one game each, that is 
 | P10 | Late game: bays sit "empty" with little to bid on. | Dev, Ray | Expected (deck runs out; R13). Could say "No more items in the deck" (shots/Ray-111.png). |
 
 ## Recommended next steps
-1. **P2 + P3 + P4/P5 (small, web only):** keyboard reasons, a clearer "Proxy tops" reason, a self-explanatory out state, and spent vs out copy. These are cheap and remove the most confusion.
+1. **P3 + P4/P5 (small, web only):** a clearer "Proxy tops" reason, a self-explanatory out state, and spent vs out copy (these also cover P2). These are cheap and remove the most confusion.
 2. **P1 (win moment):** a persistent "You won {item}!" cue plus a SETS/podium pulse. This is the top ask in both playtests.
 3. **P7 and P9:** small fixes to the SETS strip and the Gift tip trigger.
 4. **P6 and P8:** design calls (a late-game nudge, reveal emphasis). Put them to the user.
