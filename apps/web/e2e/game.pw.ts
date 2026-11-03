@@ -213,6 +213,21 @@ test('Desktop 6 players at 1280x800 and 1440x900: podiums fit without clipping',
       expect(p.text).toMatch(/cards left/);
     }
     expect(new Set(pods.map((p) => p.h)).size).toBe(1); // no height change between podiums
+    // Names are readable (not ellipsized) at 6 players, e.g. "Bot Betty"; full name in title.
+    const names = await page
+      .locator('.g-pod__name')
+      .evaluateAll((els) =>
+        els.map((e) => ({
+          t: e.textContent,
+          title: e.getAttribute('title'),
+          cut: e.scrollWidth > e.clientWidth,
+        })),
+      );
+    expect(names).toHaveLength(6);
+    for (const n of names) {
+      expect(n.title).toBe(n.t);
+      expect(n.cut, `name "${n.t}" truncated at ${width}`).toBe(false);
+    }
     expect(await layout(page)).toMatchObject({ hScroll: false, vScroll: false, inner: false });
     await ctx.close();
   }

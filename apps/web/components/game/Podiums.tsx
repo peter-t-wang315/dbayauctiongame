@@ -6,6 +6,7 @@ import { SpriteView } from './Sprite';
 import { podiumSplit, type PodiumVM } from '../../lib/game-ui/podiums';
 
 export function Podiums({ players }: { players: PodiumVM[] }) {
+  const crowded = players.length >= 5;
   return (
     <ul className="g-pods" aria-label="Players" data-count={players.length}>
       {players.map((p) => {
@@ -26,9 +27,12 @@ export function Podiums({ players }: { players: PodiumVM[] }) {
                 {p.shape}
               </span>
               <span className="sr-only">{p.color} </span>
-              <span className="g-pod__name">{p.name}</span>
+              <span className="g-pod__name" title={p.name}>
+                {p.name}
+              </span>
               {p.me && <span className="tag">YOU</span>}
-              {p.isBot && <span className="tag">BOT</span>}
+              {/* 5-6 podiums: bot names already start with "Bot", so the tag is dropped to let names fit */}
+              {p.isBot && !crowded && <span className="tag">BOT</span>}
               {p.away && <span className="tag">AWAY</span>}
             </span>
             <span className="g-pod__body">
