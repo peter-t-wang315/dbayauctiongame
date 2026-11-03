@@ -134,4 +134,27 @@ export function giftLines(view: PlayerView): string[] {
   });
 }
 
-export const TAG_TEXT = { steal: 'STEAL!', ripped: 'Ripped off!' } as const;
+export interface ProgressRow {
+  id: string;
+  player: PlayerInfo | undefined;
+  /** Final total once all of this player's cards have flipped, otherwise null (never leaks early). */
+  total: number | null;
+  flipped: number;
+  count: number;
+}
+
+/**
+ * Desktop rail while the reveal runs: one row per player in reveal order, with the total shown only
+ * after that player's last card has flipped (`shown` = cards flipped so far across the whole sequence).
+ */
+export function progressRows(view: PlayerView, shown: number): ProgressRow[] {
+  let before = 0;
+  return revealOrder(view).map((r) => {
+    const count = revealGroups(r).reduce((n, g) => n + g.cards.length, 0);
+    const flipped = Math.max(0, Math.min(count, shown - before));
+    before += count;
+    return { id: r.id, player: playerById(view, r.id), total: flipped >= count ? r.total : null, flipped, count };
+  });
+}
+
+export const TAG_TEXT ={ steal: 'STEAL!', ripped: 'Ripped off!' } as const;

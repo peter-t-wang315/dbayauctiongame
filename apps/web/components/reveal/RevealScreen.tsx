@@ -2,13 +2,16 @@
 // Reveal / results screen (04 section 3.5; 01 R32-R37). Rendered by GameScreen in phases `reveal`
 // and `ended`. Cards flip one at a time (my cards first); tap anywhere or Skip to jump to the end.
 // Standings show once the sequence is done. Everything is text, so it works with sound and motion off.
+import { useEffect } from 'react';
 import type { PlayerView } from '@dbay/protocol';
+import { useDesktop } from '../../lib/game-ui/useDesktop';
 import { useRoom } from '../../lib/net/useRoom';
 import { categoryEmoji, categoryName, playerById } from '../../lib/game-ui/viewModel';
-import { flipCount, giftLines, rankedRows, revealGroups, revealOrder, standings } from '../../lib/reveal/results';
+import { flipCount, giftLines, progressRows, rankedRows, revealGroups, revealOrder, standings } from '../../lib/reveal/results';
 import { useRevealSequence } from '../../lib/reveal/useRevealSequence';
 import { PlayerChip } from '../shell/PlayerChip';
 import { FlipCard } from './FlipCard';
+import { RevealLegend, RevealProgress } from './RevealRail';
 import { Scoreboard } from './Scoreboard';
 import './reveal.css';
 
@@ -16,6 +19,27 @@ export function RevealScreen({ view }: { view: PlayerView }) {
   const room = useRoom();
   const { shown, done, skip } = useRevealSequence(flipCount(view), view.phase === 'ended');
   // While flipping: me first. Once done: final standing order, winner on top (ties share the crown).
+  const desktop = useDesktop();
+  const canRematch = done && room.isHost;
+
+  // Desktop keys (04 section 6): Space/Enter skip, R rematch (host). Never steal keys from controls.
+  useEffect(() => {
+    if (!desktop) return;
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && ['INPUT', 'TEXTAREA', 'BUTTON', 'A', 'SELECT'].includes(t.tagName)) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if ((e.key === ' ' || e.key === 'Enter') && !done) {
+        e.preventDefault();
+        skip();
+      } else if ((e.key === 'r' || e.key === 'R') && canRematch) {
+        void room.send({ t: 'rematch' });
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [desktop, done, canRematch, skip, room]);
+
   const rows = done ? rankedRows(view) : revealOrder(view).map((row) => ({ row, rank: 0 }));
 
   if (!view.reveal) {
@@ -26,6 +50,22 @@ export function RevealScreen({ view }: { view: PlayerView }) {
       </main>
     );
   }
+
+  const actions = (
+    <footer className="rv-actions">
+      {/* R37: Rematch is offered as soon as the standings show. */}
+      {!done ? null : room.isHost ? (
+        <button type="button" className="btn btn--primary" onClick={() => void room.send({ t: 'rematch' })}>
+          REMATCH
+        </button>
+      ) : (
+        <p className="hint">Waiting for host to rematch</p>
+      )}
+      <button type="button" className="btn" onClick={room.leave}>
+        Leave
+      </button>
+    </footer>
+  );
 
   let flip = 0;
   const gifts = giftLines(view);
@@ -41,7 +81,14 @@ export function RevealScreen({ view }: { view: PlayerView }) {
         )}
       </header>
 
-      {done && <Scoreboard rows={standings(view)} me={view.me} />}
+      {desktop ? (
+        <aside className="rv-rail">
+          {done ? <Scoreboard rows={standings(view)} me={view.me} /> : <RevealProgress rows={progressRows(view, shown)} me={view.me} />}
+          {actions}
+        </aside>
+      ) : (
+        done && <Scoreboard rows={standings(view)} me={view.me} />
+      )}
 
       <div className="rv-list" onClick={done ? undefined : skip}>
         {rows.map(({ row: r, rank }) => {
@@ -103,19 +150,8 @@ export function RevealScreen({ view }: { view: PlayerView }) {
         )}
       </div>
 
-      <footer className="rv-actions">
-        {/* R37: Rematch is offered as soon as the standings show. */}
-        {!done ? null : room.isHost ? (
-          <button type="button" className="btn btn--primary" onClick={() => void room.send({ t: 'rematch' })}>
-            REMATCH
-          </button>
-        ) : (
-          <p className="hint">Waiting for host to rematch</p>
-        )}
-        <button type="button" className="btn" onClick={room.leave}>
-          Leave
-        </button>
-      </footer>
+      {!desktop && actions}
+      {desktop && <RevealLegend done={done} host={room.isHost} />}
     </main>
   );
 }

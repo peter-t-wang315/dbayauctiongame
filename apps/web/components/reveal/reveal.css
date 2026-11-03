@@ -221,3 +221,52 @@
   flex-direction: column;
   gap: var(--s-2);
 }
+
+/* ---------- desktop (>=1024px): player cards in a grid + persistent right rail (04 section 6) ---------- */
+/* Desktop-only pieces (rail, legend) mount via useDesktop; the phone DOM and layout are unchanged. */
+@media (min-width: 1024px) {
+  .rv {
+    max-width: 1680px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    grid-template-areas:
+      'head rail'
+      'list rail'
+      'legend rail';
+    grid-template-rows: auto 1fr auto;
+    column-gap: var(--s-4);
+    row-gap: var(--s-3);
+    align-items: start;
+    padding-left: var(--s-4);
+    padding-right: var(--s-4);
+  }
+  .rv-head {
+    grid-area: head;
+  }
+  .rv-list {
+    grid-area: list;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    align-items: start;
+    gap: var(--s-3);
+  }
+  .rv-gifts {
+    grid-column: 1 / -1;
+  }
+  .rv-rail {
+    grid-area: rail;
+    position: sticky;
+    top: var(--s-4);
+    max-height: calc(100dvh - 2 * var(--s-4));
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+  .rv-progress .hint {
+    margin: 0 0 var(--s-2);
+  }
+  .rv-legend {
+    grid-area: legend;
+  }
+}

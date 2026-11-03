@@ -59,6 +59,70 @@ test('game reaches the reveal; Skip shows standings and Rematch', async ({ page 
   await expect(page.getByRole('button', { name: 'START GAME' })).toBeVisible();
 });
 
+// Desktop (>=1024px) reveal: 6 players, grid + persistent rail + keys. SHOT=before|after names the
+// docs screenshots (docs/mockups/desktop/reveal-*.png) when SHOTS_DIR is set.
+test('Desktop reveal 1280x800 and 1440x900: grid, progress rail, keys, standings rail', async ({ browser }) => {
+  test.setTimeout(300_000);
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const page = await ctx.newPage();
+  const shot = process.env.SHOTS_DIR;
+  const tag = process.env.SHOT ?? 'after';
+  await page.goto('/');
+  await page.getByRole('button', { name: 'CREATE A ROOM' }).click();
+  await page.waitForURL(/\/r\/[A-Z0-9]{5}$/);
+  await page.getByLabel('Your name').fill('Sam');
+  await page.getByRole('button', { name: 'JOIN THE ROOM' }).click();
+  for (let i = 0; i < 5; i++) await page.getByRole('button', { name: '+ Add bot' }).click();
+  await page.getByRole('button', { name: 'Frenzy', exact: true }).click();
+  await page.getByRole('button', { name: 'START GAME' }).click();
+  const reveal = page.locator('[data-fx="reveal"]');
+  const deadline = Date.now() + 250_000;
+  while (!(await reveal.isVisible())) {
+    expect(Date.now(), 'reached the reveal').toBeLessThan(deadline);
+    const pick = page.locator('.g-gift__pick:not([disabled])').first();
+    if (await pick.isVisible().catch(() => false)) await pick.click().catch(() => {});
+    await page.waitForTimeout(500);
+  }
+  await expect(page.locator('.rv-player')).toHaveCount(6);
+  await expect(page.locator('[data-fx="key-legend"]')).toBeVisible();
+  if (tag === 'after') {
+    await expect(page.locator('[data-fx="reveal-progress"] .rv-board__row')).toHaveCount(6);
+    // grid: more than one player card on the first row; rail beside the list, not below it
+    const tops = await page.locator('.rv-player').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
+    expect(tops.filter((t) => t === tops[0]).length).toBeGreaterThan(1);
+    const rail = await page.locator('.rv-rail').boundingBox();
+    const list = await page.locator('.rv-list').boundingBox();
+    expect(rail!.x).toBeGreaterThanOrEqual(list!.x + list!.width - 1);
+  }
+  if (shot) await page.screenshot({ path: `${shot}/reveal-${tag}-running-1280.png` });
+  // Space skips (focus on body)
+  await page.locator('body').click({ position: { x: 1, y: 1 } });
+  if (tag === 'after') await page.keyboard.press('Space');
+  else await page.getByRole('button', { name: 'Skip' }).click();
+  await expect(reveal).toHaveAttribute('data-state', 'done');
+  await expect(page.locator('.rv-card[data-state="hidden"]')).toHaveCount(0);
+  await expect(page.locator('.rv-board__row')).toHaveCount(6);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  if (tag === 'after') {
+    await expect(page.locator('.rv-rail .rv-board')).toBeVisible();
+    await expect(page.locator('.rv-rail').getByRole('button', { name: 'REMATCH' })).toBeVisible();
+    await expect(page.locator('.rv-rail').getByRole('button', { name: 'Leave' })).toBeVisible();
+    // rail stays in view after scrolling the list
+    await page.mouse.wheel(0, 2000);
+    await expect(page.locator('.rv-rail').getByRole('button', { name: 'REMATCH' })).toBeInViewport();
+    await page.mouse.wheel(0, -2000);
+  }
+  if (shot) await page.screenshot({ path: `${shot}/reveal-${tag}-results-1280.png` });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(page.locator('.rv-card[data-state="hidden"]')).toHaveCount(0);
+  if (shot) await page.screenshot({ path: `${shot}/reveal-${tag}-results-1440.png` });
+  if (tag === 'after') {
+    await page.keyboard.press('r');
+    await expect(page.getByRole('button', { name: 'START GAME' })).toBeVisible();
+  }
+  await ctx.close();
+});
+
 test('rules page shows every section with TOC chips', async ({ page }) => {
   await page.goto('/rules');
   await expect(page.getByRole('heading', { name: 'How to play' })).toBeVisible();
