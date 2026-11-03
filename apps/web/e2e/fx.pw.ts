@@ -47,7 +47,7 @@ test('M toggles sound, persisted; reduced motion game still plays', async ({ pag
   expect(JSON.parse((await stored())!).sound).toBe(false);
 
   // Bid by tapping a card then a bay (effects run in the background of a normal bid).
-  // Highest card, so the bid beats whatever a bot has already opened with.
+  // Last slot is the Proxy: always legal on a non-empty bay I'm not winning, so it beats any bot opener.
   await page.locator('[data-fx="hand-card"]').last().click();
   await page.locator('[data-fx="bay"]').first().click();
   // The accepted bid flashes "Bid sent: <face> on <bay>" in the status line (and the bump runs).
