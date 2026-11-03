@@ -33,6 +33,19 @@ export const GameLengthSchema = z.enum(LENGTH_OPTIONS);
 export type GameLength = z.infer<typeof GameLengthSchema>;
 export const DEFAULT_LENGTH: GameLength = 'standard';
 
+/** Public, secret-free room summary for `GET /api/rooms/:code/info` (05 section 5). */
+export type RoomInfo =
+  | { exists: false }
+  | {
+      exists: true;
+      phase: 'lobby' | 'playing' | 'reveal' | 'ended';
+      /** Seats taken, bots included (bots count toward ROOM_FULL). */
+      players: number;
+      maxPlayers: number;
+      mode: 'classic' | 'frenzy';
+      hostName?: string;
+    };
+
 export const ErrorCodeSchema = z.enum([
   'BAD_MESSAGE',
   'VERSION_MISMATCH',

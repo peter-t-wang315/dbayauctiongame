@@ -50,6 +50,45 @@ async function createRoom(request: Request, env: Env, cors: Headers): Promise<Re
   return json({ error: 'INTERNAL' }, 500, cors);
 }
 
+/** Info lookups per IP per minute (default). Lower than joins: each unknown code wakes an empty DO. */
+const INFO_LIMIT_PER_MIN_DEFAULT = 20;
+
+/** JSON response that must never be cached (info answers change as the lobby fills). */
+function infoJson(body: unknown, status: number, cors?: Headers): Response {
+  const h = new Headers(cors);
+  h.set('Cache-Control', 'no-store');
+  return json(body, status, h);
+}
+
+function safeDecode(s: string): string | null {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return null;
+  }
+}
+
+async function roomInfo(
+  request: Request,
+  env: Env,
+  code: string,
+  cors: Headers,
+): Promise<Response> {
+  if (
+    !(await allow(
+      env,
+      `info:${clientIp(request)}`,
+      num(env.INFO_LIMIT_PER_MIN, INFO_LIMIT_PER_MIN_DEFAULT),
+      60_000,
+    ))
+  )
+    return infoJson({ error: 'RATE_LIMITED' }, 429, cors);
+  const stub = await getServerByName(env.Room, code);
+  const res = await stub.fetch(new Request('https://room.internal/__info'));
+  const info = (await res.json()) as { exists: boolean };
+  return infoJson(info, info.exists ? 200 : 404, cors);
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -67,14 +106,30 @@ export default {
       return createRoom(request, env, cors);
     }
 
+    // GET /api/rooms/:code/info: public, secret-free room summary for the join screen.
+    const infoMatch = /^\/api\/rooms\/([^/]+)\/info$/.exec(url.pathname);
+    if (infoMatch) {
+      if (request.method === 'OPTIONS') {
+        return originAllowed(origin, env.ALLOWED_ORIGINS)
+          ? new Response(null, { status: 204, headers: cors })
+          : new Response('Forbidden', { status: 403 });
+      }
+      if (request.method !== 'GET') return infoJson({ error: 'METHOD' }, 405, cors);
+      if (!originAllowed(origin, env.ALLOWED_ORIGINS)) return infoJson({ error: 'FORBIDDEN' }, 403);
+      const raw = safeDecode(infoMatch[1]!);
+      if (raw === null || normalizeRoomCode(raw) !== raw)
+        return infoJson({ exists: false }, 404, cors);
+      return roomInfo(request, env, raw, cors);
+    }
+
     if (url.pathname.startsWith('/parties/')) {
       if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket')
         return new Response('Not found', { status: 404 });
       if (!originAllowed(origin, env.ALLOWED_ORIGINS))
         return new Response('Forbidden', { status: 403 });
       // /parties/room/<CODE>; unknown but well-formed codes connect and get ROOM_NOT_FOUND on hello.
-      const raw = decodeURIComponent(url.pathname.split('/')[3] ?? '');
-      const code = normalizeRoomCode(raw) === raw ? raw : null;
+      const raw = safeDecode(url.pathname.split('/')[3] ?? '');
+      const code = raw !== null && normalizeRoomCode(raw) === raw ? raw : null;
       if (!code || url.pathname.split('/').length !== 4)
         return new Response('Not found', { status: 404 });
       if (!(await allow(env, `join:${clientIp(request)}`, num(env.JOIN_LIMIT_PER_MIN, 60), 60_000)))

@@ -14,7 +14,7 @@ export {
   BOT_DELAY_MIN_MS,
   BOT_DELAY_MAX_MS,
 } from './reduce';
-export { view } from './view';
+export { view, roomInfo } from './view';
 export {
   secretsMatch,
   newRateState,

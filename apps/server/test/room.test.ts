@@ -1,5 +1,10 @@
 import { PROTOCOL_VERSION, type ServerMsg } from '@dbay/protocol';
-import { env, evictDurableObject, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
+import {
+  env,
+  evictDurableObject,
+  runDurableObjectAlarm,
+  runInDurableObject,
+} from 'cloudflare:test';
 import { exports } from 'cloudflare:workers';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Client, ORIGIN, createRoomCode, isErr, isSnap, isWelcome } from './helpers';
@@ -75,6 +80,81 @@ describe('room server', () => {
     });
     expect(badCode.status).toBe(404);
     expect((await exports.default.fetch('https://x/')).status).toBe(200);
+  });
+
+  it('GET /api/rooms/:code/info: public summary, no secrets; 404 for unknown/malformed; origin checked', async () => {
+    const info = (code: string, origin: string | null = ORIGIN) =>
+      exports.default.fetch(`https://x/api/rooms/${code}/info`, {
+        headers: origin ? { Origin: origin } : {},
+      });
+    const code = await createRoomCode();
+    const fresh = await info(code);
+    expect(fresh.status).toBe(200);
+    expect(fresh.headers.get('Access-Control-Allow-Origin')).toBe(ORIGIN);
+    expect(await fresh.json()).toEqual({
+      exists: true,
+      phase: 'lobby',
+      players: 0,
+      maxPlayers: 6,
+      mode: 'classic',
+    });
+
+    const c = await client(code);
+    c.send({ t: 'join', v: PROTOCOL_VERSION, name: 'Sam' });
+    const w = await c.waitFor(isWelcome);
+    const res = await info(code);
+    const text = await res.text();
+    expect(JSON.parse(text)).toEqual({
+      exists: true,
+      phase: 'lobby',
+      players: 1,
+      maxPlayers: 6,
+      mode: 'classic',
+      hostName: 'Sam',
+    });
+    expect(text).not.toContain(w.secret);
+    expect(text).not.toContain(w.playerId);
+
+    const unknown = await info('ZZZZZ');
+    expect(unknown.status).toBe(404);
+    expect(await unknown.json()).toEqual({ exists: false });
+    expect((await info('abc')).status).toBe(404);
+    expect((await info(code, 'http://evil.example')).status).toBe(403);
+    expect((await info(code, null)).status).toBe(403);
+    const post = await exports.default.fetch(`https://x/api/rooms/${code}/info`, {
+      method: 'POST',
+      headers: { Origin: ORIGIN },
+    });
+    expect(post.status).toBe(405);
+    expect(post.headers.get('Cache-Control')).toBe('no-store');
+    expect(unknown.headers.get('Cache-Control')).toBe('no-store');
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
+  });
+
+  it('malformed percent-encoding in the code is a 404, not a crash (info and websocket routes)', async () => {
+    const info = await exports.default.fetch('https://x/api/rooms/%ZZ/info', {
+      headers: { Origin: ORIGIN },
+    });
+    expect(info.status).toBe(404);
+    expect(await info.json()).toEqual({ exists: false });
+    const ws = await exports.default.fetch('https://x/parties/room/%ZZ', {
+      headers: { Upgrade: 'websocket', Origin: ORIGIN },
+    });
+    expect(ws.status).toBe(404);
+  });
+
+  it('info lookups are rate limited per IP (429, no-store)', async () => {
+    let last = 200;
+    let cacheControl: string | null = null;
+    for (let i = 0; i < 30 && last !== 429; i++) {
+      const r = await exports.default.fetch('https://x/api/rooms/ZZZZY/info', {
+        headers: { Origin: ORIGIN, 'CF-Connecting-IP': '203.0.113.9' },
+      });
+      last = r.status;
+      cacheControl = r.headers.get('Cache-Control');
+    }
+    expect(last).toBe(429);
+    expect(cacheControl).toBe('no-store');
   });
 
   it('oversized and malformed frames are rejected with BAD_MESSAGE', async () => {
@@ -169,7 +249,9 @@ describe('room server', () => {
     // Simulate a crash that skipped Bob's close handling: storage says Bob is still connected.
     await runInDurableObject(stubFor(code), async (_inst, state) => {
       const key = [...(await state.storage.list({ prefix: 'state:v' })).keys()][0]!;
-      const s = (await state.storage.get(key)) as { players: Array<{ id: string; connected: boolean }> };
+      const s = (await state.storage.get(key)) as {
+        players: Array<{ id: string; connected: boolean }>;
+      };
       s.players.find((p) => p.id === b.playerId)!.connected = true;
       await state.storage.put(key, s);
     });

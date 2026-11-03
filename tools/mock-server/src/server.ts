@@ -2,10 +2,12 @@
 import { createServer, type Server } from 'node:http';
 import {
   MAX_INBOUND_BYTES,
+  MAX_PLAYERS,
   ROOM_CODE_ALPHABET,
   ROOM_CODE_LENGTH,
   normalizeRoomCode,
   parseClientFrame,
+  type RoomInfo,
   type ServerMsg,
 } from '@dbay/protocol';
 import { WebSocketServer, type WebSocket } from 'ws';
@@ -51,7 +53,7 @@ export function startMockServer(port = 8787, log = console.log): Promise<MockSer
 
   const http: Server = createServer((req, res) => {
     res.setHeader('Access-Control-Allow-Origin', req.headers.origin ?? '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'content-type');
     if (req.method === 'OPTIONS') return void res.writeHead(204).end();
     if (req.method === 'POST' && req.url === '/api/rooms') {
@@ -61,6 +63,33 @@ export function startMockServer(port = 8787, log = console.log): Promise<MockSer
       return void res
         .writeHead(201, { 'content-type': 'application/json' })
         .end(JSON.stringify({ code }));
+    }
+    const info = /^\/api\/rooms\/([^/?]+)\/info$/.exec(req.url?.split('?')[0] ?? '');
+    if (req.method === 'GET' && info) {
+      let code: string | null = null;
+      try {
+        code = normalizeRoomCode(decodeURIComponent(info[1]!));
+      } catch {
+        /* malformed percent-encoding: treated as unknown */
+      }
+      const room = code ? rooms.get(code) : undefined;
+      const host = room?.players.find((p) => p.id === room.hostId);
+      const body: RoomInfo = room
+        ? {
+            exists: true,
+            phase: room.phase,
+            players: room.players.length,
+            maxPlayers: MAX_PLAYERS,
+            mode: room.opts.mode,
+            ...(host ? { hostName: host.name } : {}),
+          }
+        : { exists: false };
+      return void res
+        .writeHead(room ? 200 : 404, {
+          'content-type': 'application/json',
+          'cache-control': 'no-store',
+        })
+        .end(JSON.stringify(body));
     }
     res.writeHead(404).end();
   });

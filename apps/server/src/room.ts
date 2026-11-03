@@ -12,6 +12,7 @@ import {
   newRateState,
   rateLimit,
   reduce,
+  roomInfo,
   roomNotFound,
   SCHEMA_VERSION,
 } from '@dbay/room-core';
@@ -98,6 +99,12 @@ export class Room extends Server<Env> {
       await this.ctx.storage.setAlarm(this.state.deadlines[0]?.at ?? Date.now() + 3_600_000);
       this.log({ room: this.name, event: 'create', rev: 0 });
       return new Response(JSON.stringify({ code: this.name }), { status: 201 });
+    }
+    if (request.method === 'GET' && url.pathname.endsWith('/__info')) {
+      const live = this.state && !this.incompatible && isCompatible(this.state) ? this.state : null;
+      return new Response(JSON.stringify(live ? roomInfo(live) : { exists: false }), {
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
     return new Response('Not found', { status: 404 });
   }

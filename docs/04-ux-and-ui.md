@@ -97,7 +97,7 @@ Wireframes are 390px wide. `[ ]` = button, `( )` = chip.
 |  Sound is off. Change in ⋯ later.    |
 +--------------------------------------+
 ```
-- Elements: code header, invite line ("You're invited to a dBay auction. Pick a name to take a seat."; host name and player count are a follow-up, they need a server room-info endpoint), name input (prefilled from `localStorage`), note that color and shape are assigned on join, Join button (also performs Web Audio unlock, Wake Lock request, and sends `hello`).
+- Elements: code header, invite line ("You're invited to a dBay auction. Pick a name to take a seat."; followed by one info line from `GET /api/rooms/:code/info`: "Room KQ4TZ · 3/6 players · Classic · Host Sam"; if the code is unknown, the game already started, or the room is full, a message card replaces the form; if the fetch fails the line is simply omitted), name input (prefilled from `localStorage`), note that color and shape are assigned on join, Join button (also performs Web Audio unlock, Wake Lock request, and sends `hello`).
 - States: loading (skeleton while checking room), **Room not found** (full-screen card "No such room. Check the code." [Back]), **Room full** ("This room is full (6/6)." [Back]), **Game already started** ("Game in progress. Ask the host to rejoin you" shown only if no stored secret; with stored secret it silently reconnects), **Kicked** ("You were removed from this room." [Home], no retry), name taken (suffix added server-side, shown in lobby as "Pat 2"), name invalid (inline).
 - Host vs non-host: identical. A returning player with a stored secret skips this screen.
 

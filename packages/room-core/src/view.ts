@@ -1,7 +1,7 @@
 // view(): the ONLY path from room state to any client (05 sections 6.3 and 10).
 // Every field is built explicitly from an allow-list; nothing is spread from state.
 import { engine, type BidCard, type EngineBay, type EngineState } from '@dbay/engine';
-import { DEFAULT_LENGTH, PLAYER_COLORS, type PlayerView } from '@dbay/protocol';
+import { DEFAULT_LENGTH, MAX_PLAYERS, PLAYER_COLORS, type PlayerView, type RoomInfo } from '@dbay/protocol';
 import type { RoomState } from './types';
 
 type Color = (typeof PLAYER_COLORS)[number];
@@ -139,4 +139,18 @@ export function view(state: RoomState, playerId: string, now?: number): PlayerVi
     out.reveal = engine.score(g);
   }
   return out;
+}
+
+/** Allow-listed public summary of a room (no ids, secrets, hands or seed). */
+export function roomInfo(s: RoomState): RoomInfo {
+  if (s.meta.closed) return { exists: false };
+  const host = s.players.find((p) => p.id === s.meta.hostId);
+  return {
+    exists: true,
+    phase: s.meta.phase,
+    players: s.players.length,
+    maxPlayers: MAX_PLAYERS,
+    mode: s.meta.opts.mode,
+    ...(host ? { hostName: host.name } : {}),
+  };
 }
