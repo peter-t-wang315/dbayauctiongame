@@ -10,7 +10,7 @@ import { crossedSecond, deriveFx, type FxEvent } from '../../lib/fx/events';
 import { playSfx } from '../../lib/fx/audio';
 import { fireConfetti } from '../../lib/fx/confetti';
 import { PATTERNS, patternFor, vibrate } from '../../lib/fx/haptics';
-import { sfxFor } from '../../lib/fx/plan';
+import { pickSfx } from '../../lib/fx/plan';
 import { getSettings } from '../../lib/fx/settings';
 import '../../styles/fx.css';
 
@@ -71,7 +71,7 @@ function visual(e: FxEvent): void {
     setTimeout(() => {
       const el = q(`[data-fx="bay"][data-bay="${bay}"] [data-fx="sold-stamp"]`);
       if (rm) run(el, { opacity: [0, 1] }, 0.15);
-      else run(el, { scale: [1.8, 0.94, 1], opacity: [0, 1, 1] }, 0.22, EASE);
+      else run(el, { scale: [2.2, 0.9, 1.04, 1], opacity: [0, 1, 1, 1] }, 0.36, EASE);
     }, 50);
   }
 }
@@ -79,13 +79,10 @@ function visual(e: FxEvent): void {
 /** Sounds per snapshot are capped so a reconnect after a backgrounded tab doesn't burst. */
 const MAX_SFX_PER_SNAPSHOT = 2;
 
-function handle(e: FxEvent, sound: boolean): boolean {
-  const s = sound ? sfxFor(e) : null;
-  if (s) playSfx(s);
+function handle(e: FxEvent): void {
   const p = patternFor(e);
   if (p) vibrate(p);
   visual(e);
-  return !!s;
 }
 
 /** Soonest running clock in ms, or null. */
@@ -112,10 +109,11 @@ export function FxController({ view }: { view: PlayerView | null }) {
     }
     const events = deriveFx(prev.current, view);
     prev.current = view;
-    let sounds = 0;
+    // Most important sounds first (sale / outbid sting beat a bid tok); playSfx honors the mute.
+    for (const s of pickSfx(events, MAX_SFX_PER_SNAPSHOT)) playSfx(s);
     for (const e of events) {
       if (e.t === 'reveal') confettiArmed.current = true;
-      if (handle(e, sounds < MAX_SFX_PER_SNAPSHOT)) sounds++;
+      handle(e);
     }
   }, [view]);
 

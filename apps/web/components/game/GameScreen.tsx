@@ -16,7 +16,10 @@ import { Podiums } from './Podiums';
 import { ItemDetailsBody } from './ItemDetails';
 import { MenuPanel, MySets, type MenuTab } from './MenuPanel';
 import { RevealScreen } from '../reveal/RevealScreen';
+import { SaleToast } from './SaleToast';
+import { isSaleEntry } from '../../lib/game-ui/sale';
 import { StatusStrip } from './StatusStrip';
+import { TipToast } from './TipToast';
 import { flyCard } from '../../lib/fx/fly';
 import { podiumModels } from '../../lib/game-ui/podiums';
 import { useDesktop } from '../../lib/game-ui/useDesktop';
@@ -27,10 +30,11 @@ import {
   useServerNow,
   useSoldStamps,
 } from '../../lib/game-ui/hooks';
-import { bayLegality, lockedReason, rejectionText } from '../../lib/game-ui/legal';
+import { bayLegality, cardTapReason, lockedReason, rejectionText } from '../../lib/game-ui/legal';
 import {
   IDLE,
   bayForKey,
+  CARD_KEYS,
   cardForKey,
   reconcile,
   tapCard,
@@ -53,7 +57,6 @@ import {
 import './game.css';
 
 const FLASH_MS = 2600;
-const KEY_CARDS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='];
 
 export function GameScreen() {
   const room = useRoom();
@@ -113,14 +116,24 @@ function GameScreenInner() {
   const onCard = useCallback(
     (id: string) => {
       if (!view) return;
+      // B2: a tap that can't select says why (spent, out on a bay, not my turn, cooling down).
+      const why = view.phase === 'playing' ? cardTapReason(view, id, cooldown, pending?.card ?? null) : null;
+      if (why) showFlash(why);
       setSel((s) => tapCard(s, id, view.myHand, canSelect));
     },
-    [view, canSelect],
+    [view, canSelect, cooldown, pending, showFlash],
   );
 
   const onBay = useCallback(
     async (idx: number) => {
-      if (!view || !sel.card || pending) return;
+      if (!view || pending) return;
+      if (!sel.card) {
+        // B2: no silent bay taps either.
+        if (view.phase !== 'playing') return;
+        const why = lockedReason(view, cooldown);
+        showFlash(why ?? (view.bays[idx]?.card ? 'Pick a card first, then tap a bay' : 'Empty bay'));
+        return;
+      }
       const card = view.myHand.find((c) => c.id === sel.card);
       const bay = view.bays[idx];
       if (!card || !bay) return;
@@ -154,7 +167,7 @@ function GameScreenInner() {
         );
       }
     },
-    [view, sel.card, pending, room, showFlash],
+    [view, sel.card, pending, cooldown, room, showFlash],
   );
 
   // Desktop keyboard flow (04 section 6). Never steal keys from inputs.
@@ -228,7 +241,7 @@ function GameScreenInner() {
     pending && pending.card === s.id ? { ...s, onBay: pending.bay } : s,
   );
   const selectedCard = sel.card ? view.myHand.find((c) => c.id === sel.card) : undefined;
-  const banner = bannerFor(view);
+  const banner = bannerFor(view, pending !== null);
   const progress = progressOf(view);
   const status = latestStatus(view);
   const going =
@@ -247,7 +260,7 @@ function GameScreenInner() {
       : (status?.text ?? (frenzy ? 'Frenzy! Bid any time.' : 'Doors open! First bays are up.')));
   const summary = summarizeCollection(me?.collection ?? [], me?.gifts ?? 0);
   const keyHints: Record<string, string> = {};
-  for (const k of KEY_CARDS) {
+  for (const k of CARD_KEYS) {
     const id = cardForKey(k, view.myHand);
     if (id) keyHints[id] = k;
   }
@@ -274,7 +287,12 @@ function GameScreenInner() {
       <div className="g-screen" data-bays={bays.length} data-layout={layout}>
         <StatusStrip
           text={stripText}
-          silent={flash === null && !!status && isUrgentEntry(view, status.n)}
+          silent={
+            flash === null &&
+            !going &&
+            !!status &&
+            (isUrgentEntry(view, status.n) || isSaleEntry(view, status.n))
+          }
           title={banner.title}
           sub={subtext}
           mine={banner.mine}
@@ -299,7 +317,8 @@ function GameScreenInner() {
             setMenuOpen(true);
           }}
         />
-        {desktop && <Podiums players={podiumModels(view)} />}
+        <TipToast view={view} selectedProxy={selectedCard?.kind === 'proxy'} />
+        {desktop && <Podiums players={podiumModels(view, pending !== null)} />}
         <Hand
           slots={slots}
           selected={sel.card}
@@ -356,6 +375,7 @@ function GameScreenInner() {
         <div className="sr-only" aria-live="assertive" aria-atomic="true" data-fx="assertive-live">
           {announcement && <span key={announcement.n}>{announcement.text}</span>}
         </div>
+        <SaleToast view={view} />
         {gifting && <GiftStep view={view} now={now} send={room.send} />}
       </div>
 

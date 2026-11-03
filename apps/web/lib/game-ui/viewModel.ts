@@ -218,7 +218,10 @@ export function eventText(view: PlayerView, e: LogEntry): string | null {
       return `${nm} passes`;
     case 'autoPass':
       // R13: auto-pass is either a disconnected human or a player with no legal bid (bots are never away).
-      return who && !who.isBot && !who.connected ? `${nm} is away: auto-pass` : `${nm} has no legal bid: skipped`;
+      // No legal bid happens with cards in hand once the deck is dry: empty bays take no bids and the
+      // rest are already mine or unbeatable (playtest B7), so say why.
+      if (who && !who.isBot && !who.connected) return `${nm} is away: auto-pass`;
+      return e.by === me ? 'No bay you can bid on: skipped' : `${nm} has no bay to bid on: skipped`;
     case 'bid':
       return `${nm} bids ${amt} on ${item}`;
     case 'outbid': {
@@ -226,7 +229,9 @@ export function eventText(view: PlayerView, e: LogEntry): string | null {
       if (e.by !== me) return null;
       const top = e.bay !== undefined ? view.bays[e.bay]?.topBid : null;
       const topWho = playerById(view, top?.by);
-      return topWho ? `Outbid by ${topWho.shape} ${topWho.name}! ${formatBid(top ?? null) ?? ''}` : `Outbid on ${item}!`;
+      return topWho
+        ? `Outbid on ${item} by ${topWho.shape} ${topWho.name}! ${formatBid(top ?? null) ?? ''}`
+        : `Outbid on ${item}!`;
     }
     case 'lead':
       return e.by === me ? `You lead ${item} at ${amt}` : null;
@@ -282,13 +287,37 @@ export function logLines(view: PlayerView): { n: number; text: string }[] {
     .filter((l): l is { n: number; text: string } => l.text !== null);
 }
 
-/** Banner text for Classic/Frenzy (04 section 4.6). */
-export function bannerFor(view: PlayerView): { title: string; mine: boolean; color: string | null } {
+/**
+ * Banner text for Classic/Frenzy (04 section 4.6). `pending`: my bid is in flight. The server keeps
+ * the call on me through the gap after my action, so "Your turn" (and `mine`, which drives the turn
+ * frame, Pass and the e2e hook) holds only while my window is open and nothing is in flight (B1).
+ */
+export function bannerFor(
+  view: PlayerView,
+  pending = false,
+): { title: string; mine: boolean; color: string | null } {
   if (view.stage === 'gifts') return { title: 'GIFT TIME', mine: false, color: null };
   if (view.opts.mode === 'frenzy') return { title: 'FRENZY', mine: false, color: null };
   const t = view.turn;
   if (!t) return { title: 'Get ready', mine: false, color: null };
-  if (t.player === view.me) return { title: 'Your turn', mine: true, color: t.color };
+  if (t.player === view.me) {
+    if (t.phase === 'window' && !pending) return { title: 'Your turn', mine: true, color: t.color };
+    return { title: myGapTitle(view, pending), mine: false, color: t.color };
+  }
   const who = playerById(view, t.player);
   return { title: `${who?.shape ?? ''} ${who?.name ?? 'Someone'}'s turn`.trim(), mine: false, color: t.color };
+}
+
+/** What I did with my call, for the gap after it: the newest of my entries since my last turn event. */
+function myGapTitle(view: PlayerView, pending: boolean): string {
+  if (pending) return 'Bid placed, waiting...';
+  const sorted = [...view.log].sort((a, b) => b.n - a.n);
+  for (const e of sorted) {
+    if (e.by !== view.me) continue;
+    if (e.kind === 'turn') break;
+    if (e.kind === 'bid') return 'Bid placed, waiting...';
+    if (e.kind === 'pass') return 'Passed';
+    if (e.kind === 'autoPass') return 'Skipped';
+  }
+  return 'Waiting...';
 }

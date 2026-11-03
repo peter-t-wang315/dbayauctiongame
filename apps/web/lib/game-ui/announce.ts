@@ -2,7 +2,7 @@
 // events interrupt: my Classic turn, being outbid, and winning an item. Everything else stays
 // in the polite status strip. Pure: derives text from new log entries, no React or clock.
 import type { PlayerView } from '@dbay/protocol';
-import { BAY_LETTERS, type LogEntry } from './viewModel';
+import { BAY_LETTERS, cardInfo, type LogEntry } from './viewModel';
 
 /** Text to announce assertively for this log entry, or null if it is not urgent for me. */
 export function urgentText(view: PlayerView, e: LogEntry): string | null {
@@ -12,8 +12,12 @@ export function urgentText(view: PlayerView, e: LogEntry): string | null {
       return view.opts.mode === 'classic' ? 'Your turn' : null;
     case 'outbid':
       return `You were outbid on bay ${e.bay !== undefined ? (BAY_LETTERS[e.bay] ?? e.bay + 1) : ''}`.trim();
-    case 'sold':
-      return 'Sold to you';
+    case 'sold': {
+      // Names the item: the polite strip line ("Yours! ...") is silenced for this entry, and the
+      // sale toast (sale.ts) does not speak my wins, so this is the only read.
+      const item = e.card ? cardInfo(e.card)?.name : undefined;
+      return item ? `Sold to you: ${item}` : 'Sold to you';
+    }
     default:
       return null;
   }
