@@ -66,14 +66,21 @@
   }
 }
 
+/* Desktop: the toast mounts at the top of the right rail (GameScreen), in flow, so it never covers
+   the podiums or bays; the log below it just gets a little shorter while it shows. */
 @media (min-width: 1024px) {
   .g-tipanchor {
-    margin-top: calc(-1 * var(--s-3));
+    display: contents; /* no empty flex item (and gap) in the rail while no tip shows */
   }
   .g-tip {
-    left: auto;
-    right: 0;
-    width: min(520px, 100%);
+    position: static;
+    flex-wrap: wrap;
+  }
+  .g-tip__text {
+    flex: 1 1 100%;
+  }
+  .g-tip__ok {
+    margin-left: auto;
   }
 }
 

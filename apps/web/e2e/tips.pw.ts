@@ -1,6 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import path from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 import { MOCK_PORT } from './ports';
 
 // First-game tips (04 section 4.8) vs the mock server: the first-turn tip shows once, never blocks a
@@ -87,4 +88,37 @@ test('storage that throws: the tip still shows once', async ({ page }) => {
   });
   await startClassic(page);
   await expect(page.locator('[data-fx="tip"][data-tip="firstTurn"]')).toBeVisible({ timeout: 40_000 });
+});
+
+test('desktop 1280x800, 6 players: the tip sits in the rail and covers no podium or bay', async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const page = await ctx.newPage();
+  await page.goto('/');
+  await page.getByRole('button', { name: 'CREATE A ROOM' }).click();
+  await page.waitForURL(/\/r\/[A-Z0-9]{5}$/);
+  await page.getByLabel('Your name').fill('Sam');
+  await page.getByRole('button', { name: 'JOIN THE ROOM' }).click();
+  for (let i = 0; i < 5; i++) await page.getByRole('button', { name: '+ Add bot' }).click();
+  await page.getByRole('button', { name: 'Classic', exact: true }).click();
+  await page.getByRole('button', { name: 'START GAME' }).click();
+  const tip = page.locator('[data-fx="tip"]');
+  await expect(tip).toBeVisible({ timeout: 40_000 });
+  await expect(page.locator('[data-fx="podium"]')).toHaveCount(6);
+  await page.waitForTimeout(400); // entrance animation
+  const t = (await tip.boundingBox())!;
+  const boxes = [
+    ...(await page.locator('.g-pods, [data-fx="podium"], [data-fx="bay"]').all()),
+  ];
+  expect(boxes.length).toBeGreaterThan(6);
+  for (const el of boxes) {
+    const b = (await el.boundingBox())!;
+    const overlap = t.x < b.x + b.width && b.x < t.x + t.width && t.y < b.y + b.height && b.y < t.y + t.height;
+    expect(overlap, `tip overlaps ${await el.getAttribute('class')}`).toBe(false);
+  }
+  await expect(page.locator('[data-fx="tip-live"]')).toHaveAttribute('aria-live', 'polite');
+  const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
+  expect(axe.violations.map((v) => v.id)).toEqual([]);
+  await page.getByRole('button', { name: /Got it/ }).click();
+  await expect(tip).toHaveCount(0);
+  await ctx.close();
 });
