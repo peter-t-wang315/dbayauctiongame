@@ -18,6 +18,7 @@ import { MenuPanel, MySets, type MenuTab } from './MenuPanel';
 import { RevealScreen } from '../reveal/RevealScreen';
 import { SaleToast } from './SaleToast';
 import { isSaleEntry } from '../../lib/game-ui/sale';
+import { winLine } from '../../lib/game-ui/win';
 import { StatusStrip } from './StatusStrip';
 import { TipToast } from './TipToast';
 import { flyCard } from '../../lib/fx/fly';
@@ -29,6 +30,7 @@ import {
   useOutbid,
   useServerNow,
   useSoldStamps,
+  useWinCue,
 } from '../../lib/game-ui/hooks';
 import { bayLegality, bidSentText, cardTapReason, lockedReason, rejectionText } from '../../lib/game-ui/legal';
 import {
@@ -89,6 +91,7 @@ function GameScreenInner() {
   const stamps = useSoldStamps(view);
   const outbid = useOutbid(view);
   const announcement = useAnnouncer(view);
+  const { cue: win, pulse: winPulse } = useWinCue(view);
 
   // A new snapshot may invalidate the selection (turn ended, card spent, phase change).
   useEffect(() => {
@@ -252,11 +255,13 @@ function GameScreenInner() {
         (remainingMs(b.endsAt, now) ?? 99999) <= 3000 &&
         (remainingMs(b.endsAt, now) ?? 0) > 0,
     );
+  // P1: my win stays on the status line until my next action (unless something urgent replaces it).
+  const winText = winLine(view, win, status?.n ?? null);
   const stripText =
     flash ??
     (going
       ? 'Going once... going twice...'
-      : (status?.text ?? (frenzy ? 'Frenzy! Bid any time.' : 'Doors open! First bays are up.')));
+      : (winText ?? status?.text ?? (frenzy ? 'Frenzy! Bid any time.' : 'Doors open! First bays are up.')));
   const summary = summarizeCollection(me?.collection ?? [], me?.gifts ?? 0);
   const keyHints: Record<string, string> = {};
   for (const k of CARD_KEYS) {
@@ -289,8 +294,7 @@ function GameScreenInner() {
           silent={
             flash === null &&
             !going &&
-            !!status &&
-            (isUrgentEntry(view, status.n) || isSaleEntry(view, status.n))
+            (winText !== null || (!!status && (isUrgentEntry(view, status.n) || isSaleEntry(view, status.n))))
           }
           title={banner.title}
           sub={subtext}
@@ -317,7 +321,7 @@ function GameScreenInner() {
           }}
         />
         {!desktop && <TipToast view={view} selectedProxy={selectedCard?.kind === 'proxy'} />}
-        {desktop && <Podiums players={podiumModels(view, pending !== null)} />}
+        {desktop && <Podiums players={podiumModels(view, pending !== null, win?.card ?? null)} />}
         <Hand
           slots={slots}
           selected={sel.card}
@@ -369,7 +373,7 @@ function GameScreenInner() {
             );
           })}
         </div>
-        {!desktop && <CollectionStrip summary={summary} onOpen={() => setSetsOpen(true)} />}
+        {!desktop && <CollectionStrip summary={summary} onOpen={() => setSetsOpen(true)} win={win} pulse={winPulse} />}
         {desktop && <KeyLegend bays={bays.length} />}
         <div className="sr-only" aria-live="assertive" aria-atomic="true" data-fx="assertive-live">
           {announcement && <span key={announcement.n}>{announcement.text}</span>}
@@ -384,6 +388,8 @@ function GameScreenInner() {
           <TipToast view={view} selectedProxy={selectedCard?.kind === 'proxy'} />
           <DesktopRail
             view={view}
+            win={win}
+            pulse={winPulse}
             logOpen={logOpen}
             onToggleLog={() => setLogOpen((o) => !o)}
             onOpenPanel={(t) => {
@@ -401,7 +407,7 @@ function GameScreenInner() {
         {detail && <ItemDetailsBody d={detail} onClose={() => setDetailBay(null)} />}
       </BottomSheet>
       <BottomSheet open={setsOpen} onClose={() => setSetsOpen(false)} title="Your collections">
-        <MySets view={view} />
+        <MySets view={view} win={win} />
         <button type="button" className="btn btn--primary" onClick={() => setSetsOpen(false)}>
           Back to bidding
         </button>

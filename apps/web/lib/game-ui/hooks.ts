@@ -1,10 +1,11 @@
 'use client';
 // Small React hooks for the game screen. Time always comes from the room's server-clock estimate.
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PlayerView } from '@dbay/protocol';
 import { combineAnnouncements, newAnnouncements } from './announce';
 import { SALE_FX } from './sale';
 import { nextBarTotal } from './timers';
+import { newWin, WIN_FX, winCleared, type WinCue } from './win';
 
 /** Re-render every `everyMs` while `active`; returns the current server time estimate. */
 export function useServerNow(serverNow: () => number, active: boolean, everyMs = 100): number {
@@ -138,4 +139,35 @@ export function useAnnouncer(
     return () => clearTimeout(id);
   }, [view, holdMs]);
   return cur;
+}
+
+/**
+ * The lasting cue for my newest win (win.ts): `cue` stays until I act (or my turn comes round) or win
+ * again; `pulse` is true for the first WIN_FX.pulseMs. `dismiss` also ends it (opening my sets).
+ */
+export function useWinCue(view: PlayerView | null): { cue: WinCue | null; pulse: boolean; dismiss: () => void } {
+  const lastN = useRef<number | null>(null);
+  const [cue, setCue] = useState<WinCue | null>(null);
+  const [pulse, setPulse] = useState(false);
+  useEffect(() => {
+    if (!view) return;
+    const r = newWin(view, lastN.current);
+    lastN.current = r.lastN;
+    if (r.win) {
+      setCue(r.win);
+      setPulse(true);
+      return;
+    }
+    setCue((c) => (c && winCleared(view, c) ? null : c));
+  }, [view]);
+  useEffect(() => {
+    if (!pulse) return;
+    const id = setTimeout(() => setPulse(false), WIN_FX.pulseMs);
+    return () => clearTimeout(id);
+  }, [pulse, cue?.n]);
+  const dismiss = useCallback(() => {
+    setCue(null);
+    setPulse(false);
+  }, []);
+  return { cue: cue, pulse: pulse && cue !== null, dismiss };
 }

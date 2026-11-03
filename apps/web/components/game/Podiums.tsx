@@ -20,6 +20,7 @@ export function Podiums({ players }: { players: PodiumVM[] }) {
             data-fx="podium"
             data-turn={p.turn ? 'true' : undefined}
             data-me={p.me ? 'true' : undefined}
+            data-fresh={p.freshId ? 'true' : undefined}
             style={{ ['--pc' as string]: `var(--p-${p.color})` }}
           >
             <span className="g-pod__head">
@@ -49,7 +50,7 @@ export function Podiums({ players }: { players: PodiumVM[] }) {
                 <span className="g-pod__row" aria-hidden="true">
                   {shown.length === 0 && <span className="g-pod__small">No items yet</span>}
                   {shown.map((w) => (
-                    <span key={w.id} title={w.name}>
+                    <span key={w.id} title={w.name} data-new={w.id === p.freshId ? 'true' : undefined}>
                       <SpriteView sprite={w.sprite} size={24} />
                     </span>
                   ))}

@@ -117,11 +117,31 @@ describe('tip triggers', () => {
     ).not.toContain('pairSet');
   });
 
-  it('gift: a Gift is sitting on a bay', () => {
-    const v = makeView({ bays: [bay(0, 'special-gift-1'), bay(1, 'media-violin')] });
-    expect(ids(v)).toEqual(['gift']);
-    // a Display Case is not a Gift
-    expect(ids(makeView({ bays: [bay(0, 'special-display-case-1')] }))).toEqual([]);
+  it('gift (P9): only when I can bid on a Gift this turn, or I hold one', () => {
+    const hand = [{ id: 'v50', kind: 'value' as const, value: 50 }];
+    const giftBays = [bay(0, 'special-gift-1'), bay(1, 'media-violin')];
+    // A Gift just sitting on a bay while it is not my turn: no tip (the playtest's complaint).
+    expect(ids(makeView({ bays: giftBays, myHand: hand }))).toEqual([]);
+    // My turn, a card that can bid on it: tip.
+    expect(ids(makeView({ ...myTurn, bays: giftBays, myHand: hand })).includes('gift')).toBe(true);
+    // My turn but nothing in hand beats the Gift's top bid: no Gift tip.
+    const topped = [bay(0, 'special-gift-1', [{ by: 'pat', card: 'v100', kind: 'value', value: 100 }])];
+    expect(ids(makeView({ ...myTurn, bays: topped, myHand: hand })).includes('gift')).toBe(false);
+    // ...and a card already out on a bay does not count as available.
+    expect(
+      ids(makeView({ ...myTurn, bays: giftBays, myHand: [{ ...hand[0]!, onBay: 1 }] })).includes('gift'),
+    ).toBe(false);
+    // I am already the top bidder on the Gift: nothing to bid on.
+    const mineTop = [bay(0, 'special-gift-1', [{ by: ME, card: 'v50', kind: 'value', value: 50 }])];
+    expect(ids(makeView({ ...myTurn, bays: mineTop, myHand: hand })).includes('gift')).toBe(false);
+    // Winning one (in my collection or pending) triggers it, any time.
+    const held = withCollection(['special-gift-1'])(makeView());
+    expect(ids(held)).toEqual(['gift']);
+    const pending = makeView();
+    pending.players[0]!.gifts = 1;
+    expect(ids(pending)).toEqual(['gift']);
+    // A Display Case is not a Gift
+    expect(ids(makeView({ ...myTurn, bays: [bay(0, 'special-display-case-1')], myHand: hand })).includes('gift')).toBe(false);
   });
 
   it('proxy: a Proxy is played on any bay, or I pick one up', () => {
@@ -133,7 +153,7 @@ describe('tip triggers', () => {
   });
 
   it('no tips outside bidding: gift stage, reveal, lobby', () => {
-    const busy = makeView({ ...myTurn, bays: [bay(0, 'special-gift-1')] });
+    const busy = makeView({ ...myTurn, bays: [bay(0, 'special-gift-1')], myHand: [{ id: 'v50', kind: 'value', value: 50 }] });
     expect(ids(busy).length).toBeGreaterThan(0);
     expect(ids({ ...busy, stage: 'gifts' })).toEqual([]);
     expect(ids({ ...busy, phase: 'reveal' })).toEqual([]);
@@ -144,6 +164,7 @@ describe('tip triggers', () => {
     const v = withCollection(['toys-pink-snake', 'toys-bean-bag-bear'])(
       makeView({
         ...myTurn,
+        myHand: [{ id: 'p2', kind: 'proxy' }],
         bays: [
           bay(0, 'special-gift-1', [{ by: 'pat', card: 'p1', kind: 'proxy' }]),
           bay(1, 'media-violin', [
@@ -159,7 +180,7 @@ describe('tip triggers', () => {
 
 describe('nextTip: one time per device', () => {
   it('skips tips already seen and returns null when all are seen', () => {
-    const v = makeView({ ...myTurn, bays: [bay(0, 'special-gift-1')] });
+    const v = makeView({ ...myTurn, bays: [bay(0, 'special-gift-1')], myHand: [{ id: 'v50', kind: 'value', value: 50 }] });
     expect(nextTip(v, new Set())?.id).toBe('firstTurn');
     expect(nextTip(v, new Set<TipId>(['firstTurn']))?.id).toBe('gift');
     expect(nextTip(v, new Set<TipId>(['firstTurn', 'gift']))).toBeNull();

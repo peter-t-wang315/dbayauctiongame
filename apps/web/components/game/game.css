@@ -1624,3 +1624,51 @@
     animation: none;
   }
 }
+
+/* ---------- win moment (playtest 11-02 P1): the item I just won stays marked NEW until my next action ---------- */
+.g-new {
+  font: 800 10px/1 var(--font-body);
+  letter-spacing: 0.5px;
+  color: #1e1a14;
+  background: var(--gold);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--r-chip);
+  padding: 1px 4px;
+}
+/* On the phone strip the row with the new item moves to the front so overflow can never clip it. */
+.g-sets__item[data-new='true'] {
+  order: -1;
+}
+.g-sets[data-new='true'] {
+  box-shadow: inset 0 0 0 3px var(--gold);
+}
+.g-sets .g-wild[data-new='true'],
+.g-crow--wild[data-new='true'] {
+  outline: 3px solid var(--gold);
+}
+.g-crow[data-new='true'] {
+  box-shadow: inset 0 0 0 3px var(--gold);
+}
+.g-pod[data-fresh='true'] {
+  box-shadow: 0 0 0 3px var(--gold);
+}
+.g-pod [data-new='true'] {
+  outline: 3px solid var(--gold);
+  outline-offset: 1px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .g-sets[data-pulse='true'],
+  .g-crow[data-pulse='true'],
+  .g-pod[data-fresh='true'] {
+    animation: g-win-pulse 0.9s ease-in-out 5;
+  }
+  @keyframes g-win-pulse {
+    0%,
+    100% {
+      filter: none;
+    }
+    50% {
+      filter: brightness(1.2) saturate(1.25);
+    }
+  }
+}
