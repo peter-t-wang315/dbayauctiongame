@@ -19,13 +19,15 @@ export interface PodiumVM {
   /** Items won, newest first. */
   won: { id: string; name: string; sprite: Sprite | null }[];
   wonCount: number;
+  /** My newest win (win.ts cue): this item's sprite is marked new. */
+  freshId: string | null;
 }
 
 /**
  * Me first, then seating order. The turn marker shows only while the called player's window is
  * open; my own clears as soon as my bid is in flight (`pending`, playtest B1).
  */
-export function podiumModels(view: PlayerView, pending = false): PodiumVM[] {
+export function podiumModels(view: PlayerView, pending = false, freshCard: string | null = null): PodiumVM[] {
   const t = view.turn;
   const turnId =
     view.opts.mode === 'classic' &&
@@ -58,6 +60,7 @@ export function podiumModels(view: PlayerView, pending = false): PodiumVM[] {
         .map((b) => BAY_LETTERS[b.idx] ?? String(b.idx + 1)),
       won,
       wonCount: won.length,
+      freshId: p.id === view.me && freshCard && won.some((w) => w.id === freshCard) ? freshCard : null,
     };
   });
 }

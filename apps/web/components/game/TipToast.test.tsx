@@ -41,3 +41,23 @@ describe('SETS strip', () => {
     expect(html).toContain('3 of a kind scores x2.');
   });
 });
+
+describe('SETS strip: wild and win cue', () => {
+  const strip = (cards: string[], win = null as import('../../lib/game-ui/win').WinCue | null) =>
+    renderToStaticMarkup(createElement(CollectionStrip, { summary: summarizeCollection(cards), onOpen: () => {}, win }));
+  it('P7: shows the Display Case and the set it joins; nothing when there is none', () => {
+    const html = strip(['special-display-case-1', 'toys-pink-snake', 'toys-bean-bag-bear']);
+    expect(html).toContain('data-fx="sets-wild"');
+    expect(html).toMatch(/WILD[^<]*Toys/);
+    expect(html).toContain('joins Toys at the end');
+    expect(strip(['toys-pink-snake'])).not.toContain('sets-wild');
+  });
+  it('P1: the set holding my new item is marked NEW', () => {
+    const win = { n: 1, card: 'toys-pink-snake', name: 'Pink Snake', category: 'toys' as const, special: null, text: 'You won Pink Snake!' };
+    const html = strip(['toys-pink-snake'], win);
+    expect(html).toContain('data-new="true"');
+    expect(html).toContain('>NEW<');
+    expect(html).toContain('New: Pink Snake.');
+    expect(strip(['toys-pink-snake'])).not.toContain('>NEW<');
+  });
+});

@@ -3,6 +3,7 @@
 // local selection); the seen-set lives in localStorage on this device. No React, no clock.
 // Copy is checked against docs/01 (R15-R16 Proxy, R19 sale, R27-R30 Gift, R33 sets, R35 scoring).
 import type { PlayerView } from '@dbay/protocol';
+import { bayLegality } from './legal';
 import { BAY_LETTERS, cardInfo, summarizeCollection } from './viewModel';
 
 export type TipId = 'firstTurn' | 'outbid' | 'pairSet' | 'gift' | 'proxy';
@@ -60,8 +61,20 @@ function tipFor(id: TipId, view: PlayerView, ctx: TipContext): Tip | null {
       const row = summarizeCollection(mine?.collection ?? []).rows.find((r) => r.count === 2);
       return row ? { id, text: TIP_TEXT.pairSet(row.name) } : null;
     }
-    case 'gift':
-      return view.bays.some((b) => cardInfo(b.card)?.special === 'gift') ? { id, text: TIP_TEXT.gift } : null;
+    case 'gift': {
+      // P9 (playtest 11-02): not just because a Gift is on the board. It matters when I can bid on it
+      // during my turn (a legal card in hand), or once I hold one.
+      const bidOnIt =
+        view.canAct &&
+        view.bays.some(
+          (b) =>
+            cardInfo(b.card)?.special === 'gift' && view.myHand.some((c) => c.onBay === undefined && bayLegality(c, b, me).legal),
+        );
+      const mine = view.players.find((p) => p.id === me);
+      const holding =
+        (mine?.gifts ?? 0) > 0 || (mine?.collection ?? []).some((c) => cardInfo(c)?.special === 'gift');
+      return bidOnIt || holding ? { id, text: TIP_TEXT.gift } : null;
+    }
     case 'proxy': {
       const played = view.bays.some((b) => b.card !== null && b.stack.some((s) => s.kind === 'proxy'));
       return played || ctx.selectedProxy ? { id, text: TIP_TEXT.proxy } : null;

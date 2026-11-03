@@ -6,7 +6,7 @@ import type { PlayerView } from '@dbay/protocol';
 import { PlayerChip } from '../shell/PlayerChip';
 import { RulesContent } from '../rules/RulesContent';
 import { SoundHapticsToggles } from '../fx/SoundHapticsToggles';
-import { CollectionsView } from './Collections';
+import { CollectionsView, type WinMark } from './Collections';
 import { TipsAgain } from './TipToast';
 import { logLines, summarizeCollection } from '../../lib/game-ui/viewModel';
 
@@ -60,9 +60,9 @@ export function MenuPanel({
   );
 }
 
-export function MySets({ view }: { view: PlayerView }) {
+export function MySets({ view, win, pulse }: { view: PlayerView } & WinMark) {
   const me = view.players.find((p) => p.id === view.me);
-  return <CollectionsView summary={summarizeCollection(me?.collection ?? [], me?.gifts ?? 0)} />;
+  return <CollectionsView summary={summarizeCollection(me?.collection ?? [], me?.gifts ?? 0)} win={win} pulse={pulse} />;
 }
 
 function Players({ view }: { view: PlayerView }) {
