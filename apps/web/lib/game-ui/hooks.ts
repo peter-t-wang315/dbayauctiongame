@@ -2,7 +2,7 @@
 // Small React hooks for the game screen. Time always comes from the room's server-clock estimate.
 import { useEffect, useRef, useState } from 'react';
 import type { PlayerView } from '@dbay/protocol';
-import { newAnnouncements } from './announce';
+import { combineAnnouncements, newAnnouncements } from './announce';
 import { SALE_FX } from './sale';
 import { nextBarTotal } from './timers';
 
@@ -131,7 +131,7 @@ export function useAnnouncer(
     if (!view) return;
     const r = newAnnouncements(view, lastN.current);
     lastN.current = r.lastN;
-    const last = r.items[r.items.length - 1];
+    const last = combineAnnouncements(r.items);
     if (!last) return;
     setCur(last);
     const id = setTimeout(() => setCur((c) => (c?.n === last.n ? null : c)), holdMs);

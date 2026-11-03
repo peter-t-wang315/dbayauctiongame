@@ -44,6 +44,12 @@ export function lockedReason(view: PlayerView, cooldownMs: number): string | nul
   return 'Wait for your color';
 }
 
+/** Confirmation flash after the server accepts my bid, e.g. "Bid sent: $50 on B". */
+export function bidSentText(card: Pick<HandCardView, 'kind' | 'value'>, bayIdx: number): string {
+  const face = card.kind === 'proxy' ? 'Proxy' : `$${card.value}`;
+  return `Bid sent: ${face} on ${BAY_LETTERS[bayIdx] ?? bayIdx + 1}`;
+}
+
 /**
  * Why tapping this hand card does nothing, or null when it selects (playtest B2: silent taps).
  * Shown as a short flash in the status text. `pendingCard` is the card whose bid is in flight.
