@@ -7,6 +7,9 @@ const config: NextConfig = {
   // dev server. Without these, hydration and RSC navigation are blocked and "Create a room"
   // hangs on "Creating...".
   allowedDevOrigins: ['127.0.0.1', '192.168.*.*', '10.*.*.*', '172.*.*.*', '*.local'],
+  // Dev only: hide the Next dev-tools pill; on phones it sat over the hand and ate taps in local
+  // playtests (playtest B10). Production never shows it.
+  devIndicators: false,
 };
 
 export default config;

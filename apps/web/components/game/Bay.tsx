@@ -197,8 +197,14 @@ export function Bay(p: BayProps) {
           </kbd>
         )}
         {p.sold && (
-          <span className="g-sold" data-fx="sold-stamp" aria-hidden="true">
-            SOLD
+          <span
+            className="g-sold"
+            data-fx="sold-stamp"
+            data-mine={p.sold.by && p.sold.by.id === p.me?.id ? 'true' : undefined}
+            style={p.sold.by ? { ['--sold' as string]: `var(--p-${p.sold.by.color})` } : undefined}
+            aria-hidden="true"
+          >
+            <span className="g-sold__slab">SOLD!</span>
             <span className="g-sold__who">
               {p.sold.by ? `${p.sold.by.shape} ${p.sold.by.name}` : ''}
               {p.sold.amount !== undefined

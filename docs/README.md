@@ -75,9 +75,9 @@ This is a browser version of the 2001 *eBay Electronic Talking Auction Game*, re
 ## Working within usage limits (Claude Pro, $20/mo)
 The project is built on the Pro plan. Usage is capped per rolling window and per week, and every subagent spends from the same budget. **Plan work to finish within limits, not to maximize parallelism.** This section overrides the concurrency suggestions in 06.
 
-- **Do it yourself first.** Handle work inline in the main session. Only spawn a subagent when it really saves effort or the user asks: a large isolated research sweep, the pre-PR review, or a truly independent workstream.
-- **Parallelism: at most 3 coding subagents at a time**, plus at most 1 reviewer subagent. Only run workstreams in parallel when 06 says they have no file conflicts. Parallel agents spend the usage window faster; they don't stretch it. If several agents run at once, they can all be cut off at the same moment, which is why the checkpoint protocol below is mandatory.
-- **Model choice:**
+- **Subagents: standing permission (user, 2026-11-02).** The lead agent spawns whatever subagents the work needs, without asking, and picks their type, model and effort level itself. The points below are defaults to weigh, not limits. See also the root `CLAUDE.md`.
+- **Parallelism: about 3 coding subagents at a time** is a good default, plus reviewers as needed. Only run workstreams in parallel when 06 says they have no file conflicts. Parallel agents spend the usage window faster; they don't stretch it. If several agents run at once, they can all be cut off at the same moment, which is why the checkpoint protocol below is mandatory.
+- **Model choice (defaults; the lead agent decides):**
   - **Sonnet** is the default for coding and reviews.
   - **Haiku** is for mechanical or bulk work: lookups, data entry such as the 60 items and sprites, simple refactors.
   - **Opus** is reserved for hard design or debugging problems, and only when needed.
