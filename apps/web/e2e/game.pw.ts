@@ -185,6 +185,39 @@ test('Desktop 1280x800: podiums, big bays, card rack, persistent rail, keyboard 
   await ctx.close();
 });
 
+test('Desktop 6 players at 1280x800 and 1440x900: podiums fit without clipping', async ({
+  browser,
+}) => {
+  for (const [width, height] of [
+    [1280, 800],
+    [1440, 900],
+  ] as const) {
+    const ctx = await browser.newContext({ viewport: { width, height } });
+    const page = await ctx.newPage();
+    await startGame(page, 'Classic', 5);
+    await expect(page.locator('[data-fx="podium"]')).toHaveCount(6);
+    const pods = await page.locator('[data-fx="podium"]').evaluateAll((els) =>
+      els.map((e) => {
+        const row = e.querySelector('.g-pod__won')!;
+        return {
+          overflow: e.scrollHeight > e.clientHeight || e.scrollWidth > e.clientWidth,
+          wonOverflow: row.scrollHeight > row.clientHeight || row.scrollWidth > row.clientWidth,
+          h: Math.round(e.getBoundingClientRect().height),
+          text: (e.textContent ?? '').replace(/\s+/g, ' '),
+        };
+      }),
+    );
+    for (const p of pods) {
+      expect(p.overflow).toBe(false);
+      expect(p.wonOverflow).toBe(false);
+      expect(p.text).toMatch(/cards left/);
+    }
+    expect(new Set(pods.map((p) => p.h)).size).toBe(1); // no height change between podiums
+    expect(await layout(page)).toMatchObject({ hScroll: false, vScroll: false, inner: false });
+    await ctx.close();
+  }
+});
+
 for (const [mode, bots, bays] of [
   ['Classic', 4, 4],
   ['Frenzy', 2, 3],

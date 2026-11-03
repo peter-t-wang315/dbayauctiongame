@@ -3,16 +3,15 @@
 // name), whose turn it is (Classic) or which bays they lead (Frenzy), cards left, and the items
 // they have won as small 12x12 sprites at integer scale (24px = 2x). Mounted only at >=1024px.
 import { SpriteView } from './Sprite';
-import type { PodiumVM } from '../../lib/game-ui/podiums';
-
-const MAX_SPRITES = 6;
+import { podiumSplit, type PodiumVM } from '../../lib/game-ui/podiums';
 
 export function Podiums({ players }: { players: PodiumVM[] }) {
   return (
     <ul className="g-pods" aria-label="Players" data-count={players.length}>
       {players.map((p) => {
-        const shown = p.won.slice(0, MAX_SPRITES);
-        const more = p.wonCount - shown.length;
+        const split = podiumSplit(p.wonCount, players.length);
+        const shown = p.won.slice(0, split.shown);
+        const more = split.more;
         return (
           <li
             key={p.id}
@@ -37,14 +36,21 @@ export function Podiums({ players }: { players: PodiumVM[] }) {
                 <span className="g-pod__big">{p.cardsLeft}</span>
                 <span className="g-pod__small">cards left</span>
               </span>
-              <span className="g-pod__won" aria-label={`${p.wonCount} items won`}>
-                {shown.length === 0 && <span className="g-pod__small">No items yet</span>}
-                {shown.map((w) => (
-                  <span key={w.id} title={w.name}>
-                    <SpriteView sprite={w.sprite} size={24} />
-                  </span>
-                ))}
-                {more > 0 && <span className="g-pod__small">+{more}</span>}
+              <span className="g-pod__won">
+                <span className="sr-only">
+                  {p.wonCount === 0
+                    ? 'No items won'
+                    : `${p.wonCount} ${p.wonCount === 1 ? 'item' : 'items'} won: ${p.won.map((w) => w.name).join(', ')}`}
+                </span>
+                <span className="g-pod__row" aria-hidden="true">
+                  {shown.length === 0 && <span className="g-pod__small">No items yet</span>}
+                  {shown.map((w) => (
+                    <span key={w.id} title={w.name}>
+                      <SpriteView sprite={w.sprite} size={24} />
+                    </span>
+                  ))}
+                  {more > 0 && <span className="g-pod__more">+{more}</span>}
+                </span>
               </span>
             </span>
             <span className="g-pod__live">
