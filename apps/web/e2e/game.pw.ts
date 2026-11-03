@@ -91,10 +91,27 @@ test('Classic 3 bays at 390x844: fits without scrolling, two-tap bid works', asy
   // after my bid the turn ends: hand locked
   await expect(page.locator('[data-fx="hand-card"][data-state="locked"]').first()).toBeVisible();
   await expect(page.locator('[data-fx="turn-frame"]')).toHaveCount(0);
+  // B1: no stale "Your turn" once the bid is in (the call stays on me through the gap)
+  await expect(page.locator('[data-fx="turn-banner"][data-mine="true"]')).toHaveCount(0);
+  await expect(page.locator('[data-fx="turn-banner"]')).not.toContainText('Your turn');
+  // B2: tapping the card that is out on a bay says why instead of doing nothing (force: the card is
+  // aria-disabled, so Playwright would otherwise wait until it comes back)
+  if ((await page.locator('[data-card="v50"]').getAttribute('data-state')) === 'out') {
+    await page.locator('[data-card="v50"]').click({ force: true });
+    await expect(page.locator('[data-fx="status-text"]')).toContainText(/on bay [A-D] until it closes/);
+  }
   // the collection sheet opens and closes
   await page.getByRole('button', { name: /Your collections/ }).click();
   await expect(page.getByRole('dialog', { name: 'Your collections' })).toBeVisible();
   await page.getByRole('button', { name: 'Back to bidding' }).click();
+  // B9: the menu closes on a tap outside the sheet, not on a tap inside it
+  await page.getByRole('button', { name: /Menu: players/ }).click();
+  const menu = page.getByRole('dialog', { name: 'Menu' });
+  await expect(menu).toBeVisible();
+  await menu.getByRole('heading', { name: 'Menu' }).click();
+  await expect(menu).toBeVisible();
+  await page.mouse.click(195, 12);
+  await expect(menu).toBeHidden();
 });
 
 test('Frenzy 4 bays at 390x844: timers show, bid without waiting for a turn', async ({ page }) => {
@@ -156,12 +173,15 @@ test('Desktop 1280x800: podiums, big bays, card rack, persistent rail, keyboard 
   await expect(page.locator('#g-rail-log')).toBeVisible();
   await page.screenshot({ path: 'test-results/ws5-desktop.png' });
   await expect(page.getByText(/Your turn, Sam/).first()).toBeVisible({ timeout: 40_000 });
-  await page.keyboard.press('3'); // third unspent value card ($50)
+  await page.keyboard.press('3'); // slot 3 is always $50
   await expect(page.locator('[data-card="v50"]')).toHaveAttribute('data-state', 'selected');
   await page.keyboard.press('q');
   await expect(page.locator('[data-card="v50"]')).toHaveAttribute('data-state', /out|spent/, {
     timeout: 5000,
   });
+  // B6: keys stay on their slot after a card is played ($75 keeps 4; $50 keeps 3).
+  await expect(page.locator('[data-card="v75"] .g-kbd')).toHaveText('4');
+  await expect(page.locator('[data-card="v50"] .g-kbd')).toHaveText('3');
   await ctx.close();
 });
 

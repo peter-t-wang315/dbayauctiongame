@@ -7,7 +7,7 @@ Fixed facts: 3-6 players. Colors/shapes: Red ●, Blue ▲, Yellow ■, Green �
 ## 1. Design principles
 
 1. **Gameplay owns the screen.** Bays, hand and the active turn get space first. Anything else lives in the ⋯ sheet. Nothing needed to play is behind a tap, and the game screen never scrolls.
-2. **Feedback lives on existing elements.** Pop, flash, slide and stamp the bay/chip/card that already exist. No toasts, banners-on-banners, full-screen flashes or screen shake.
+2. **Feedback lives on existing elements.** Pop, flash, slide and stamp the bay/chip/card that already exist. No toast stacks, banners-on-banners, full-screen flashes or screen shake. One exception: the single, click-through won/lost sale toast (section 7, "Sale moment"), added after the 2026-10-27 playtest because sales read as log lines.
 3. **Playable with sound off, and with color ignored.** Every player is color + shape + name. Every event has text in the status strip. Sound and haptics are garnish.
 4. **Chunky and tactile, not form-like.** Big rounded cards, bold numerals, spring press states. Controls look like physical objects (cards, stamps, paddles), not inputs.
 5. **Calm by default, loud on the moments that matter.** Idle UI is quiet and flat. Motion is reserved for the six feedback moments.
@@ -148,9 +148,9 @@ Wireframes are 390px wide. `[ ]` = button, `( )` = chip.
 - Host only: Rematch (returns everyone to lobby). Others see "Waiting for host to rematch" and Leave.
 
 ### 3.5b Gift step (phase `playing`, stage `gifts`; same route as the game)
-Shown as a centered card over the dimmed bays, one Gift at a time (owner: WS6, mounted by the game route). Text: "{holder} opened a Gift!" Then:
-- **Holder** (stage `pickTarget`): list of eligible players (chip + item count) and a countdown (`gift.endsAt`). Others see "{holder} is choosing...".
-- **Victim** (stage `pickItem`): own scorable cards (items and Display Cases, never Gifts) as tappable tokens with est values; countdown; the pick sends `giftGive`. Others see "{victim} must give up something...".
+Shown as a centered card over the dimmed bays, one Gift at a time (owner: WS6, mounted by the game route). Text: "{holder} opened a Gift!" ("You opened a Gift!" for the holder; the victim sees "{holder}'s Gift picked you!" instead, playtest B3). Then:
+- **Holder** (stage `pickTarget`): "Pick who has to give you an item:" over a list of eligible players (chip + item count) and a countdown (`gift.endsAt`). Others see "{holder} is choosing who has to give them an item...".
+- **Victim** (stage `pickItem`): "Give {holder} one of your items:" over own scorable cards (items and Display Cases, never Gifts) as tappable tokens with est values; countdown; the pick sends `giftGive`. The holder sees "{victim} is giving you an item..."; others see "{victim} is giving {holder} an item...".
 - Fizzle or timeout default shows as a status-strip line ("{name} gave up {item}"). Values stay hidden until `reveal`.
 
 ### 3.6 Rules `/rules` and sheet
@@ -192,7 +192,7 @@ Both are under the 780px ceiling; the leftover (84px / 140px) is slack for the i
 - **Bidder chip**: player color + shape + name; slides in on bid.
 - **Per-bay timer (Frenzy only)**: bar plus mm:ss text; the clock is a 20px display number, and only in the last 3s it turns into a `--danger` chip with a tick pulse (no pulse under reduced motion); "+3s" floats on extension. In Classic the bay has no timer; the shared clock is in the merged HUD (4.6).
 - **Winning state:** a bay you top is strong, not faded: 3px border in your player color, a tint of that color, a 6px top stripe, a green "✓ You're winning" pill (text + check, so it is not color-only) and a larger price. Faded (45%) plus stripes is only for illegal bays; empty bays are dashed.
-- **SOLD stamp**: rotated -8deg slab over the bay in the winner's color with their shape; stays 1.2s then bay refills (new item slides in). Reduced motion: stamp appears without slam.
+- **SOLD stamp**: a "SOLD!" rubber-stamp slab (tilted -6deg inside a full-bay overlay, 5px border in the winner's color, hard offset shadow; brass text when sold to you) with the winner's shape, name and price underneath. 56px on rows and 30-40px on tiles; from 600px wide 64px rows and 48px tiles. Stays 2.0s (`SALE_FX.stampHoldMs` in `lib/game-ui/sale.ts`), then the refilled bay shows. Reduced motion: stamp fades in (150ms) without the slam; the hold is the same.
 - **Legal/illegal** (when a card is selected): legal = `--ok` 3px glow border + "tap to bid"; illegal = 45% opacity plus diagonal-stripe pattern and a small reason label ("Beat $150"). Never color alone.
 - Long-press (400ms): item details sheet (name, category, est, flavor text).
 
@@ -219,12 +219,14 @@ Left: event text (one line, ellipsis, crossfade 150ms). Middle: round pips (ASSU
 | Classic: other's turn | "{name}'s turn" |
 | Classic: turn passed | "{name} passes" |
 | Auto-pass (disconnected) | "{name} is away: auto-pass" |
+| Auto-pass (no legal bid, R13) | "{name} has no bay to bid on: skipped" / you: "No bay you can bid on: skipped" |
 | Frenzy start | "Frenzy! Bid any time." |
 | New bid | "{name} bids ${amount} on {item}" |
-| Outbid (you) | "Outbid by {name}! ${amount}" |
+| Outbid (you) | "Outbid on {item} by {name}! ${amount}" |
 | Your bid is top | "You lead {item} at ${amount}" |
 | Your bid accepted (local, 2.6s) | "Bid sent: ${amount} on {bay letter}" ("Proxy" for a Proxy card) |
 | Bid rejected | "Can't bid that. Beat ${top}." |
+| Tap that can't act (local, 2.6s) | Spent: "Spent: that card already won an item"; out: "That card is on bay {letter} until it closes"; locked: "Not your turn" / "Cooling down" / "Gift time"; bay with no card picked: "Pick a card first, then tap a bay" |
 | Timer extended (Frenzy) | "Late bid! +3s on {item}" |
 | Last 3 seconds | "Going once... going twice..." |
 | Sold | "SOLD! {item} to {name} for ${amount}" |
@@ -241,13 +243,32 @@ Left: event text (one line, ellipsis, crossfade 150ms). Middle: round pips (ASSU
 | Reconnected | "Back in the room" |
 
 ### 4.6 Merged HUD: turn + clock (one ~94px bar with 4.5)
-There is no separate banner. One navy bar has a left accent border in the turn player's color. Row 1 (44px): tap area (opens the log) with the turn title on line 1 ("Your turn" as a pill in your color, or "{shape} {name}'s turn") and the status text on line 2 (plus the game-progress bar); then the clock, Pass (Classic, my turn) and the ⋯ button. A thin 8px timer bar sits along the bottom. The event text is exposed once, as a separate sr-only polite live region.
+There is no separate banner. One navy bar has a left accent border in the turn player's color. Row 1 (44px): tap area (opens the log) with the turn title on line 1 ("Your turn" as a pill in your color, or "{shape} {name}'s turn"; once my bid is sent, through the gap after my call: "Bid placed, waiting..." / "Passed" / "Skipped", not a pill) and the status text on line 2 (plus the game-progress bar); then the clock, Pass (Classic, my turn) and the ⋯ button. A thin 8px timer bar sits along the bottom. The event text is exposed once, as a separate sr-only polite live region.
 - **Classic clock:** a large (30px) dark-on-white number. Urgency (coral chip + tick pulse) starts only in the last 3s; no pulse under reduced motion.
 - **Frenzy:** the title reads "FRENZY" and there is no global number; the bottom bar (3px, quiet) shows the soonest-ending bay. The per-bay clocks (4.2) carry the timing.
 - **Bid feedback (sound off included):** on tapping a legal bay a ghost card flies from the hand card to the bay (260ms, transform only); when the snapshot arrives the bay pops (scale 1.04, 1.02 for others' bids) and flashes a 6px ring (green for my bid), and the status says "Bid sent: ${amount} on {bay}". Reduced motion: no flight and no scale; the ring flash and the status text remain.
 
 ### 4.7 ⋯ sheet (bottom sheet 70% height mobile; docked right sidebar 320px on desktop)
 Tabs/sections: **Players** (all players with chips, item counts, card counts; tap to expand their collection: items with est values and category counts, from the view's public `collection`), **Collections** (mine, detailed), **Event log** (last 30), **Settings** (Sound toggle, Haptics toggle, Relaxed timing x1.5 (host-set, shown read-only to others mid-game), Theme), **Rules** (rules content inline as a tab), **Leave game** (confirm). Draggable handle, Esc/swipe-down/backdrop closes. Focus is trapped while open on mobile.
+
+### 4.8 First-game tips (added 2026-10-28, after the AI playtest)
+All four playtesters learned the rules that decide the game too late (docs/playtests/2026-10-27-ai "Clarity"). One-time contextual tips teach each rule the first time it matters. No rule changes.
+- **Where:** a small non-modal toast hanging just under the status strip, over the top of the bays (desktop: right-aligned, max 520px). Never a modal. It is pointer-transparent except its "Got it" button (44px), so a tap on the bay underneath still bids. One tip at a time.
+- **Lifetime:** marked seen the moment it shows (once per device), hides on "Got it" or after 9s (ASSUMED), paused while hovered or focused; at least 3s (ASSUMED) between tips. Only in `phase: playing`, `stage: bidding`.
+- **Memory:** `localStorage["dbay:tips"]` = JSON array of seen tip ids; the value `"off"` means all seen (e2e uses it to keep tips out of the way). Every access is in try/catch: if storage throws, tips still show once per session. Settings has "Show first-game tips again" (clears the key).
+- **Accessibility:** its own sr-only `role="status"` / `aria-live="polite"` region reads "Tip: {text}" (the status strip's region is untouched); the visible copy is `aria-hidden`. The 180ms slide-in runs only under `prefers-reduced-motion: no-preference`.
+- **Triggers** (pure, `apps/web/lib/game-ui/tips.ts`, evaluated on every snapshot; when several fire, this order):
+
+| Tip | Fires when | Text | Rules |
+|---|---|---|---|
+| First turn | Classic: my call with the window open. Frenzy: I can bid | "Bid cards don't score: only the items you win do. Spend them!" | R35 (cards in hand only break ties) |
+| First outbid | a bay still holds one of my cards but someone else is top | "Outbid! Your card is stuck on bay {letter} until it closes, then comes back. You can still bid there with another card." | R16, R19 |
+| First pair | I own exactly 2 items of one category | "2 {category} so far! Get a 3rd and every {category} item scores x2." | R33 |
+| First Gift | a Gift is on a bay | "Gift: scores nothing itself. After the last sale, whoever won it picks a player, and that player must give them an item." | R27-R30 |
+| First Proxy | a Proxy is on any bay, or I select a Proxy card | "Proxy: beats any $ bid. Only a later Proxy can beat it." | R15, R16.4 |
+
+  "First Proxy in hand" is read as "first selected": everyone holds 2 Proxies from the start (R2), so a hand-based trigger would fire at once.
+- **Sets reminder:** the SETS strip (4.4) always shows a small "3 = x2" after its title (its aria-label adds "3 of a kind scores x2."); the Collections view keeps "3 of a kind = x2 value" and "One more = x2!".
 
 ## 5. Bid interaction spec
 
@@ -282,7 +303,7 @@ Keep the default flow tap-friendly: no drag required (drag from card to bay is a
 - **Right rail:** "Your sets" (6 categories with pips, "One more = x2!", WILD/GIFT rows) and the **event log**, open by default; `L` or the LOG header collapses and expands it. Rules and Settings buttons open the existing menu sheet at that tab (`?` also opens Rules). Clicking the status strip text expands the log.
 - Desktop-only pieces (`Podiums`, `DesktopRail`, `KeyLegend`) mount only at >=1024px via `useDesktop()`, so phone and tablet DOM and layout are unchanged (the mobile SETS strip is not mounted on desktop). Same view models as mobile plus `lib/game-ui/podiums.ts`. The reveal/results screen is not yet adapted for desktop (waits on the results rework). Screenshots: `docs/mockups/desktop/after-*.png`.
 
-**Keyboard shortcuts:** `1`-`9` pick cards 1-9 (in ascending order of unspent cards), `0` picks the 10th, `-` / `=` picks the Proxies; `Q W E R` bid the selected card on bays 1-4; `Esc` cancels selection or closes sheet; `L` collapses or expands the desktop log; `?` opens rules; `M` toggles sound; `Tab` order: strip, hand, bays. Shortcut hints appear as small badges on cards/bays, desktop only. Don't steal keys while focus is in a text input.
+**Keyboard shortcuts:** `1`-`9` and `0` pick the value-card slots $10-$300 and `-` / `=` the two Proxies, fixed for the whole game (a spent or out card keeps its key; pressing it says why it can't be picked, playtest B6); `Q W E R` bid the selected card on bays 1-4; `Esc` cancels selection or closes sheet; `L` collapses or expands the desktop log; `?` opens rules; `M` toggles sound; `Tab` order: strip, hand, bays. Shortcut hints appear as small badges on cards/bays, desktop only. Don't steal keys while focus is in a text input.
 
 **Tablet (600-1023px):** use the mobile layout scaled up in a centered 560px column with larger cards (hand 6x2, 72px cards), bays 2x2 even for 3 bays only if the screen is landscape. Sheet stays a bottom sheet. Landscape phones (height under 500px): bays left (2x2 or 3 in row), hand right in a 4x3 grid, strip on top; if too cramped, show a "Rotate to portrait" nudge (not a block).
 
@@ -296,8 +317,10 @@ All motion is wrapped by `MotionConfig reducedMotion="user"` for Motion, and `@m
 | 2 | Your turn (Classic): 8px frame around the whole screen edge in your color, flashing, plus the timer bar; Android vibrate | frame 1s ease-in-out infinite (opacity 1 -> 0.2, 1 flash/s, under the 3/s limit); bar depletes linear | CSS (`.g-turnframe`, `data-fx="turn-frame"`) | static frame, no flashing; bar still depletes |
 | 3 | Outbid: your chip slides off bay, edge flashes red 300ms | chip translateX 0 -> 40px + fade 250ms; edge `--danger` 300ms | CSS | chip fades out in place; 300ms edge flash kept (single, non-flashing fade) |
 | 4 | Timer: red in last 3s; "+3s" floats up | color transition 200ms at t<=3s; "+3s" translateY 0 -> -20px, fade out 700ms | CSS | color change only; "+3s" appears static for 700ms |
-| 5 | SOLD: stamp slams, card flies into winner's collection | stamp scale 2 -> 1, rotate -8deg, 220ms with overshoot, holds 1.2s; card fades/translates to strip 450ms | Motion (`m`, `AnimatePresence`, `layoutId` for card travel) | stamp fades in 150ms; card swaps without travel |
+| 5 | SOLD: stamp slams, plus the won/lost toast | stamp scale 2.2 -> 0.9 -> 1.04 -> 1 with opacity in, 360ms with overshoot, holds 2.0s; toast drops in 240ms and holds 2.8s (card travel to the collection strip is not built) | Motion `animate` on `data-fx="sold-stamp"`; CSS for the toast | stamp fades in 150ms; toast appears without movement |
 | 6 | Reveal: values flip with tags; confetti for winner | card rotateY flip 400ms, staggered 500ms apart; tag pops 200ms; confetti 2.5s | Motion; `canvas-confetti` lazy-imported | no flip (crossfade 150ms); no confetti, a gold crown badge instead |
+
+**Sale moment (playtest follow-ups slice 3).** On each new `sold` log entry: the stamp above, a gavel, and one toast under the status strip: "You won {item}!" (brass) or "{shape} {name} won {item}" with "for $X" / "with a Proxy" and "+N more sold" when several sell in one snapshot (my win is shown first). The toast is non-modal, `pointer-events: none`, never covers the hand, and is replaced by a newer one. Screen readers read each sale once: a sale to me assertively as "Sold to you: {item}" (announce.ts), another player's sale through the toast's own polite region. The strip still shows sale lines but keeps them out of its polite region (`isSaleEntry`), since it often shows "Going once...", a refill line or a local flash instead. Logic and timings: `lib/game-ui/sale.ts` (unit-tested).
 
 Rules: never block input during animations (all animate transforms/opacity only, pointer events pass through); never queue more than 3 pending animations (drop the rest to final state). Respect the `data-motion="off"` toggle from the ⋯ sheet if added.
 
@@ -308,16 +331,18 @@ Rules: never block input during animations (all animate transforms/opacity only,
 | Card select | soft tick |
 | Bid placed | wooden "tok" |
 | Bid accepted/top | rising two-note chirp |
-| Outbid | low descending "bwop" |
+| Outbid | sting: short dissonant falling stab over a low thud |
 | Rejected | dull buzz |
 | Your turn | bell ding |
 | Last 3s | clock tick each second |
 | Timer extend | small "ting" |
-| SOLD | gavel crack |
+| SOLD | gavel: two wooden knocks; sold to you adds a rising "ding-ding" |
 | Collection complete | short fanfare |
 | Halfway/last round | gong |
 | Reveal flip | paper flip per card |
 | Win | cheer jingle |
+
+When one snapshot carries more sounds than the cap (2), the most important play: sold to you, outbid sting, your turn, gavel, then the rest; the outbid sting replaces the bid tok on that bay, and repeats collapse (`pickSfx` in `lib/fx/plan.ts`). All sounds are synthesized (`lib/fx/sfx.ts`), no audio files, and honor the Sound toggle.
 
 Sound-off must lose no information: every row above has a text line in the status strip (4.5) and a visual from section 7.
 
@@ -475,6 +500,6 @@ The only overlay is the terminal **SOLD** state, which covers the whole tile wit
 ## 15. Polish decisions 2026-10-12 (WS5)
 
 - Item details: long-press (450ms, cancelled by moving more than 10px or pointer-cancel) or right-click on a bay opens a bottom sheet with sprite, name, category, **estimated** value, flavor and the top bid (the true value is never sent). A fired long-press swallows the following click, so it never bids. Keyboard: `i` while a bay is focused; screen readers and keyboard users also get a per-bay "Item details: NAME, bay X" button (a 44px target that is invisible and click-through until focused).
-- Assertive live region (visually hidden, separate from the polite status strip) announces only: "Your turn" (Classic), "You were outbid on bay X", "Sold to you". The strip text for those events is `aria-hidden` inside the polite region so nothing is read twice.
+- Assertive live region (visually hidden, separate from the polite status strip) announces only: "Your turn" (Classic), "You were outbid on bay X", "Sold to you: {item}". The strip text for those events is `aria-hidden` inside the polite region so nothing is read twice.
 - Tab order is the merged HUD (log, Pass, menu), hand, bays, sets. DOM order is that; the visual order (bays above hand) is restored with CSS `order`.
 - Small screens: 4-bay tiles on 320 wide keep amount + bidder on one line; at heights under 600px (320x568) tile sprites shrink to 28px and 3-bay rows go to a two-column grid (body | bid, timer underneath). 44px targets are enforced at 360x640; at 320x568 only "no page scroll" is enforced.

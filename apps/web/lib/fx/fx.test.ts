@@ -3,7 +3,8 @@ import type { PlayerView } from '@dbay/protocol';
 import { crossedSecond, deriveFx } from './events';
 import { parseSettings } from './settings';
 import { patternFor } from './haptics';
-import { sfxFor } from './plan';
+import { pickSfx, sfxFor } from './plan';
+import { SFX } from './sfx';
 import { centre, flyCard } from './fly';
 
 describe('flyCard', () => {
@@ -128,5 +129,56 @@ describe('settings and plans', () => {
     expect(sfxFor({ t: 'bump', bay: 0, mine: true })).toBe('chirp');
     expect(sfxFor({ t: 'bump', bay: 0, mine: false })).toBe('tok');
     expect(sfxFor({ t: 'reveal' })).toBeNull();
+    expect(sfxFor({ t: 'sold', bay: 0, mine: false })).toBe('gavel');
+    expect(sfxFor({ t: 'sold', bay: 0, mine: true })).toBe('gavelWon');
+    expect(sfxFor({ t: 'outbid', bay: 0 })).toBe('sting');
+  });
+});
+
+describe('pickSfx (sale moment: the important sound always plays)', () => {
+  it('outbid sting replaces the tok on the same bay and beats other bumps under the cap', () => {
+    const ev = [
+      { t: 'bump', bay: 1, mine: true },
+      { t: 'bump', bay: 0, mine: false },
+      { t: 'outbid', bay: 0 },
+    ] as const;
+    expect(pickSfx(ev, 2)).toEqual(['sting', 'chirp']);
+    expect(pickSfx(ev, 1)).toEqual(['sting']);
+  });
+  it('a sale beats a bid tok; my win replaces other gavels; repeats collapse', () => {
+    expect(
+      pickSfx(
+        [
+          { t: 'bump', bay: 2, mine: false },
+          { t: 'sold', bay: 0, mine: false },
+        ],
+        1,
+      ),
+    ).toEqual(['gavel']);
+    expect(
+      pickSfx(
+        [
+          { t: 'sold', bay: 0, mine: false },
+          { t: 'sold', bay: 1, mine: true },
+          { t: 'sold', bay: 2, mine: false },
+          { t: 'collection', mine: true },
+        ],
+        2,
+      ),
+    ).toEqual(['gavelWon', 'fanfare']);
+    expect(pickSfx([{ t: 'reveal' }], 2)).toEqual([]);
+    expect(pickSfx([{ t: 'sold', bay: 0, mine: false }], 0)).toEqual([]);
+  });
+});
+
+describe('synth recipes', () => {
+  it('gavel, gavelWon and sting are short WebAudio voices (no assets)', () => {
+    for (const n of ['gavel', 'gavelWon', 'sting'] as const) {
+      const end = Math.max(...SFX[n].map((v) => v.at + v.dur));
+      expect(end).toBeLessThan(1);
+      expect(SFX[n].every((v) => v.gain > 0 && v.gain <= 0.5)).toBe(true);
+    }
+    // Noise voices must fit the 0.2s shared noise buffer (audio.ts).
+    expect(Object.values(SFX).flat().filter((v) => v.wave === 'noise').every((v) => v.dur <= 0.2)).toBe(true);
   });
 });

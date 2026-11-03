@@ -43,6 +43,12 @@ describe('podiumModels', () => {
     expect(pods.find((x) => x.turn)?.id).toBe('pat');
     expect(pods[0]).toMatchObject({ me: true, cardsLeft: 12, wonCount: 0 });
   });
+  it('drops the turn marker in the gap and while my bid is in flight (B1)', () => {
+    expect(podiumModels(view({ turn: { player: 'pat', color: 'blue', phase: 'gap' } })).some((x) => x.turn)).toBe(false);
+    const mine = view({ turn: { player: 'me', color: 'red', phase: 'window' } });
+    expect(podiumModels(mine).find((x) => x.turn)?.id).toBe('me');
+    expect(podiumModels(mine, true).some((x) => x.turn)).toBe(false);
+  });
   it('has no turn in Frenzy and reports the bays a player leads', () => {
     const pods = podiumModels(view({ opts: { mode: 'frenzy', relaxed: false, bidWindowMs: 5000 } }));
     expect(pods.some((x) => x.turn)).toBe(false);
