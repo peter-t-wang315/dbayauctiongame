@@ -99,19 +99,24 @@ describe('rate limit + secret compare', () => {
 const SEED_MARK = '§seed§';
 const markSeed = (s: string) => `${SEED_MARK}${s}`;
 
+/** Longer than any generated seed, so even a leaked seed length would differ after the swap. */
+const SWAPPED = 'SWAPPED-SEED-'.padEnd(40, 'x');
+
 /**
  * Neither the pending seed (`meta.seed`) nor the game seed may reach any view.
- * Checked structurally: swapping both seeds must leave every view byte-identical. That is sound for
- * any seed, unlike `json.not.toContain(seed)`, which false-positives on 1-char seeds such as ','
- * or ' ' that occur naturally in view JSON. Marked seeds are additionally substring-checked, which
- * also catches a seed copied into some other state field.
+ * 1. Swap check: replacing both seed fields must leave every view byte-identical, i.e. no view reads
+ *    them. Works for any seed, unlike `json.not.toContain(seed)`, which false-positives on 1-char
+ *    seeds such as ',' or ' ' that occur naturally in view JSON. (It does not cover values derived
+ *    from the seed, such as `game.rng` or deck order; redaction.test.ts mutates those.)
+ * 2. Substring check for marked seeds (all non-empty fuzzed seeds are marked): catches a seed copied
+ *    into some other state field that a view does expose.
  */
 function expectSeedNotInViews(state: RoomState, viewers: string[]) {
-  const seeds = [state.game?.seed, state.meta.seed].filter((s): s is string => !!s);
+  const seeds = [state.game?.seed, state.meta.seed].filter((s): s is string => s !== undefined);
   if (seeds.length === 0) return;
   const swapped: RoomState = structuredClone(state);
-  if (swapped.game) swapped.game.seed = 'SWAPPED-SEED';
-  if (swapped.meta.seed !== undefined) swapped.meta.seed = 'SWAPPED-PENDING';
+  if (swapped.game) swapped.game.seed = SWAPPED;
+  if (swapped.meta.seed !== undefined) swapped.meta.seed = SWAPPED;
   for (const p of viewers) {
     const json = JSON.stringify(view(state, p));
     expect(JSON.stringify(view(swapped, p))).toBe(json);
@@ -159,6 +164,19 @@ describe('seed leak check (regression: intermittent "holds invariants" failure)'
     leaky.players[0]!.name = h.state.game!.seed; // simulate a seed copied into a public field
     expect(() => expectSeedNotInViews(leaky, ['ghost'])).toThrow();
     expectSeedNotInViews(h.state, [...h.state.players.map((p) => p.id), 'ghost']);
+  });
+
+  it('covers the pending lobby seed (meta.seed) as well', () => {
+    const h = new Harness();
+    h.join('Host');
+    h.join('Guest');
+    h.run({ type: 'seed', seed: markSeed('pending') });
+    expect(h.state.meta.seed).toBe(markSeed('pending'));
+    const viewers = [...h.state.players.map((p) => p.id), 'ghost'];
+    expectSeedNotInViews(h.state, viewers);
+    const leaky: RoomState = structuredClone(h.state);
+    leaky.players[1]!.name = h.state.meta.seed!;
+    expect(() => expectSeedNotInViews(leaky, viewers)).toThrow();
   });
 });
 
@@ -240,9 +258,9 @@ const eventArb: fc.Arbitrary<{ ev: RoomEvent; dt: number }> = fc.record({
       weight: 2,
       arbitrary: fc.record({
         type: fc.constant('seed' as const),
-        // Raw short strings (incl. '' and 1-char seeds like ',') exercise the reducer; marked seeds
-        // are distinctive enough for the substring leak check in `expectSeedNotInViews`.
-        seed: fc.oneof(fc.string({ maxLength: 6 }), fc.string({ maxLength: 6 }).map(markSeed)),
+        // '' exercises the reducer's reject path; every other seed is marked so the substring leak
+        // check in `expectSeedNotInViews` cannot collide with ordinary view JSON (e.g. seed ',').
+        seed: fc.string({ maxLength: 6 }).map((s) => (s === '' ? '' : markSeed(s))),
       }),
     },
   ),
@@ -301,7 +319,7 @@ describe('fast-check: mid-game sequences', () => {
         fc.constantFrom('classic', 'frenzy'),
         fc.array(gameEvent, { minLength: 1, maxLength: 80 }),
         (mode, events) => {
-          const h = Harness.started(3, 1, { mode });
+          const h = Harness.started(3, 1, { mode }, markSeed('mid-game'));
           let state = h.state;
           let now = h.now;
           for (const { ev, dt } of events) {
@@ -311,6 +329,7 @@ describe('fast-check: mid-game sequences', () => {
             for (const p of state.players) {
               expect(PlayerViewSchema.safeParse(view(state, p.id)).success).toBe(true);
             }
+            expectSeedNotInViews(state, [...state.players.map((p) => p.id), 'ghost']);
           }
         },
       ),

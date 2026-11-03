@@ -20,17 +20,28 @@
   or ` `, which is present in every view's JSON for unrelated reasons. No randomness, clock or timeout
   is involved (300 runs take about 0.1 s).
 - **Fix (test only, invariant kept and made stronger):** new helper `expectSeedNotInViews`:
-  - Structural check: swap `game.seed` and the pending `meta.seed` in a clone; every view (each
-    player and `ghost`) must stay byte-identical. That is sound for any seed. It now covers
-    `meta.seed` and all viewers, where the old check covered only `game.seed` and `ghost`.
-  - Substring check, only for "marked" seeds (`§seed§...`; `§` is non-ASCII, so `fc.string` never makes
-    it and no view text has it). The generator now mixes raw seeds (for reducer robustness) with
-    marked ones. This also catches a seed copied into some other state field.
+  - Swap check: replace `game.seed` and the pending `meta.seed` in a clone with a 40-char value
+    (longer than any generated seed); every view (each player and `ghost`) must stay byte-identical,
+    so no view reads either field. Works for any seed, including `,`. It now covers `meta.seed` and
+    all viewers, where the old check covered only `game.seed` and `ghost`. It does not cover values
+    derived from the seed (`game.rng`, deck order); `redaction.test.ts` already mutates those.
+  - Substring check for marked seeds: every non-empty fuzzed seed is now `§seed§<fc.string>`. `§` is
+    non-ASCII, so `fc.string` (printable ASCII) never makes it and no view text has it. `''` is kept
+    raw to exercise the reducer's reject path. This catches a seed copied into another state field.
+  - The mid-game property now starts with a marked seed and runs the same check every step, so the
+    check also covers bidding, reveal and ended states.
 - Deterministic regression tests: the shrunk counterexample replayed (asserts the game started with
-  seed `,`, the view contains `,` anyway, and the helper passes), plus a positive test that a marked
-  seed copied into a player name is caught.
-- Verification: inflated 200k runs with seeds 1, 2, 3 (the ones that failed before), 42, 1337, 99999
-  all pass after the fix. Typecheck, lint and all unit tests pass; room-core tests run repeatedly.
+  seed `,`, the view contains `,` anyway, and the helper passes); a marked game seed copied into a
+  player name is caught; a pending lobby `meta.seed` passes clean and is caught when copied.
+- Pre-PR review (`/code-review` medium, 1 round): no blocking bugs. Fixed from its notes: raw seeds
+  lost the copy-detection (so all non-empty seeds are now marked), `meta.seed` had no deterministic
+  test, the mid-game property had no leak check, the `''` seed handling was inconsistent, the swap
+  value could match a seed's length, and the docstring overstated what it covers. Not changed: the
+  extra `view()` calls per step (room-core suite still takes about 2 s).
+- Verification: before the review fixes, inflated 200k runs with seeds 1, 2, 3 (the ones that failed
+  before), 42, 1337 and 99999 all passed. After them, 100k "holds invariants" runs plus 5k mid-game
+  runs with seeds 2, 7 and 31337 passed. Typecheck, lint and all unit tests pass; the room-core suite
+  passed 15 times in a row.
 
 ## In progress
 - Nothing.
