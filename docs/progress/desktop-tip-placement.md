@@ -8,7 +8,7 @@
 - e2e: desktop 1280x800 6-player check in `apps/web/e2e/tips.pw.ts` (tip box vs `.g-pods`, podiums, bays; polite live region; axe wcag2a/aa with the tip showing).
 
 ## In progress
-Screenshots `docs/mockups/desktop/tip-before.png` / `tip-after.png`, full checks, draft PR.
+Nothing; all checks green (typecheck, lint, unit, e2e tips/game/a11y). Screenshots in docs/mockups/desktop/tip-before.png and tip-after.png.
 
 ## Next
 Open the draft PR; do not merge.

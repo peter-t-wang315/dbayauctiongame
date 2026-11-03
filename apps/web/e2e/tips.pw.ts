@@ -105,7 +105,6 @@ test('desktop 1280x800, 6 players: the tip sits in the rail and covers no podium
   await expect(tip).toBeVisible({ timeout: 40_000 });
   await expect(page.locator('[data-fx="podium"]')).toHaveCount(6);
   await page.waitForTimeout(400); // entrance animation
-  if (process.env.TIP_SHOT) await page.screenshot({ path: process.env.TIP_SHOT });
   const t = (await tip.boundingBox())!;
   const boxes = [
     ...(await page.locator('.g-pods, [data-fx="podium"], [data-fx="bay"]').all()),
