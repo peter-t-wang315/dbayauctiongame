@@ -1,6 +1,7 @@
 // Client mirror of the bid legality rule (01 R16; the server decides). Used only for hints:
 // legal-bay glow, dimmed illegal bays with a reason label, and the rejection message.
 import type { PlayerView } from '@dbay/protocol';
+import { BAY_LETTERS } from './viewModel';
 
 export type HandCardView = PlayerView['myHand'][number];
 export type BayView = PlayerView['bays'][number];
@@ -41,4 +42,28 @@ export function lockedReason(view: PlayerView, cooldownMs: number): string | nul
   const t = view.turn;
   if (t && t.player !== view.me) return 'Not your turn';
   return 'Wait for your color';
+}
+
+/** Confirmation flash after the server accepts my bid, e.g. "Bid sent: $50 on B". */
+export function bidSentText(card: Pick<HandCardView, 'kind' | 'value'>, bayIdx: number): string {
+  const face = card.kind === 'proxy' ? 'Proxy' : `$${card.value}`;
+  return `Bid sent: ${face} on ${BAY_LETTERS[bayIdx] ?? bayIdx + 1}`;
+}
+
+/**
+ * Why tapping this hand card does nothing, or null when it selects (playtest B2: silent taps).
+ * Shown as a short flash in the status text. `pendingCard` is the card whose bid is in flight.
+ */
+export function cardTapReason(
+  view: PlayerView,
+  cardId: string,
+  cooldownMs: number,
+  pendingCard: string | null = null,
+): string | null {
+  if (pendingCard !== null) return 'Sending your bid...';
+  const c = view.myHand.find((h) => h.id === cardId);
+  if (!c) return 'Spent: that card already won an item';
+  if (c.onBay !== undefined)
+    return `That card is on bay ${BAY_LETTERS[c.onBay] ?? c.onBay + 1} until it closes`;
+  return lockedReason(view, cooldownMs);
 }

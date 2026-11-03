@@ -8,7 +8,7 @@ This is a browser version of the 2001 *eBay Electronic Talking Auction Game*, re
 
 > **Status (2026-10-27):** M1 and M2 done; M4 code done. Merged through PR #30: everything above plus R17 age bonus + R18b no-bid round clear (#21), engine follow-up tests (#27), special sprites + ranked results (#23), create-room safety net + landing/lobby polish + lobby length hint (#24), HUD polish (#25), turn-edge flash (#26), desktop hybrid layout (#28), CI e2e jobs pinned to ubuntu-24.04 because Playwright can't install Chromium on 26.04 (#30). CI: `check`, `e2e-web`, `e2e-real`, `e2e-robustness`. Run locally with `pnpm dev` (web :3000, server :8787).
 > **AI playtest 2026-10-27:** 4 persona agents, fun 6.5-7/10. Findings, bugs and the feature wishlist are in [playtests/2026-10-27-ai/](playtests/2026-10-27-ai/README.md); start with its "Recommended next steps".
-> **Open items:** (1) Quick-fix PR from the playtest (stale "YOUR TURN", tap feedback, Gift modal wording, outbid item name, badge truncation; investigate the "no legal bid" skip). (2) Desktop reveal/results layout. (3) 6-player podium crowding at 1280px. (4) Join-screen room info / bad-code-on-load: done on branch `feat/room-info` (draft PR; `GET /api/rooms/:code/info`, see docs/progress/room-info.md). (5) Tests for the FxController bump and "Bid sent" flash. (6) Next.js has a known security advisory; upgrade on its own branch. (7) Cleanup: orphaned `.claude/worktrees/agent-*` folders from the OneDrive move (contents verified in git history); delete them, `git worktree unlock` + `prune`, and delete merged branches.
+> **Open items:** Playtest follow-ups done: quick fixes (#33), first-game tips (#32), sale moment (#34), announcer + Fx tests (#37). Next.js security upgrade done (#35). Merge batch 2026-11-02 also covers: remaining dependency advisories (#39), desktop reveal/results (#36), podium crowding + names (#41, #42), room-info endpoint (#40), room-core replay flake (#43), e2e ports (#44); see each PR and its `docs/progress/` file. Still open: re-run the AI playtest; cleanup of orphaned `.claude/worktrees/agent-*` folders and merged branches; one moderate dev-only advisory (minimatch via eslint, needs an eslint major).
 > **Needs the user:** play-test; Cloudflare + Vercel accounts and [07-deploy-checklist.md](07-deploy-checklist.md) (incl. replacing `CHANGE-ME.vercel.app` in `apps/server/wrangler.jsonc`); iPhone/Android checks. Per-workstream progress lives in `docs/progress/`.
 
 ## Start here (new session or new agent)
@@ -75,9 +75,9 @@ This is a browser version of the 2001 *eBay Electronic Talking Auction Game*, re
 ## Working within usage limits (Claude Pro, $20/mo)
 The project is built on the Pro plan. Usage is capped per rolling window and per week, and every subagent spends from the same budget. **Plan work to finish within limits, not to maximize parallelism.** This section overrides the concurrency suggestions in 06.
 
-- **Do it yourself first.** Handle work inline in the main session. Only spawn a subagent when it really saves effort or the user asks: a large isolated research sweep, the pre-PR review, or a truly independent workstream.
-- **Parallelism: at most 3 coding subagents at a time**, plus at most 1 reviewer subagent. Only run workstreams in parallel when 06 says they have no file conflicts. Parallel agents spend the usage window faster; they don't stretch it. If several agents run at once, they can all be cut off at the same moment, which is why the checkpoint protocol below is mandatory.
-- **Model choice:**
+- **Subagents: standing permission (user, 2026-11-02).** The lead agent spawns whatever subagents the work needs, without asking, and picks their type, model and effort level itself. The points below are defaults to weigh, not limits. See also the root `CLAUDE.md`.
+- **Parallelism: about 3 coding subagents at a time** is a good default, plus reviewers as needed. Only run workstreams in parallel when 06 says they have no file conflicts. Parallel agents spend the usage window faster; they don't stretch it. If several agents run at once, they can all be cut off at the same moment, which is why the checkpoint protocol below is mandatory.
+- **Model choice (defaults; the lead agent decides):**
   - **Sonnet** is the default for coding and reviews.
   - **Haiku** is for mechanical or bulk work: lookups, data entry such as the 60 items and sprites, simple refactors.
   - **Opus** is reserved for hard design or debugging problems, and only when needed.
@@ -109,6 +109,8 @@ An agent cannot tell when the usage limit is about to hit. Requests just start f
 2. Then M2, one or two workstreams per session, in this order: WS1 → WS2 → WS3a → WS4 → WS5.
 3. Then M3: WS3b → WS6 → WS7.
 4. Then WS8.
+
+**Running the web e2e locally:** `pnpm --filter @dbay/web test:e2e` runs the whole suite in one go (specs start/stop their own mock; Playwright starts `next dev`). Ports default to web 3100 and mock 8787; override with `E2E_WEB_PORT` / `E2E_MOCK_PORT` (read once in `apps/web/e2e/ports.ts`). Needs Next >= 16.4.1: 16.4.0's dev server exits with a security-upgrade nudge when it detects a coding agent, which killed full-suite runs (see `docs/progress/e2e-ports.md`).
 
 ## Git workflow for sessions and agents
 Use your judgement here. Don't wait to be asked for routine git hygiene. The detailed branch and PR naming per workstream is in [06-workstreams.md](06-workstreams.md).

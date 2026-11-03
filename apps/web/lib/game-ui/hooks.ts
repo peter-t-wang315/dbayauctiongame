@@ -2,7 +2,8 @@
 // Small React hooks for the game screen. Time always comes from the room's server-clock estimate.
 import { useEffect, useRef, useState } from 'react';
 import type { PlayerView } from '@dbay/protocol';
-import { newAnnouncements } from './announce';
+import { combineAnnouncements, newAnnouncements } from './announce';
+import { SALE_FX } from './sale';
 import { nextBarTotal } from './timers';
 
 /** Re-render every `everyMs` while `active`; returns the current server time estimate. */
@@ -55,7 +56,7 @@ export interface SoldStamp {
 }
 
 /** Log-driven SOLD stamps: one per new `sold` entry (not for entries already present at mount). */
-export function useSoldStamps(view: PlayerView | null, holdMs = 1300): SoldStamp[] {
+export function useSoldStamps(view: PlayerView | null, holdMs: number = SALE_FX.stampHoldMs): SoldStamp[] {
   const lastN = useRef<number | null>(null);
   const [stamps, setStamps] = useState<SoldStamp[]>([]);
   useEffect(() => {
@@ -130,7 +131,7 @@ export function useAnnouncer(
     if (!view) return;
     const r = newAnnouncements(view, lastN.current);
     lastN.current = r.lastN;
-    const last = r.items[r.items.length - 1];
+    const last = combineAnnouncements(r.items);
     if (!last) return;
     setCur(last);
     const id = setTimeout(() => setCur((c) => (c?.n === last.n ? null : c)), holdMs);

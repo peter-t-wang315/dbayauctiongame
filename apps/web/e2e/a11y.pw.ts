@@ -1,6 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import path from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
+import { MOCK_PORT } from './ports';
 import { expect, test, type Page } from '@playwright/test';
 
 // Accessibility audit (04 section 8): axe (wcag2a + wcag2aa) on every screen at 390x844, light and dark,
@@ -12,7 +13,7 @@ let mock: ChildProcess | null = null;
 test.beforeAll(async () => {
   mock = spawn(process.execPath, ['--import', 'tsx', 'src/main.ts'], {
     cwd: MOCK_DIR,
-    env: { ...process.env, PORT: '8787' },
+    env: { ...process.env, PORT: MOCK_PORT },
     stdio: 'pipe',
   });
   await new Promise<void>((resolve, reject) => {
@@ -216,4 +217,26 @@ test('gift step and reveal/results', async ({ page }) => {
   await page.getByRole('button', { name: 'Skip' }).click();
   await expect(page.locator('[data-fx="reveal"]')).toHaveAttribute('data-state', 'done');
   await scan(page, 'results');
+});
+
+test('Desktop 1280x800: reveal (progress rail) and results (standings rail)', async ({ browser }) => {
+  test.setTimeout(240_000);
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const page = await ctx.newPage();
+  await startGame(page, 'Frenzy', 2);
+  const reveal = page.locator('[data-fx="reveal"]');
+  const deadline = Date.now() + 200_000;
+  while (!(await reveal.isVisible())) {
+    expect(Date.now(), 'reached the reveal').toBeLessThan(deadline);
+    const pick = page.locator('.g-gift__pick:not([disabled])').first();
+    if (await pick.isVisible().catch(() => false)) await pick.click().catch(() => {});
+    await page.waitForTimeout(500);
+  }
+  await expect(page.locator('[data-fx="reveal-progress"]')).toBeVisible();
+  await scan(page, 'desktop reveal');
+  await page.getByRole('button', { name: 'Skip' }).click();
+  await expect(reveal).toHaveAttribute('data-state', 'done');
+  await expect(page.locator('.rv-rail [data-fx="scoreboard"]')).toBeVisible();
+  await scan(page, 'desktop results');
+  await ctx.close();
 });

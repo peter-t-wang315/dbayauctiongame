@@ -1,5 +1,6 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import path from 'node:path';
+import { MOCK_PORT } from './ports';
 import { expect, test, type Page } from '@playwright/test';
 
 // WS5 smoke vs the mock server: Classic two-tap bid, Frenzy timers, 390px layout budget.
@@ -9,7 +10,7 @@ let mock: ChildProcess | null = null;
 test.beforeAll(async () => {
   mock = spawn(process.execPath, ['--import', 'tsx', 'src/main.ts'], {
     cwd: MOCK_DIR,
-    env: { ...process.env, PORT: '8787' },
+    env: { ...process.env, PORT: MOCK_PORT },
     stdio: 'pipe',
   });
   await new Promise<void>((resolve, reject) => {
@@ -91,10 +92,27 @@ test('Classic 3 bays at 390x844: fits without scrolling, two-tap bid works', asy
   // after my bid the turn ends: hand locked
   await expect(page.locator('[data-fx="hand-card"][data-state="locked"]').first()).toBeVisible();
   await expect(page.locator('[data-fx="turn-frame"]')).toHaveCount(0);
+  // B1: no stale "Your turn" once the bid is in (the call stays on me through the gap)
+  await expect(page.locator('[data-fx="turn-banner"][data-mine="true"]')).toHaveCount(0);
+  await expect(page.locator('[data-fx="turn-banner"]')).not.toContainText('Your turn');
+  // B2: tapping the card that is out on a bay says why instead of doing nothing (force: the card is
+  // aria-disabled, so Playwright would otherwise wait until it comes back)
+  if ((await page.locator('[data-card="v50"]').getAttribute('data-state')) === 'out') {
+    await page.locator('[data-card="v50"]').click({ force: true });
+    await expect(page.locator('[data-fx="status-text"]')).toContainText(/on bay [A-D] until it closes/);
+  }
   // the collection sheet opens and closes
   await page.getByRole('button', { name: /Your collections/ }).click();
   await expect(page.getByRole('dialog', { name: 'Your collections' })).toBeVisible();
   await page.getByRole('button', { name: 'Back to bidding' }).click();
+  // B9: the menu closes on a tap outside the sheet, not on a tap inside it
+  await page.getByRole('button', { name: /Menu: players/ }).click();
+  const menu = page.getByRole('dialog', { name: 'Menu' });
+  await expect(menu).toBeVisible();
+  await menu.getByRole('heading', { name: 'Menu' }).click();
+  await expect(menu).toBeVisible();
+  await page.mouse.click(195, 12);
+  await expect(menu).toBeHidden();
 });
 
 test('Frenzy 4 bays at 390x844: timers show, bid without waiting for a turn', async ({ page }) => {
@@ -156,13 +174,64 @@ test('Desktop 1280x800: podiums, big bays, card rack, persistent rail, keyboard 
   await expect(page.locator('#g-rail-log')).toBeVisible();
   await page.screenshot({ path: 'test-results/ws5-desktop.png' });
   await expect(page.getByText(/Your turn, Sam/).first()).toBeVisible({ timeout: 40_000 });
-  await page.keyboard.press('3'); // third unspent value card ($50)
+  await page.keyboard.press('3'); // slot 3 is always $50
   await expect(page.locator('[data-card="v50"]')).toHaveAttribute('data-state', 'selected');
   await page.keyboard.press('q');
   await expect(page.locator('[data-card="v50"]')).toHaveAttribute('data-state', /out|spent/, {
     timeout: 5000,
   });
+  // B6: keys stay on their slot after a card is played ($75 keeps 4; $50 keeps 3).
+  await expect(page.locator('[data-card="v75"] .g-kbd')).toHaveText('4');
+  await expect(page.locator('[data-card="v50"] .g-kbd')).toHaveText('3');
   await ctx.close();
+});
+
+test('Desktop 6 players at 1280x800 and 1440x900: podiums fit without clipping', async ({
+  browser,
+}) => {
+  for (const [width, height] of [
+    [1280, 800],
+    [1440, 900],
+  ] as const) {
+    const ctx = await browser.newContext({ viewport: { width, height } });
+    const page = await ctx.newPage();
+    await startGame(page, 'Classic', 5);
+    await expect(page.locator('[data-fx="podium"]')).toHaveCount(6);
+    const pods = await page.locator('[data-fx="podium"]').evaluateAll((els) =>
+      els.map((e) => {
+        const row = e.querySelector('.g-pod__won')!;
+        return {
+          overflow: e.scrollHeight > e.clientHeight || e.scrollWidth > e.clientWidth,
+          wonOverflow: row.scrollHeight > row.clientHeight || row.scrollWidth > row.clientWidth,
+          h: Math.round(e.getBoundingClientRect().height),
+          text: (e.textContent ?? '').replace(/\s+/g, ' '),
+        };
+      }),
+    );
+    for (const p of pods) {
+      expect(p.overflow).toBe(false);
+      expect(p.wonOverflow).toBe(false);
+      expect(p.text).toMatch(/cards left/);
+    }
+    expect(new Set(pods.map((p) => p.h)).size).toBe(1); // no height change between podiums
+    // Names are readable (not ellipsized) at 6 players, e.g. "Bot Betty"; full name in title.
+    const names = await page
+      .locator('.g-pod__name')
+      .evaluateAll((els) =>
+        els.map((e) => ({
+          t: e.textContent,
+          title: e.getAttribute('title'),
+          cut: e.scrollWidth > e.clientWidth,
+        })),
+      );
+    expect(names).toHaveLength(6);
+    for (const n of names) {
+      expect(n.title).toBe(n.t);
+      expect(n.cut, `name "${n.t}" truncated at ${width}`).toBe(false);
+    }
+    expect(await layout(page)).toMatchObject({ hScroll: false, vScroll: false, inner: false });
+    await ctx.close();
+  }
 });
 
 for (const [mode, bots, bays] of [

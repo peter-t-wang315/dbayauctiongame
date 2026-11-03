@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PlayerView } from '@dbay/protocol';
-import { podiumModels } from './podiums';
+import { podiumModels, podiumSlots, podiumSplit } from './podiums';
 
 function view(over: Partial<PlayerView> = {}): PlayerView {
   const p = (id: string, color: PlayerView['players'][number]['color'], shape: string, collection: string[] = []) => ({
@@ -43,6 +43,12 @@ describe('podiumModels', () => {
     expect(pods.find((x) => x.turn)?.id).toBe('pat');
     expect(pods[0]).toMatchObject({ me: true, cardsLeft: 12, wonCount: 0 });
   });
+  it('drops the turn marker in the gap and while my bid is in flight (B1)', () => {
+    expect(podiumModels(view({ turn: { player: 'pat', color: 'blue', phase: 'gap' } })).some((x) => x.turn)).toBe(false);
+    const mine = view({ turn: { player: 'me', color: 'red', phase: 'window' } });
+    expect(podiumModels(mine).find((x) => x.turn)?.id).toBe('me');
+    expect(podiumModels(mine, true).some((x) => x.turn)).toBe(false);
+  });
   it('has no turn in Frenzy and reports the bays a player leads', () => {
     const pods = podiumModels(view({ opts: { mode: 'frenzy', relaxed: false, bidWindowMs: 5000 } }));
     expect(pods.some((x) => x.turn)).toBe(false);
@@ -52,5 +58,18 @@ describe('podiumModels', () => {
     const pat = podiumModels(view()).find((x) => x.id === 'pat')!;
     expect(pat.wonCount).toBe(1);
     expect(pat.won[0]?.sprite).not.toBeNull();
+  });
+});
+
+describe('podium sprite slots', () => {
+  it('shrinks the slot count as players are added', () => {
+    expect([3, 4, 5, 6].map(podiumSlots)).toEqual([6, 6, 4, 3]);
+  });
+  it('shows every sprite while they fit, then reserves the last slot for +n', () => {
+    expect(podiumSplit(0, 6)).toEqual({ shown: 0, more: 0 });
+    expect(podiumSplit(3, 6)).toEqual({ shown: 3, more: 0 });
+    expect(podiumSplit(4, 6)).toEqual({ shown: 2, more: 2 });
+    expect(podiumSplit(9, 5)).toEqual({ shown: 3, more: 6 });
+    expect(podiumSplit(7, 3)).toEqual({ shown: 5, more: 2 });
   });
 });

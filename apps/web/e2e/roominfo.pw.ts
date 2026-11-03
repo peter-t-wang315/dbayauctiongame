@@ -1,6 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
+import { MOCK_PORT } from './ports';
 
 const MOCK_DIR = path.resolve(process.cwd(), '../../tools/mock-server');
 let mock: ChildProcess | null = null;
@@ -8,7 +9,7 @@ let mock: ChildProcess | null = null;
 test.beforeAll(async () => {
   mock = spawn(process.execPath, ['--import', 'tsx', 'src/main.ts'], {
     cwd: MOCK_DIR,
-    env: { ...process.env, PORT: '8787' },
+    env: { ...process.env, PORT: MOCK_PORT },
     stdio: 'pipe',
   });
   await new Promise<void>((resolve, reject) => {
