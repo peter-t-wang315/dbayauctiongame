@@ -1,16 +1,23 @@
 import type { ReactNode } from 'react';
 import type { Viewport } from 'next';
-import { Lilita_One, Nunito } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 
 export const metadata = { title: 'dBay', description: 'Bid fast. Hope it is real gold.' };
 // Never disable pinch zoom (04 section 8).
 export const viewport: Viewport = { width: 'device-width', initialScale: 1 };
 
-const lilita = Lilita_One({ weight: '400', subsets: ['latin'], variable: '--font-lilita' });
-const nunito = Nunito({
-  weight: ['600', '700', '800'],
-  subsets: ['latin'],
+// Self-hosted (OFL; licenses in ./fonts) so builds and dev make no network font requests.
+const lilita = localFont({
+  src: './fonts/LilitaOne-Regular.woff2',
+  weight: '400',
+  display: 'swap',
+  variable: '--font-lilita',
+});
+const nunito = localFont({
+  src: './fonts/Nunito-Variable.woff2',
+  weight: '200 1000',
+  display: 'swap',
   variable: '--font-nunito',
 });
 
