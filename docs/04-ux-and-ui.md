@@ -148,9 +148,9 @@ Wireframes are 390px wide. `[ ]` = button, `( )` = chip.
 - Host only: Rematch (returns everyone to lobby). Others see "Waiting for host to rematch" and Leave.
 
 ### 3.5b Gift step (phase `playing`, stage `gifts`; same route as the game)
-Shown as a centered card over the dimmed bays, one Gift at a time (owner: WS6, mounted by the game route). Text: "{holder} opened a Gift!" Then:
-- **Holder** (stage `pickTarget`): list of eligible players (chip + item count) and a countdown (`gift.endsAt`). Others see "{holder} is choosing...".
-- **Victim** (stage `pickItem`): own scorable cards (items and Display Cases, never Gifts) as tappable tokens with est values; countdown; the pick sends `giftGive`. Others see "{victim} must give up something...".
+Shown as a centered card over the dimmed bays, one Gift at a time (owner: WS6, mounted by the game route). Text: "{holder} opened a Gift!" ("You opened a Gift!" for the holder; the victim sees "{holder}'s Gift picked you!" instead, playtest B3). Then:
+- **Holder** (stage `pickTarget`): "Pick who has to give you an item:" over a list of eligible players (chip + item count) and a countdown (`gift.endsAt`). Others see "{holder} is choosing who has to give them an item...".
+- **Victim** (stage `pickItem`): "Give {holder} one of your items:" over own scorable cards (items and Display Cases, never Gifts) as tappable tokens with est values; countdown; the pick sends `giftGive`. The holder sees "{victim} is giving you an item..."; others see "{victim} is giving {holder} an item...".
 - Fizzle or timeout default shows as a status-strip line ("{name} gave up {item}"). Values stay hidden until `reveal`.
 
 ### 3.6 Rules `/rules` and sheet
@@ -219,12 +219,14 @@ Left: event text (one line, ellipsis, crossfade 150ms). Middle: round pips (ASSU
 | Classic: other's turn | "{name}'s turn" |
 | Classic: turn passed | "{name} passes" |
 | Auto-pass (disconnected) | "{name} is away: auto-pass" |
+| Auto-pass (no legal bid, R13) | "{name} has no bay to bid on: skipped" / you: "No bay you can bid on: skipped" |
 | Frenzy start | "Frenzy! Bid any time." |
 | New bid | "{name} bids ${amount} on {item}" |
-| Outbid (you) | "Outbid by {name}! ${amount}" |
+| Outbid (you) | "Outbid on {item} by {name}! ${amount}" |
 | Your bid is top | "You lead {item} at ${amount}" |
 | Your bid accepted (local, 2.6s) | "Bid sent: ${amount} on {bay letter}" ("Proxy" for a Proxy card) |
 | Bid rejected | "Can't bid that. Beat ${top}." |
+| Tap that can't act (local, 2.6s) | Spent: "Spent: that card already won an item"; out: "That card is on bay {letter} until it closes"; locked: "Not your turn" / "Cooling down" / "Gift time"; bay with no card picked: "Pick a card first, then tap a bay" |
 | Timer extended (Frenzy) | "Late bid! +3s on {item}" |
 | Last 3 seconds | "Going once... going twice..." |
 | Sold | "SOLD! {item} to {name} for ${amount}" |
@@ -241,7 +243,7 @@ Left: event text (one line, ellipsis, crossfade 150ms). Middle: round pips (ASSU
 | Reconnected | "Back in the room" |
 
 ### 4.6 Merged HUD: turn + clock (one ~94px bar with 4.5)
-There is no separate banner. One navy bar has a left accent border in the turn player's color. Row 1 (44px): tap area (opens the log) with the turn title on line 1 ("Your turn" as a pill in your color, or "{shape} {name}'s turn") and the status text on line 2 (plus the game-progress bar); then the clock, Pass (Classic, my turn) and the ⋯ button. A thin 8px timer bar sits along the bottom. The event text is exposed once, as a separate sr-only polite live region.
+There is no separate banner. One navy bar has a left accent border in the turn player's color. Row 1 (44px): tap area (opens the log) with the turn title on line 1 ("Your turn" as a pill in your color, or "{shape} {name}'s turn"; once my bid is sent, through the gap after my call: "Bid placed, waiting..." / "Passed" / "Skipped", not a pill) and the status text on line 2 (plus the game-progress bar); then the clock, Pass (Classic, my turn) and the ⋯ button. A thin 8px timer bar sits along the bottom. The event text is exposed once, as a separate sr-only polite live region.
 - **Classic clock:** a large (30px) dark-on-white number. Urgency (coral chip + tick pulse) starts only in the last 3s; no pulse under reduced motion.
 - **Frenzy:** the title reads "FRENZY" and there is no global number; the bottom bar (3px, quiet) shows the soonest-ending bay. The per-bay clocks (4.2) carry the timing.
 - **Bid feedback (sound off included):** on tapping a legal bay a ghost card flies from the hand card to the bay (260ms, transform only); when the snapshot arrives the bay pops (scale 1.04, 1.02 for others' bids) and flashes a 6px ring (green for my bid), and the status says "Bid sent: ${amount} on {bay}". Reduced motion: no flight and no scale; the ring flash and the status text remain.
@@ -282,7 +284,7 @@ Keep the default flow tap-friendly: no drag required (drag from card to bay is a
 - **Right rail:** "Your sets" (6 categories with pips, "One more = x2!", WILD/GIFT rows) and the **event log**, open by default; `L` or the LOG header collapses and expands it. Rules and Settings buttons open the existing menu sheet at that tab (`?` also opens Rules). Clicking the status strip text expands the log.
 - Desktop-only pieces (`Podiums`, `DesktopRail`, `KeyLegend`) mount only at >=1024px via `useDesktop()`, so phone and tablet DOM and layout are unchanged (the mobile SETS strip is not mounted on desktop). Same view models as mobile plus `lib/game-ui/podiums.ts`. The reveal/results screen is not yet adapted for desktop (waits on the results rework). Screenshots: `docs/mockups/desktop/after-*.png`.
 
-**Keyboard shortcuts:** `1`-`9` pick cards 1-9 (in ascending order of unspent cards), `0` picks the 10th, `-` / `=` picks the Proxies; `Q W E R` bid the selected card on bays 1-4; `Esc` cancels selection or closes sheet; `L` collapses or expands the desktop log; `?` opens rules; `M` toggles sound; `Tab` order: strip, hand, bays. Shortcut hints appear as small badges on cards/bays, desktop only. Don't steal keys while focus is in a text input.
+**Keyboard shortcuts:** `1`-`9` and `0` pick the value-card slots $10-$300 and `-` / `=` the two Proxies, fixed for the whole game (a spent or out card keeps its key; pressing it says why it can't be picked, playtest B6); `Q W E R` bid the selected card on bays 1-4; `Esc` cancels selection or closes sheet; `L` collapses or expands the desktop log; `?` opens rules; `M` toggles sound; `Tab` order: strip, hand, bays. Shortcut hints appear as small badges on cards/bays, desktop only. Don't steal keys while focus is in a text input.
 
 **Tablet (600-1023px):** use the mobile layout scaled up in a centered 560px column with larger cards (hand 6x2, 72px cards), bays 2x2 even for 3 bays only if the screen is landscape. Sheet stays a bottom sheet. Landscape phones (height under 500px): bays left (2x2 or 3 in row), hand right in a 4x3 grid, strip on top; if too cramped, show a "Rotate to portrait" nudge (not a block).
 
