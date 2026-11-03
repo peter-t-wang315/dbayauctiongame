@@ -1,6 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import path from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
+import { MOCK_PORT } from './ports';
 
 // First-game tips (04 section 4.8) vs the mock server: the first-turn tip shows once, never blocks a
 // bid, is dismissable, is remembered on this device, and `dbay:tips = "off"` keeps tips away.
@@ -10,7 +11,7 @@ let mock: ChildProcess | null = null;
 test.beforeAll(async () => {
   mock = spawn(process.execPath, ['--import', 'tsx', 'src/main.ts'], {
     cwd: MOCK_DIR,
-    env: { ...process.env, PORT: '8787' },
+    env: { ...process.env, PORT: MOCK_PORT },
     stdio: 'pipe',
   });
   await new Promise<void>((resolve, reject) => {
