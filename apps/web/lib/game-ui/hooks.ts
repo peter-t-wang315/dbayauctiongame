@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { PlayerView } from '@dbay/protocol';
 import { newAnnouncements } from './announce';
+import { SALE_FX } from './sale';
 import { nextBarTotal } from './timers';
 
 /** Re-render every `everyMs` while `active`; returns the current server time estimate. */
@@ -55,7 +56,7 @@ export interface SoldStamp {
 }
 
 /** Log-driven SOLD stamps: one per new `sold` entry (not for entries already present at mount). */
-export function useSoldStamps(view: PlayerView | null, holdMs = 1300): SoldStamp[] {
+export function useSoldStamps(view: PlayerView | null, holdMs: number = SALE_FX.stampHoldMs): SoldStamp[] {
   const lastN = useRef<number | null>(null);
   const [stamps, setStamps] = useState<SoldStamp[]>([]);
   useEffect(() => {
