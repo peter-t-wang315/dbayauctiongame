@@ -15,7 +15,7 @@ export function RevealProgress({ rows, me }: { rows: ProgressRow[]; me: string }
             {r.player && (
               <PlayerChip color={r.player.color} shape={r.player.shape} name={r.id === me ? `${r.player.name} (you)` : r.player.name} />
             )}
-            <strong className="rv-board__total">{r.total === null ? '...' : `$${r.total.toLocaleString('en-US')}`}</strong>
+            <strong className="rv-board__total">{r.total === null ? <span aria-hidden="true">...</span> : `$${r.total.toLocaleString('en-US')}`}</strong>
             {r.total === null && <span className="sr-only">not revealed yet</span>}
           </li>
         ))}

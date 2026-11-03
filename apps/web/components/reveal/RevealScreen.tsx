@@ -17,6 +17,7 @@ import './reveal.css';
 
 export function RevealScreen({ view }: { view: PlayerView }) {
   const room = useRoom();
+  const { send } = room;
   const { shown, done, skip } = useRevealSequence(flipCount(view), view.phase === 'ended');
   // While flipping: me first. Once done: final standing order, winner on top (ties share the crown).
   const desktop = useDesktop();
@@ -28,17 +29,17 @@ export function RevealScreen({ view }: { view: PlayerView }) {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
       if (t && ['INPUT', 'TEXTAREA', 'BUTTON', 'A', 'SELECT'].includes(t.tagName)) return;
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
       if ((e.key === ' ' || e.key === 'Enter') && !done) {
         e.preventDefault();
         skip();
       } else if ((e.key === 'r' || e.key === 'R') && canRematch) {
-        void room.send({ t: 'rematch' });
+        void send({ t: 'rematch' });
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [desktop, done, canRematch, skip, room]);
+  }, [desktop, done, canRematch, skip, send]);
 
   const rows = done ? rankedRows(view) : revealOrder(view).map((row) => ({ row, rank: 0 }));
 

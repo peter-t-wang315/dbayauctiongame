@@ -157,4 +157,4 @@ export function progressRows(view: PlayerView, shown: number): ProgressRow[] {
   });
 }
 
-export const TAG_TEXT ={ steal: 'STEAL!', ripped: 'Ripped off!' } as const;
+export const TAG_TEXT = { steal: 'STEAL!', ripped: 'Ripped off!' } as const;
