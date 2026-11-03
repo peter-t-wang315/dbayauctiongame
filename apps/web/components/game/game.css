@@ -1022,13 +1022,26 @@
     color: var(--text-dim);
   }
   .g-pod__won {
+    height: 34px; /* fixed: one row of 24px sprites + frame; never grows as items are won */
+    overflow: hidden;
+  }
+  .g-pod__row {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     gap: 3px;
-    min-height: 28px;
-    max-height: 62px;
-    overflow: hidden;
+    height: 100%;
+  }
+  .g-pod__row > span {
+    flex: none;
+  }
+  .g-pod__more {
+    font: 800 12px/1 var(--font-body);
+    color: var(--ink);
+    padding: 3px 6px;
+    background: var(--card);
+    border: 1.5px solid var(--ink);
+    border-radius: var(--r-pill);
   }
   .g-pod__won .g-sprite {
     padding: 0;

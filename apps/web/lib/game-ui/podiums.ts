@@ -52,3 +52,21 @@ export function podiumModels(view: PlayerView): PodiumVM[] {
     };
   });
 }
+
+/**
+ * Won-item sprite slots in a podium's single fixed-height row, from the player count (the podiums
+ * share the row width, so 5-6 players get narrower cards). When more items are won than slots, the
+ * last slot becomes a "+n" chip, so the row never wraps, clips or changes height as items are won.
+ */
+export function podiumSlots(playerCount: number): number {
+  if (playerCount >= 6) return 3;
+  if (playerCount === 5) return 4;
+  return 6;
+}
+
+/** How many sprites to draw, and how many items hide behind the "+n" chip. */
+export function podiumSplit(wonCount: number, playerCount: number): { shown: number; more: number } {
+  const slots = podiumSlots(playerCount);
+  if (wonCount <= slots) return { shown: wonCount, more: 0 };
+  return { shown: slots - 1, more: wonCount - (slots - 1) };
+}
