@@ -97,17 +97,10 @@ export function CollectionsView({ summary, win = null, pulse = false }: { summar
           <span className="g-crow__main">
             <span className="g-crow__name">{categoryName(r.category)}</span>
             <span className="g-crow__items">
-              {r.items.length
-                ? r.items.map((i, k) => (
-                    <span key={`${i.id}-${k}`} className={win?.card === i.id ? 'g-crow__new' : undefined}>
-                      {k > 0 ? ', ' : ''}
-                      {i.name}
-                      {win?.card === i.id && <span className="g-new"> NEW</span>}
-                    </span>
-                  ))
-                : 'None yet'}
+              {r.items.length ? r.items.map((i) => i.name).join(', ') : 'None yet'}
             </span>
           </span>
+          {win?.category === r.category && <span className="g-new">NEW</span>}
           {r.oneMore && <span className="g-crow__note">One more = x2!</span>}
           {r.complete && <span className="g-crow__note">x2!</span>}
           <Pips n={r.count} />

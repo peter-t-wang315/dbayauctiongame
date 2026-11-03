@@ -259,9 +259,10 @@ function GameScreenInner() {
   const winText = winLine(view, win, status?.n ?? null);
   const stripText =
     flash ??
+    winText ??
     (going
       ? 'Going once... going twice...'
-      : (winText ?? status?.text ?? (frenzy ? 'Frenzy! Bid any time.' : 'Doors open! First bays are up.')));
+      : (status?.text ?? (frenzy ? 'Frenzy! Bid any time.' : 'Doors open! First bays are up.')));
   const summary = summarizeCollection(me?.collection ?? [], me?.gifts ?? 0);
   const keyHints: Record<string, string> = {};
   for (const k of CARD_KEYS) {
@@ -293,8 +294,8 @@ function GameScreenInner() {
           text={stripText}
           silent={
             flash === null &&
-            !going &&
-            (winText !== null || (!!status && (isUrgentEntry(view, status.n) || isSaleEntry(view, status.n))))
+            (winText !== null ||
+              (!going && !!status && (isUrgentEntry(view, status.n) || isSaleEntry(view, status.n))))
           }
           title={banner.title}
           sub={subtext}
