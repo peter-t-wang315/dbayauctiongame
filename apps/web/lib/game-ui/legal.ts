@@ -10,6 +10,8 @@ export interface Legality {
   legal: boolean;
   /** Short label shown on an illegal bay (never colour alone). */
   reason?: string;
+  /** Longer instruction for the flash message when the short label isn't enough (R15, R16 step 4). */
+  detail?: string;
 }
 
 const money = (n: number) => `$${n}`;
@@ -20,7 +22,7 @@ export function bayLegality(card: HandCardView, bay: BayView, me: string): Legal
   if (!top) return { legal: true };
   if (top.by === me) return { legal: false, reason: "You're winning" };
   if (card.kind === 'proxy') return { legal: true };
-  if (top.kind === 'proxy') return { legal: false, reason: 'Proxy tops it' };
+  if (top.kind === 'proxy') return { legal: false, reason: 'Proxy on top', detail: 'A Proxy is on top: only a Proxy can beat it' };
   const face = card.value ?? 0;
   const topFace = top.value ?? 0;
   return face > topFace ? { legal: true } : { legal: false, reason: `Beat ${money(topFace)}` };
@@ -30,7 +32,7 @@ export function bayLegality(card: HandCardView, bay: BayView, me: string): Legal
 export function rejectionText(bay: BayView | undefined): string {
   const top = bay?.topBid;
   if (top?.kind === 'value' && top.value !== undefined) return `Can't bid that. Beat ${money(top.value)}.`;
-  if (top?.kind === 'proxy') return "Can't bid that. Only a Proxy beats a Proxy.";
+  if (top?.kind === 'proxy') return "Can't bid that. A Proxy is on top: only a Proxy can beat it.";
   return "Can't bid that.";
 }
 

@@ -17,6 +17,7 @@ export function KeyLegend({ bays }: { bays: number }) {
         ))}{' '}
         bid on bay
       </span>
+      <span>on B = back when it sells · won = gone</span>
       <span>
         <kbd>Esc</kbd> cancel
       </span>

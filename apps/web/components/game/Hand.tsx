@@ -1,6 +1,6 @@
 'use client';
 // The 12 bid cards (04 section 4.3): fixed positions, spent cards stay in place (dashed, struck
-// through), cards out on the table show a bay-letter badge, Proxies are striped with a label.
+// through), cards out on the table say "on B", spent ones say "won", Proxies are striped with a label.
 import type { HandSlot } from '../../lib/game-ui/viewModel';
 import { BAY_LETTERS } from '../../lib/game-ui/viewModel';
 
@@ -29,9 +29,9 @@ export function Hand({
         const isSel = selected === s.id;
         const face = s.kind === 'proxy' ? 'Proxy' : `$${s.value}`;
         const name = s.spent
-          ? `${face} card, spent`
+          ? `${face} card, spent: it won an item and is gone for good`
           : out
-            ? `${face} card, out on bay ${BAY_LETTERS[s.onBay!] ?? s.onBay! + 1}`
+            ? `${face} card, out on bay ${BAY_LETTERS[s.onBay!] ?? s.onBay! + 1}, back when that item sells`
             : `${face} card`;
         return (
           <button
@@ -43,6 +43,7 @@ export function Hand({
             data-state={s.spent ? 'spent' : out ? 'out' : isSel ? 'selected' : locked ? 'locked' : 'ready'}
             data-shake={shake === s.id ? 'true' : undefined}
             aria-label={name}
+            title={s.spent ? 'Won an item: gone for good' : out ? 'Out on the bay: back when it sells' : undefined}
             aria-pressed={unavailable ? undefined : isSel}
             aria-disabled={unavailable || locked}
             tabIndex={s.spent ? -1 : 0}
@@ -58,7 +59,16 @@ export function Hand({
             ) : (
               <span className="g-card__face">{face}</span>
             )}
-            {out && <span className="g-card__badge">{BAY_LETTERS[s.onBay!] ?? s.onBay! + 1}</span>}
+            {s.spent && (
+              <span aria-hidden="true" className="g-card__state">
+                won
+              </span>
+            )}
+            {out && (
+              <span aria-hidden="true" className="g-card__state">
+                on {BAY_LETTERS[s.onBay!] ?? s.onBay! + 1}
+              </span>
+            )}
             {keyHints[s.id] && (
               <kbd className="g-kbd" aria-hidden="true">
                 {keyHints[s.id]}

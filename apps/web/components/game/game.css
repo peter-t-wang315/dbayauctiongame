@@ -747,18 +747,17 @@
   background: var(--bg-raised);
   cursor: default;
 }
-.g-card__badge {
+.g-card__state {
   position: absolute;
-  top: -6px;
-  right: -4px;
-  min-width: 18px;
-  padding: 2px 4px;
-  font: 800 11px/1 var(--font-body);
+  bottom: 3px;
+  left: 0;
+  right: 0;
   text-align: center;
-  color: var(--on-navy);
-  background: var(--navy);
-  border: 1.5px solid var(--ink);
-  border-radius: var(--r-chip);
+  font: 800 9px/1 var(--font-body);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  pointer-events: none;
 }
 .g-card[data-shake='true'] {
   animation: g-shake 300ms linear;
@@ -1252,8 +1251,9 @@
     font: 800 11px/1 var(--font-body);
     color: var(--on-card-dim);
   }
-  .g-card__badge {
-    font-size: 12px;
+  .g-card__state {
+    bottom: 22px;
+    font-size: 11px;
   }
 
   /* keyboard legend */

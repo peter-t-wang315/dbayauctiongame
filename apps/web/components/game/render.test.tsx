@@ -16,8 +16,17 @@ describe('Hand', () => {
     expect((html.match(/data-fx="hand-card"/g) ?? []).length).toBe(12);
     expect(html).toContain('aria-label="$10 card"');
     expect(html).toContain('aria-pressed="true"');
-    expect(html).toContain('aria-label="$25 card, spent"');
     expect(html).toContain('tabindex="-1"');
+    expect(html).toContain('aria-label="$25 card, spent: it won an item and is gone for good"');
+  });
+  it('out cards say where and when they return; spent cards say won', () => {
+    const slots = handSlots([{ id: 'v10', kind: 'value', value: 10, onBay: 1 }]);
+    const html = renderToStaticMarkup(
+      createElement(Hand, { slots, selected: null, locked: false, shake: null, keyHints: {}, onTap: () => {} }),
+    );
+    expect(html).toContain('aria-label="$10 card, out on bay B, back when that item sells"');
+    expect(html).toMatch(/g-card__state[^>]*>on B</);
+    expect(html).toMatch(/g-card__state[^>]*>won</);
   });
 });
 

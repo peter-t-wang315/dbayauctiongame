@@ -140,7 +140,7 @@ function GameScreenInner() {
       if (!l.legal) {
         setNudge(idx);
         setTimeout(() => setNudge(null), 400);
-        showFlash(l.reason ? `Can't bid there: ${l.reason}` : "Can't bid there");
+        showFlash(l.reason ? `Can't bid there: ${l.detail ?? l.reason}` : "Can't bid there");
         return;
       }
       setPending({ card: card.id, bay: idx });
