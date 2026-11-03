@@ -6,12 +6,21 @@ import { SpriteView } from './Sprite';
 import { podiumSplit, type PodiumVM } from '../../lib/game-ui/podiums';
 
 export function Podiums({ players }: { players: PodiumVM[] }) {
+  const crowded = players.length >= 5;
   return (
     <ul className="g-pods" aria-label="Players" data-count={players.length}>
       {players.map((p) => {
+        // 5-6 podiums: the YOU/BOT/AWAY tags move from the header to the cards line so names fit.
         const split = podiumSplit(p.wonCount, players.length);
         const shown = p.won.slice(0, split.shown);
         const more = split.more;
+        const tags = (
+          <>
+            {p.me && <span className="tag">YOU</span>}
+            {p.isBot && <span className="tag">BOT</span>}
+            {p.away && <span className="tag">AWAY</span>}
+          </>
+        );
         return (
           <li
             key={p.id}
@@ -29,14 +38,13 @@ export function Podiums({ players }: { players: PodiumVM[] }) {
               <span className="g-pod__name" title={p.name}>
                 {p.name}
               </span>
-              {p.me && <span className="tag">YOU</span>}
-              {p.isBot && <span className="tag">BOT</span>}
-              {p.away && <span className="tag">AWAY</span>}
+              {!crowded && tags}
             </span>
             <span className="g-pod__body">
               <span className="g-pod__cards">
                 <span className="g-pod__big">{p.cardsLeft}</span>
                 <span className="g-pod__small">cards left</span>
+                {crowded && tags}
               </span>
               <span className="g-pod__won">
                 <span className="sr-only">

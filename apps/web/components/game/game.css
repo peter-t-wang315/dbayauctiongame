@@ -1009,11 +1009,9 @@
     padding: 4px var(--s-2);
     font-size: 16px;
   }
-  .g-pods[data-count='5'] .g-pod__head .tag,
-  .g-pods[data-count='6'] .g-pod__head .tag {
-    font-size: 9px;
-    letter-spacing: 0.5px;
-    padding: 2px 4px;
+  .g-pod__cards .tag {
+    margin-left: auto;
+    align-self: center;
   }
   .g-pod__body {
     display: flex;
