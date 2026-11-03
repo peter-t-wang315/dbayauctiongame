@@ -29,6 +29,10 @@ afterEach(() => {
 const stubFor = (code: string) => env.Room.get(env.Room.idFromName(code));
 
 describe('room server', () => {
+  it('runs with DO logging silenced (avoids vitest onUserConsoleLog teardown race)', () => {
+    expect(env.LOG_LEVEL).toBe('silent');
+  });
+
   it('join -> welcome with secret -> snapshot with me/host/lobby', async () => {
     const code = await createRoomCode();
     expect(code).toMatch(/^[2-9A-Z]{5}$/);
