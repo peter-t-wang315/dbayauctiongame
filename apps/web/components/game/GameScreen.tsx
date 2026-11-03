@@ -316,7 +316,7 @@ function GameScreenInner() {
             setMenuOpen(true);
           }}
         />
-        <TipToast view={view} selectedProxy={selectedCard?.kind === 'proxy'} />
+        {!desktop && <TipToast view={view} selectedProxy={selectedCard?.kind === 'proxy'} />}
         {desktop && <Podiums players={podiumModels(view, pending !== null)} />}
         <Hand
           slots={slots}
@@ -380,6 +380,8 @@ function GameScreenInner() {
 
       {desktop && (
         <aside className="g-side" aria-label="Your sets and event log">
+          {/* Desktop: the first-game tip lives at the top of the rail, clear of podiums and bays. */}
+          <TipToast view={view} selectedProxy={selectedCard?.kind === 'proxy'} />
           <DesktopRail
             view={view}
             logOpen={logOpen}
