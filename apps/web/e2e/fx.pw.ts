@@ -81,6 +81,8 @@ async function winSomething(page: Page) {
     if (/^You won /.test((await text.textContent({ timeout: 2000 })) ?? '')) return;
     const cards = page.locator('[data-fx="hand-card"]:not([aria-disabled="true"])');
     const n = await cards.count();
+    // Never bid while a win cue is showing (my bid would end it before the test looks).
+    if (await page.locator('[data-fx="collection-strip"][data-new="true"]').count()) return;
     if (n > 0) {
       await cards.nth(n - 1 - (i % Math.min(n, 3))).click();
       const bay = page.locator('[data-fx="bay"]').and(page.getByRole('button', { name: /Tap to bid\./ })).first();
@@ -103,15 +105,16 @@ test('win moment: status line and NEW mark outlive the toast; the wild shows in 
   const sets = page.locator('[data-fx="collection-strip"]');
   await expect(msg).toHaveText(/^You won .+!$/);
   await expect(sets).toHaveAttribute('data-new', 'true');
-  await expect(sets.locator('.g-new')).toBeVisible();
+  // A Display Case / Gift win marks the wild/gift pill instead of a set row (no NEW tag there).
+  const marked = sets.locator('.g-sets__item[data-new="true"], .g-wild[data-new="true"]');
+  await expect(marked.first()).toBeVisible();
   // Past the toast (2.8s) and the stamp (2s): the cue is still there, and the strip is not double-read.
   await page.waitForTimeout(3500);
   await expect(msg).toHaveText(/^You won .+!$/);
   await expect(sets).toHaveAttribute('data-new', 'true');
   await expect(page.locator('[data-fx="status-text"] > span[aria-hidden="true"]')).toHaveCount(1);
   // The won item is in the strip, not clipped (it moves to the front).
-  const item = sets.locator('.g-sets__item[data-new="true"]');
-  await expect(item).toBeVisible();
+  const item = marked.first();
   const box = await item.boundingBox();
   const sbox = await sets.boundingBox();
   expect(box!.x + box!.width).toBeLessThanOrEqual(sbox!.x + sbox!.width);
@@ -131,7 +134,6 @@ test('win moment on desktop: Your sets row and my podium are marked; reduced mot
   await startFrenzy(page);
   await winSomething(page);
   await expect(page.locator('.g-side .g-crow[data-new="true"], .g-side .g-crow--wild[data-new="true"]').first()).toBeVisible();
-  await expect(page.locator('.g-side .g-new').first()).toBeVisible();
   await expect(page.locator('[data-fx="podium"][data-me][data-fresh="true"]')).toBeVisible();
   const anim = await page.locator('[data-fx="podium"][data-fresh="true"]').evaluate((el) => getComputedStyle(el).animationName);
   expect(anim).toBe('none');

@@ -6,7 +6,7 @@
 // {item}"). The persistent status line is therefore silenced while it shows the win (`silent`).
 import type { CategoryId, PlayerView } from '@dbay/protocol';
 import { isUrgentEntry } from './announce';
-import { cardInfo, type CollectionSummary } from './viewModel';
+import { cardInfo, categoryShort, type CollectionSummary } from './viewModel';
 
 export const WIN_FX = {
   /** The new row pulses this long (then stays marked NEW, static, until my next action). */
@@ -62,13 +62,40 @@ export function winCleared(view: PlayerView, cue: WinCue): boolean {
  */
 export function winLine(view: PlayerView, cue: WinCue | null, latestN: number | null): string | null {
   if (!cue) return null;
-  if (latestN !== null && latestN > cue.n && isUrgentEntry(view, latestN)) return null;
+  if (latestN !== null && latestN > cue.n) {
+    if (isUrgentEntry(view, latestN)) return null;
+    // Game-wide moments (and the end) must be seen and read politely, not hidden behind my win.
+    const kind = view.log.find((x) => x.n === latestN)?.kind;
+    if (kind === 'halfway' || kind === 'lastRound' || kind === 'gameOver') return null;
+  }
   return cue.text;
 }
 
-/** The set the Display Case(s) will most likely join at the end (R34: best set; ties by category order). */
-export function wildTarget(summary: CollectionSummary): { category: CategoryId; name: string; count: number } | null {
-  let best: CollectionSummary['rows'][number] | null = null;
-  for (const r of summary.rows) if (r.count > 0 && (!best || r.count > best.count)) best = r;
-  return best ? { category: best.category, name: best.name, count: best.count } : null;
+/** What a Display Case will likely join. A hint only: R34 decides at scoring (brute force over the real values). */
+export interface WildHint {
+  categories: CategoryId[];
+  /** "Toys" or "Toys or Media". */
+  name: string;
+  /** Short form for the phone strip: "Toys" or "Toys/Media". */
+  short: string;
+}
+
+/**
+ * R34 picks the assignment that maximizes the total. Joining a set at exactly 2 completes it (the whole
+ * set doubles, docs/01 section 9), which beats joining a set already at 3+ (+100). So: sets at exactly 2
+ * first (several = a hedged list; the values decide and the client does not weigh them), else the
+ * biggest set at 3+, else no hint.
+ */
+export function wildHint(summary: CollectionSummary): WildHint | null {
+  let rows = summary.rows.filter((r) => r.count === 2);
+  if (rows.length === 0) {
+    const max = Math.max(0, ...summary.rows.map((r) => r.count));
+    rows = max >= 3 ? summary.rows.filter((r) => r.count === max) : [];
+  }
+  if (rows.length === 0) return null;
+  return {
+    categories: rows.map((r) => r.category),
+    name: rows.map((r) => r.name).join(' or '),
+    short: rows.map((r) => categoryShort(r.category)).join('/'),
+  };
 }

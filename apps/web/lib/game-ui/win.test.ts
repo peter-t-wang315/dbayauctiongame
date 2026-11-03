@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PlayerView } from '@dbay/protocol';
-import { newWin, winCleared, winLine, wildTarget } from './win';
+import { newWin, winCleared, winLine, wildHint } from './win';
 import { summarizeCollection } from './viewModel';
 
 type Entry = PlayerView['log'][number];
@@ -74,11 +74,34 @@ describe('winLine', () => {
   });
 });
 
-describe('wildTarget', () => {
-  it('names the best set, ties by category order; null with no items', () => {
-    expect(wildTarget(summarizeCollection([]))).toBeNull();
-    const s = summarizeCollection(['media-violin', 'toys-pink-snake', 'toys-bean-bag-bear']);
-    expect(wildTarget(s)).toMatchObject({ category: 'toys', count: 2 });
-    expect(wildTarget(summarizeCollection(['media-violin', 'toys-pink-snake']))?.category).toBe('toys');
+describe('winLine yields to game-wide moments', () => {
+  const cue = newWin(view([won]), 4).win!;
+  it('halfway, last round and game over replace it (so they are shown and read politely)', () => {
+    for (const kind of ['halfway', 'lastRound', 'gameOver'] as const) {
+      const v = view([won, e({ n: 6, kind })]);
+      expect(winLine(v, cue, 6)).toBeNull();
+    }
+  });
+});
+
+describe('wildHint (R34 hint)', () => {
+  const sum = (ids: string[]) => summarizeCollection(ids);
+  const toys3 = ['toys-pink-snake', 'toys-bean-bag-bear', 'toys-inflatable-alien'];
+  it('docs/01 section 9: toys x3 + glass x2 -> Glass (completing a pair beats a set at 3)', () => {
+    const h = wildHint(sum([...toys3, 'glass-cookie-jar', 'glass-crystal-decanter']));
+    expect(h?.categories).toEqual(['glass']);
+    expect(h?.name).toBe('Glass');
+  });
+  it('several sets at exactly 2: hedged list in category order', () => {
+    const h = wildHint(sum(['toys-pink-snake', 'toys-bean-bag-bear', 'media-violin', 'media-brass-tuba']));
+    expect(h?.categories).toEqual(['toys', 'media']);
+    expect(h?.name).toBe('Toys or Media');
+  });
+  it('no set at 2: the biggest set at 3+; ties listed', () => {
+    expect(wildHint(sum(toys3))?.categories).toEqual(['toys']);
+  });
+  it('nothing worth naming: no items, or only singles', () => {
+    expect(wildHint(sum([]))).toBeNull();
+    expect(wildHint(sum(['toys-pink-snake', 'glass-cookie-jar']))).toBeNull();
   });
 });

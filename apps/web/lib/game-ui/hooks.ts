@@ -1,6 +1,6 @@
 'use client';
 // Small React hooks for the game screen. Time always comes from the room's server-clock estimate.
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { PlayerView } from '@dbay/protocol';
 import { combineAnnouncements, newAnnouncements } from './announce';
 import { SALE_FX } from './sale';
@@ -143,9 +143,9 @@ export function useAnnouncer(
 
 /**
  * The lasting cue for my newest win (win.ts): `cue` stays until I act (or my turn comes round) or win
- * again; `pulse` is true for the first WIN_FX.pulseMs. `dismiss` also ends it (opening my sets).
+ * again; `pulse` is true for the first WIN_FX.pulseMs.
  */
-export function useWinCue(view: PlayerView | null): { cue: WinCue | null; pulse: boolean; dismiss: () => void } {
+export function useWinCue(view: PlayerView | null): { cue: WinCue | null; pulse: boolean } {
   const lastN = useRef<number | null>(null);
   const [cue, setCue] = useState<WinCue | null>(null);
   const [pulse, setPulse] = useState(false);
@@ -153,9 +153,13 @@ export function useWinCue(view: PlayerView | null): { cue: WinCue | null; pulse:
     if (!view) return;
     const r = newWin(view, lastN.current);
     lastN.current = r.lastN;
-    if (r.win) {
+    if (r.win && !winCleared(view, r.win)) {
       setCue(r.win);
       setPulse(true);
+      return;
+    }
+    if (r.win) {
+      setCue(null); // my own bid/pass/turn already follows the win in this snapshot
       return;
     }
     setCue((c) => (c && winCleared(view, c) ? null : c));
@@ -165,9 +169,5 @@ export function useWinCue(view: PlayerView | null): { cue: WinCue | null; pulse:
     const id = setTimeout(() => setPulse(false), WIN_FX.pulseMs);
     return () => clearTimeout(id);
   }, [pulse, cue?.n]);
-  const dismiss = useCallback(() => {
-    setCue(null);
-    setPulse(false);
-  }, []);
-  return { cue: cue, pulse: pulse && cue !== null, dismiss };
+  return { cue, pulse: pulse && cue !== null };
 }

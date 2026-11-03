@@ -2,7 +2,7 @@
 // My collections: the 44px SETS strip (04 section 12) and the detail view used by the
 // "Your collections" sheet and the desktop sidebar.
 import { categoryName, type CollectionSummary, CATEGORY_ORDER, categoryShort } from '../../lib/game-ui/viewModel';
-import { wildTarget, type WinCue } from '../../lib/game-ui/win';
+import { wildHint, type WinCue } from '../../lib/game-ui/win';
 
 /** Win-moment cue props (win.ts): the item I just won stays marked NEW until my next action. */
 export interface WinMark {
@@ -35,11 +35,11 @@ export function CollectionStrip({
   // "3 = x2" stays visible from the first item on (first-game tips, 04 section 4.8).
   const rule = '3 of a kind scores x2.';
   // P7: the wild stays visible (pinned before the sets so a long list can't clip it) and names the set it joins.
-  const target = wildTarget(summary);
-  const wildText = `WILD${summary.displayCases > 1 ? ` x${summary.displayCases}` : ''}${target ? ` → ${categoryShort(target.category)}` : ''}`;
+  const target = wildHint(summary);
+  const wildText = `WILD${summary.displayCases > 1 ? ` x${summary.displayCases}` : ''}${target ? ` → ${target.short}?` : ''}`;
   const newNote = win ? ` New: ${win.name}.` : '';
   return (
-    <button type="button" className="g-sets" data-fx="collection-strip" aria-label={`${label}${summary.displayCases > 0 ? ` Display Case ${summary.displayCases}, joins ${target ? target.name : 'your best set'} at the end.` : ''}${newNote} ${rule} Tap for details.`}
+    <button type="button" className="g-sets" data-fx="collection-strip" aria-label={`${label}${summary.displayCases > 0 ? ` Display Case ${summary.displayCases}, likely joins ${target ? target.name : 'your best set'} at the end.` : ''}${newNote} ${rule} Tap for details.`}
       data-new={win ? 'true' : undefined}
       data-pulse={win && pulse ? 'true' : undefined} onClick={onOpen}>
       <span className="g-sets__title">SETS</span>
@@ -113,7 +113,7 @@ export function CollectionsView({ summary, win = null, pulse = false }: { summar
       >
         <span className="g-wild">WILD</span>
         <span className="g-crow__name">
-          Display Case x{summary.displayCases}: joins {wildTarget(summary)?.name ?? 'your best set'} at the end (+$100)
+          Display Case x{summary.displayCases}: likely joins {wildHint(summary)?.name ?? 'your best set'} at the end (best fit; $100, doubled with a complete set)
         </span>
       </div>
       {summary.gifts > 0 && (
