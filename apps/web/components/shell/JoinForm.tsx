@@ -1,8 +1,12 @@
 'use client';
+import Link from 'next/link';
 import { useEffect, useState, type FormEvent } from 'react';
-import { NameSchema } from '@dbay/protocol';
+import { NameSchema, type RoomInfo } from '@dbay/protocol';
 import { loadName } from '../../lib/identity';
+import { describeRoomInfo, fetchRoomInfo } from '../../lib/net/roomInfo';
 import { useRoom } from '../../lib/net/useRoom';
+import { MessageCard } from './MessageCard';
+import { FATAL_COPY } from './RoomShell';
 import { runAudioUnlock } from './audioUnlock';
 import '../../lib/fx/register';
 
@@ -10,6 +14,17 @@ export function JoinForm() {
   const room = useRoom();
   const [name, setName] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
+  const [info, setInfo] = useState<RoomInfo | null>(null);
+
+  // Pre-join room summary; any failure leaves `info` null and the form behaves as before.
+  useEffect(() => {
+    const ctl = new AbortController();
+    void fetchRoomInfo(room.code, undefined, ctl.signal).then((i) => {
+      if (!ctl.signal.aborted) setInfo(i);
+    });
+    return () => ctl.abort();
+  }, [room.code]);
+  const joinInfo = describeRoomInfo(room.code, info);
 
   useEffect(() => {
     setName((n) => n || loadName());
@@ -31,6 +46,22 @@ export function JoinForm() {
     room.join(parsed.data);
   };
 
+  if (joinInfo.kind === 'notfound' || joinInfo.kind === 'started' || joinInfo.kind === 'full') {
+    const copy = FATAL_COPY[joinInfo.kind];
+    return (
+      <MessageCard
+        title={copy.title}
+        actions={
+          <Link className="btn" href="/">
+            Home
+          </Link>
+        }
+      >
+        <p className="hint">{copy.body}</p>
+      </MessageCard>
+    );
+  }
+
   return (
     <main className="page">
       <h1 style={{ margin: 0, font: '400 28px/1.2 var(--font-display)' }}>
@@ -39,6 +70,11 @@ export function JoinForm() {
       <p className="hint" style={{ margin: 0 }}>
         You&apos;re invited to a dBay auction. Pick a name to take a seat.
       </p>
+      {joinInfo.kind === 'ok' && (
+        <p className="hint" data-testid="room-info" style={{ margin: 0 }}>
+          {joinInfo.line}
+        </p>
+      )}
       <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }} noValidate>
         {staleSeat && (
           <p className="hint" role="status">
